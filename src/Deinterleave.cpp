@@ -775,6 +775,12 @@ void deinterleave_vector_test() {
           Load::make(ramp_a.type(), "buf", ramp_a, Buffer<>(), Parameter(), const_true(ramp_a.type().lanes()), ModulusRemainder()),
           Load::make(ramp_b.type(), "buf", ramp_b, Buffer<>(), Parameter(), const_true(ramp_b.type().lanes()), ModulusRemainder()));
 
+    Expr vec_x = Variable::make(Int(32, 4), "vec_x");
+    Expr vec_y = Variable::make(Int(32, 4), "vec_y");
+    check(Shuffle::make({vec_x, vec_y}, {0, 4, 2, 6, 4, 2, 3, 7, 1, 2, 3, 4}),
+          Shuffle::make({vec_x, vec_y}, {0, 2, 4, 3, 1, 3}),
+          Shuffle::make({vec_x, vec_y}, {4, 6, 2, 7, 2, 4}));
+
     std::cout << "deinterleave_vector test passed" << std::endl;
 }
 

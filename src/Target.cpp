@@ -577,7 +577,7 @@ std::string Target::feature_to_name(Target::Feature feature) {
             return feature_entry.first;
         }
     }
-    internal_assert(false);
+    internal_error;
     return "";
 }
 

@@ -41,7 +41,9 @@ ostream &operator<<(ostream &out, const Type &type) {
     if (!type.is_handle()) {
         out << type.bits();
     }
-    if (type.lanes() > 1) out << 'x' << type.lanes();
+    if (type.lanes() > 1) {
+        out << "x" << type.lanes();
+    }
     return out;
 }
 
@@ -355,7 +357,7 @@ std::ostream &operator<<(std::ostream &stream, const LinkageType &type) {
 
 std::ostream &operator<<(std::ostream &stream, const Indentation &indentation) {
     for (int i = 0; i < indentation.indent; i++) {
-        stream << ' ';
+        stream << " ";
     }
     return stream;
 }
@@ -400,10 +402,10 @@ void IRPrinter::visit(const FloatImm *op) {
         stream << op->value;
         break;
     case 32:
-        stream << op->value << 'f';
+        stream << op->value << "f";
         break;
     case 16:
-        stream << op->value << 'h';
+        stream << op->value << "h";
         break;
     default:
         internal_error << "Bad bit-width for float: " << op->type << "\n";
@@ -411,90 +413,90 @@ void IRPrinter::visit(const FloatImm *op) {
 }
 
 void IRPrinter::visit(const StringImm *op) {
-    stream << '"';
+    stream << "\"";
     for (size_t i = 0; i < op->value.size(); i++) {
         unsigned char c = op->value[i];
         if (c >= ' ' && c <= '~' && c != '\\' && c != '"') {
             stream << c;
         } else {
-            stream << '\\';
+            stream << "\\";
             switch (c) {
             case '"':
-                stream << '"';
+                stream << "\"";
                 break;
             case '\\':
-                stream << '\\';
+                stream << "\\";
                 break;
             case '\t':
-                stream << 't';
+                stream << "t";
                 break;
             case '\r':
-                stream << 'r';
+                stream << "r";
                 break;
             case '\n':
-                stream << 'n';
+                stream << "n";
                 break;
             default:
                 string hex_digits = "0123456789ABCDEF";
-                stream << 'x' << hex_digits[c >> 4] << hex_digits[c & 0xf];
+                stream << "x" << hex_digits[c >> 4] << hex_digits[c & 0xf];
             }
         }
     }
-    stream << '"';
+    stream << "\"";
 }
 
 void IRPrinter::visit(const Cast *op) {
-    stream << op->type << '(';
+    stream << op->type << "(";
     print(op->value);
-    stream << ')';
+    stream << ")";
 }
 
 void IRPrinter::visit(const Variable *op) {
     if (!known_type.contains(op->name) &&
         (op->type != Int(32))) {
-        stream << '(' << op->type << ')';
+        stream << "(" << op->type << ")";
     }
     stream << op->name;
 }
 
 void IRPrinter::visit(const Add *op) {
-    stream << '(';
+    stream << "(";
     print(op->a);
     stream << " + ";
     print(op->b);
-    stream << ')';
+    stream << ")";
 }
 
 void IRPrinter::visit(const Sub *op) {
-    stream << '(';
+    stream << "(";
     print(op->a);
     stream << " - ";
     print(op->b);
-    stream << ')';
+    stream << ")";
 }
 
 void IRPrinter::visit(const Mul *op) {
-    stream << '(';
+    stream << "(";
     print(op->a);
     stream << "*";
     print(op->b);
-    stream << ')';
+    stream << ")";
 }
 
 void IRPrinter::visit(const Div *op) {
-    stream << '(';
+    stream << "(";
     print(op->a);
     stream << "/";
     print(op->b);
-    stream << ')';
+    stream << ")";
 }
 
 void IRPrinter::visit(const Mod *op) {
-    stream << '(';
+    stream << "(";
     print(op->a);
     stream << " % ";
     print(op->b);
-    stream << ')';
+    stream << ")";
 }
 
 void IRPrinter::visit(const Min *op) {
@@ -514,71 +516,71 @@ void IRPrinter::visit(const Max *op) {
 }
 
 void IRPrinter::visit(const EQ *op) {
-    stream << '(';
+    stream << "(";
     print(op->a);
     stream << " == ";
     print(op->b);
-    stream << ')';
+    stream << ")";
 }
 
 void IRPrinter::visit(const NE *op) {
-    stream << '(';
+    stream << "(";
     print(op->a);
     stream << " != ";
     print(op->b);
-    stream << ')';
+    stream << ")";
 }
 
 void IRPrinter::visit(const LT *op) {
-    stream << '(';
+    stream << "(";
     print(op->a);
     stream << " < ";
     print(op->b);
-    stream << ')';
+    stream << ")";
 }
 
 void IRPrinter::visit(const LE *op) {
-    stream << '(';
+    stream << "(";
     print(op->a);
     stream << " <= ";
     print(op->b);
-    stream << ')';
+    stream << ")";
 }
 
 void IRPrinter::visit(const GT *op) {
-    stream << '(';
+    stream << "(";
     print(op->a);
     stream << " > ";
     print(op->b);
-    stream << ')';
+    stream << ")";
 }
 
 void IRPrinter::visit(const GE *op) {
-    stream << '(';
+    stream << "(";
     print(op->a);
     stream << " >= ";
     print(op->b);
-    stream << ')';
+    stream << ")";
 }
 
 void IRPrinter::visit(const And *op) {
-    stream << '(';
+    stream << "(";
     print(op->a);
     stream << " && ";
     print(op->b);
-    stream << ')';
+    stream << ")";
 }
 
 void IRPrinter::visit(const Or *op) {
-    stream << '(';
+    stream << "(";
     print(op->a);
     stream << " || ";
     print(op->b);
-    stream << ')';
+    stream << ")";
 }
 
 void IRPrinter::visit(const Not *op) {
-    stream << '!';
+    stream << "!";
     print(op->a);
 }
 
@@ -599,7 +601,7 @@ void IRPrinter::visit(const Load *op) {
         stream << "(";
     }
     if (!known_type.contains(op->name)) {
-        stream << '(' << op->type << ')';
+        stream << "(" << op->type << ")";
     }
     stream << op->name << "[";
     print(op->index);
@@ -632,7 +634,7 @@ void IRPrinter::visit(const Call *op) {
     // TODO: Print indication of C vs C++?
     if (!known_type.contains(op->name) &&
         (op->type != Int(32))) {
-        stream << '(' << op->type << ')';
+        stream << "(" << op->type << ")";
     }
     stream << op->name << "(";
     print_list(op->args);
@@ -652,7 +654,7 @@ void IRPrinter::visit(const LetStmt *op) {
     ScopedBinding<> bind(known_type, op->name);
     stream << get_indent() << "let " << op->name << " = ";
     print(op->value);
-    stream << '\n';
+    stream << "\n";
 
     print(op->body);
 }
@@ -742,7 +744,7 @@ void IRPrinter::visit(const Store *op) {
     stream << "] = ";
     if (const Let *let = op->value.as<Let>()) {
         // Use some nicer line breaks for containing Lets
-        stream << '\n';
+        stream << "\n";
         indent += 2;
         print_lets(let);
         indent -= 2;
@@ -750,7 +752,7 @@ void IRPrinter::visit(const Store *op) {
         // Just print the value in-line
         print(op->value);
     }
-    stream << '\n';
+    stream << "\n";
     if (has_pred) {
         indent--;
     }
@@ -768,7 +770,7 @@ void IRPrinter::visit(const Provide *op) {
         stream << "}";
     }
 
-    stream << '\n';
+    stream << "\n";
 }
 
 void IRPrinter::visit(const Allocate *op) {
@@ -802,7 +804,7 @@ void IRPrinter::visit(const Allocate *op) {
 
 void IRPrinter::visit(const Free *op) {
     stream << get_indent() << "free " << op->name;
-    stream << '\n';
+    stream << "\n";
 }
 
 void IRPrinter::visit(const Realize *op) {

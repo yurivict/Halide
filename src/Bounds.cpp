@@ -552,7 +552,26 @@ private:
             int min_sign = static_sign(b.min);
             int max_sign = static_sign(b.max);
             if (min_sign != max_sign || min_sign == 0 || max_sign == 0) {
-                interval = Interval::everything();
+                if (op->type.is_int() && op->type.bits() >= 32) {
+                    // Division can't make signed integers larger
+                    // Restricted to 32-bits or greater to ensure the
+                    // negation can't overflow.
+                    interval = Interval::nothing();
+                    interval.include(a.min);
+                    interval.include(a.max);
+                    interval.include(-a.min);
+                    interval.include(-a.max);
+                } else if (op->type.is_uint()) {
+                    // Division can't make unsigned integers large,
+                    // but could make them arbitrarily small.
+                    interval.min = make_zero(a.min.type());
+                    interval.max = a.max;
+                } else {
+                    // Division can make floats arbitrarily large, and
+                    // we can't easily negate narrow bit-width signed
+                    // integers because they just wrap.
+                    bounds_of_type(op->type);
+                }
             } else {
                 // Divisor is either strictly positive or strictly
                 // negative, so we can just take the extrema.
@@ -588,7 +607,7 @@ private:
 
         if (!b.is_bounded()) {
             if (a.has_lower_bound() && can_prove(a.min >= 0)) {
-                // Mod cannot positive values larger
+                // Mod cannot make positive values larger
                 interval.max = a.max;
             }
         } else {
@@ -1030,9 +1049,36 @@ private:
                     bounds_of_type(t);
                 }
             }
-        } else if (op->is_intrinsic(Call::unsafe_promise_clamped)) {
-            Expr full_clamp = clamp(op->args[0], op->args[1], op->args[2]);
-            full_clamp.accept(this);
+        } else if (op->is_intrinsic(Call::unsafe_promise_clamped) ||
+                   op->is_intrinsic(Call::promise_clamped)) {
+            // Unlike an explicit clamp, we are also permitted to
+            // assume the upper bound is greater than the lower bound.
+            op->args[1].accept(this);
+            Interval lower = interval;
+            op->args[2].accept(this);
+            Interval upper = interval;
+            op->args[0].accept(this);
+
+            if (interval.is_single_point()) {
+                // The thing being guarded doesn't vary, so we don't
+                // need the additional bounds. Our options are to
+                // return the full promise_clamped, or to just return
+                // the value. Both promise_clamped and unsafe_promise
+                // clamped assert that a clamp here would be a
+                // no-op. promise_clamped is context-dependent -
+                // something might be bounded inside a loop, but
+                // lifting the IR elsewhere would make it a lie, so we
+                // can't lift it without knowing where the expression
+                // is going. unsafe_promise_clamped is true for the
+                // entire program, so we can only lift that one.  For
+                // now, we lift neither and just return the interval
+                // for the first arg.
+            } else {
+                // The first arg varies, so use the other args as
+                // additional bounds.
+                interval.min = Interval::make_max(interval.min, lower.min);
+                interval.max = Interval::make_min(interval.max, upper.max);
+            }
         } else if (op->is_intrinsic(Call::likely) ||
                    op->is_intrinsic(Call::likely_if_innermost)) {
             internal_assert(op->args.size() == 1);
@@ -2638,13 +2684,13 @@ void check(const Scope<Interval> &scope, const Expr &e, const Expr &correct_min,
     result.max = simplify(result.max);
     if (!equal(result.min, correct_min)) {
         internal_error << "In bounds of " << e << ":\n"
-                       << "Incorrect min: " << result.min << '\n'
-                       << "Should have been: " << correct_min << '\n';
+                       << "Incorrect min: " << result.min << "\n"
+                       << "Should have been: " << correct_min << "\n";
     }
     if (!equal(result.max, correct_max)) {
         internal_error << "In bounds of " << e << ":\n"
-                       << "Incorrect max: " << result.max << '\n'
-                       << "Should have been: " << correct_max << '\n';
+                       << "Incorrect max: " << result.max << "\n"
+                       << "Should have been: " << correct_max << "\n";
     }
 }
 
@@ -2655,13 +2701,13 @@ void check_constant_bound(const Scope<Interval> &scope, const Expr &e, const Exp
     result.max = simplify(result.max);
     if (!equal(result.min, correct_min)) {
         internal_error << "In find constant bound of " << e << ":\n"
-                       << "Incorrect min constant bound: " << result.min << '\n'
-                       << "Should have been: " << correct_min << '\n';
+                       << "Incorrect min constant bound: " << result.min << "\n"
+                       << "Should have been: " << correct_min << "\n";
     }
     if (!equal(result.max, correct_max)) {
         internal_error << "In find constant bound of " << e << ":\n"
-                       << "Incorrect max constant bound: " << result.max << '\n'
-                       << "Should have been: " << correct_max << '\n';
+                       << "Incorrect max constant bound: " << result.max << "\n"
+                       << "Should have been: " << correct_max << "\n";
     }
 }
 
@@ -2810,13 +2856,13 @@ void boxes_touched_test() {
         b.max = simplify(b.max);
         if (!equal(correct.min, b.min)) {
             internal_error << "In bounds of dim " << i << ":\n"
-                           << "Incorrect min: " << b.min << '\n'
-                           << "Should have been: " << correct.min << '\n';
+                           << "Incorrect min: " << b.min << "\n"
+                           << "Should have been: " << correct.min << "\n";
         }
         if (!equal(correct.max, b.max)) {
             internal_error << "In bounds of dim " << i << ":\n"
-                           << "Incorrect max: " << b.max << '\n'
-                           << "Should have been: " << correct.max << '\n';
+                           << "Incorrect max: " << b.max << "\n"
+                           << "Should have been: " << correct.max << "\n";
         }
     }
 }
@@ -2841,12 +2887,12 @@ void bounds_test() {
     check(scope, Select::make(x < 4, x, x + 100), 0, 110);
     check(scope, x + y, y, y + 10);
     check(scope, x * y, min(y, 0) * 10, max(y, 0) * 10);
-    check(scope, x / (x + y), Interval::neg_inf(), Interval::pos_inf());
+    check(scope, x / (x + y), -10, 10);
     check(scope, 11 / (x + 1), 1, 11);
     check(scope, Load::make(Int(8), "buf", x, Buffer<>(), Parameter(), const_true(), ModulusRemainder()),
           i8(-128), i8(127));
     check(scope, y + (Let::make("y", x + 3, y - x + 10)), y + 3, y + 23);  // Once again, we don't know that y is correlated with x
-    check(scope, clamp(1 / (x - 2), x - 10, x + 10), -10, 20);
+    check(scope, clamp(1000 / (x - 2), x - 10, x + 10), -10, 20);
     check(scope, cast<uint16_t>(x / 2), u16(0), u16(5));
     check(scope, cast<uint16_t>((x + 10) / 2), u16(5), u16(10));
     check(scope, x < 20, make_bool(1), make_bool(1));
