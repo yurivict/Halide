@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.14)
 
+# TODO: find a use for these, or remove them?
 define_property(TARGET PROPERTY HL_GEN_TARGET
                 BRIEF_DOCS "On a Halide library target, names the generator target used to create it"
                 FULL_DOCS "On a Halide library target, names the generator target used to create it")
