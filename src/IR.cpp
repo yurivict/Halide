@@ -827,14 +827,15 @@ Expr VectorReduce::make(VectorReduce::Operator op,
     if (vec.type().is_bool()) {
         internal_assert(op == VectorReduce::And || op == VectorReduce::Or)
             << "The only legal operators for VectorReduce on a Bool"
-            << "vector are VectorReduce::And and VectorReduce::Or";
+            << "vector are VectorReduce::And and VectorReduce::Or\n";
     }
     internal_assert(!vec.type().is_handle()) << "VectorReduce of handle type";
     // Check the output lanes is a factor of the input lanes. They can
     // also both be zero if we're constructing a wildcard expression.
     internal_assert((lanes == 0 && vec.type().lanes() == 0) ||
-                    vec.type().lanes() % lanes == 0)
-        << "Vector reduce output lanes must be a divisor of the number of lanes in the argument\n";
+                    (lanes != 0 && (vec.type().lanes() % lanes == 0)))
+        << "Vector reduce output lanes must be a divisor of the number of lanes in the argument "
+        << lanes << " " << vec.type().lanes() << "\n";
     VectorReduce *node = new VectorReduce;
     node->type = vec.type().with_lanes(lanes);
     node->op = op;

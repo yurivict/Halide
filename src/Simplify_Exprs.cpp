@@ -98,55 +98,70 @@ Expr Simplify::visit(const VectorReduce *op, ExprInfo *bounds) {
     //   underlying op on different shuffle_vectors calls
 
     const int lanes = op->type.lanes();
+    const int arg_lanes = op->value.type().lanes();
     switch (op->op) {
     case VectorReduce::Add: {
-        auto rewrite = IRMatcher::rewriter(IRMatcher::horizontal_add(value, lanes), op->type);
-        if (rewrite(horizontal_add(x * broadcast(y)), horizontal_add(x, lanes) * broadcast(y, lanes)) ||
-            rewrite(horizontal_add(broadcast(x) * y), broadcast(x, lanes) * horizontal_add(x, lanes))) {
+        auto rewrite = IRMatcher::rewriter(IRMatcher::h_add(value, lanes), op->type);
+        if (rewrite(h_add(x * broadcast(y)), h_add(x, lanes) * broadcast(y, lanes)) ||
+            rewrite(h_add(broadcast(x) * y), broadcast(x, lanes) * h_add(x, lanes))) {
             return mutate(rewrite.result, bounds);
         }
         break;
     }
     case VectorReduce::Min: {
-        auto rewrite = IRMatcher::rewriter(IRMatcher::horizontal_min(value, lanes), op->type);
-        if (rewrite(horizontal_min(min(x, broadcast(y))), min(horizontal_min(x, lanes), broadcast(y, lanes))) ||
-            rewrite(horizontal_min(min(broadcast(x), y)), min(broadcast(x, lanes), horizontal_min(y, lanes))) ||
-            rewrite(horizontal_min(max(x, broadcast(y))), max(horizontal_min(x, lanes), broadcast(y, lanes))) ||
-            rewrite(horizontal_min(max(broadcast(x), y)), max(broadcast(x, lanes), horizontal_min(y, lanes))) ||
-            rewrite(horizontal_min(broadcast(x)), broadcast(x, lanes))) {
+        auto rewrite = IRMatcher::rewriter(IRMatcher::h_min(value, lanes), op->type);
+        if (rewrite(h_min(min(x, broadcast(y))), min(h_min(x, lanes), broadcast(y, lanes))) ||
+            rewrite(h_min(min(broadcast(x), y)), min(broadcast(x, lanes), h_min(y, lanes))) ||
+            rewrite(h_min(max(x, broadcast(y))), max(h_min(x, lanes), broadcast(y, lanes))) ||
+            rewrite(h_min(max(broadcast(x), y)), max(broadcast(x, lanes), h_min(y, lanes))) ||
+            rewrite(h_min(broadcast(x)), broadcast(x, lanes)) ||
+            rewrite(h_min(ramp(x, y)), x + min(y * (arg_lanes - 1), 0)) ||
+            false) {
             return mutate(rewrite.result, bounds);
         }
         break;
     }
     case VectorReduce::Max: {
-        auto rewrite = IRMatcher::rewriter(IRMatcher::horizontal_max(value, lanes), op->type);
-        if (rewrite(horizontal_max(min(x, broadcast(y))), min(horizontal_max(x, lanes), broadcast(y, lanes))) ||
-            rewrite(horizontal_max(min(broadcast(x), y)), min(broadcast(x, lanes), horizontal_max(y, lanes))) ||
-            rewrite(horizontal_max(max(x, broadcast(y))), max(horizontal_max(x, lanes), broadcast(y, lanes))) ||
-            rewrite(horizontal_max(max(broadcast(x), y)), max(broadcast(x, lanes), horizontal_max(y, lanes))) ||
-            rewrite(horizontal_max(broadcast(x)), broadcast(x, lanes))) {
+        auto rewrite = IRMatcher::rewriter(IRMatcher::h_max(value, lanes), op->type);
+        if (rewrite(h_max(min(x, broadcast(y))), min(h_max(x, lanes), broadcast(y, lanes))) ||
+            rewrite(h_max(min(broadcast(x), y)), min(broadcast(x, lanes), h_max(y, lanes))) ||
+            rewrite(h_max(max(x, broadcast(y))), max(h_max(x, lanes), broadcast(y, lanes))) ||
+            rewrite(h_max(max(broadcast(x), y)), max(broadcast(x, lanes), h_max(y, lanes))) ||
+            rewrite(h_max(broadcast(x)), broadcast(x, lanes)) ||
+            rewrite(h_max(ramp(x, y)), x + max(y * (arg_lanes - 1), 0)) ||
+            false) {
             return mutate(rewrite.result, bounds);
         }
         break;
     }
     case VectorReduce::And: {
-        auto rewrite = IRMatcher::rewriter(IRMatcher::horizontal_and(value, lanes), op->type);
-        if (rewrite(horizontal_and(x || broadcast(y)), horizontal_and(x, lanes) || broadcast(y, lanes)) ||
-            rewrite(horizontal_and(broadcast(x) || y), broadcast(x, lanes) || horizontal_and(y, lanes)) ||
-            rewrite(horizontal_and(x && broadcast(y)), horizontal_and(x, lanes) && broadcast(y, lanes)) ||
-            rewrite(horizontal_and(broadcast(x) && y), broadcast(x, lanes) && horizontal_and(y, lanes)) ||
-            rewrite(horizontal_and(broadcast(x)), broadcast(x, lanes))) {
+        auto rewrite = IRMatcher::rewriter(IRMatcher::h_and(value, lanes), op->type);
+        if (rewrite(h_and(x || broadcast(y)), h_and(x, lanes) || broadcast(y, lanes)) ||
+            rewrite(h_and(broadcast(x) || y), broadcast(x, lanes) || h_and(y, lanes)) ||
+            rewrite(h_and(x && broadcast(y)), h_and(x, lanes) && broadcast(y, lanes)) ||
+            rewrite(h_and(broadcast(x) && y), broadcast(x, lanes) && h_and(y, lanes)) ||
+            rewrite(h_and(broadcast(x)), broadcast(x, lanes)) ||
+            rewrite(h_and(ramp(x, y) < broadcast(z)), x + max(y * (arg_lanes - 1), 0) < z) ||
+            rewrite(h_and(ramp(x, y) <= broadcast(z)), x + max(y * (arg_lanes - 1), 0) <= z) ||
+            rewrite(h_and(broadcast(x) < ramp(y, z)), x < y + min(z * (arg_lanes - 1), 0)) ||
+            rewrite(h_and(broadcast(x) < ramp(y, z)), x <= y + min(z * (arg_lanes - 1), 0)) ||
+            false) {
             return mutate(rewrite.result, bounds);
         }
         break;
     }
     case VectorReduce::Or: {
-        auto rewrite = IRMatcher::rewriter(IRMatcher::horizontal_or(value, lanes), op->type);
-        if (rewrite(horizontal_or(x || broadcast(y)), horizontal_or(x, lanes) || broadcast(y, lanes)) ||
-            rewrite(horizontal_or(broadcast(x) || y), broadcast(x, lanes) || horizontal_or(y, lanes)) ||
-            rewrite(horizontal_or(x && broadcast(y)), horizontal_or(x, lanes) && broadcast(y, lanes)) ||
-            rewrite(horizontal_or(broadcast(x) && y), broadcast(x, lanes) && horizontal_or(y, lanes)) ||
-            rewrite(horizontal_or(broadcast(x)), broadcast(x, lanes))) {
+        auto rewrite = IRMatcher::rewriter(IRMatcher::h_or(value, lanes), op->type);
+        if (rewrite(h_or(x || broadcast(y)), h_or(x, lanes) || broadcast(y, lanes)) ||
+            rewrite(h_or(broadcast(x) || y), broadcast(x, lanes) || h_or(y, lanes)) ||
+            rewrite(h_or(x && broadcast(y)), h_or(x, lanes) && broadcast(y, lanes)) ||
+            rewrite(h_or(broadcast(x) && y), broadcast(x, lanes) && h_or(y, lanes)) ||
+            rewrite(h_or(broadcast(x)), broadcast(x, lanes)) ||
+            rewrite(h_or(ramp(x, y) < broadcast(z)), x + min(y * (arg_lanes - 1), 0) < z) ||
+            rewrite(h_or(ramp(x, y) <= broadcast(z)), x + min(y * (arg_lanes - 1), 0) <= z) ||
+            rewrite(h_or(broadcast(x) < ramp(y, z)), x < y + max(z * (arg_lanes - 1), 0)) ||
+            rewrite(h_or(broadcast(x) < ramp(y, z)), x <= y + max(z * (arg_lanes - 1), 0)) ||
+            false) {
             return mutate(rewrite.result, bounds);
         }
         break;

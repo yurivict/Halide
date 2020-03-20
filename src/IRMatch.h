@@ -1463,7 +1463,12 @@ struct BroadcastOp {
     Expr make(MatcherState &state, halide_type_t type_hint) const {
         const int l = known_lanes ? lanes : type_hint.lanes;
         type_hint.lanes = 1;
-        return Broadcast::make(a.make(state, type_hint), l);
+        Expr val = a.make(state, type_hint);
+        if (l == 1) {
+            return val;
+        } else {
+            return Broadcast::make(std::move(val), l);
+        }
     }
 
     constexpr static bool foldable = false;
@@ -1619,52 +1624,52 @@ inline std::ostream &operator<<(std::ostream &s, const VectorReduceOp<A, false, 
 }
 
 template<typename A>
-HALIDE_ALWAYS_INLINE auto horizontal_add(A a, int lanes) noexcept -> VectorReduceOp<decltype(pattern_arg(a)), true, VectorReduce::Add> {
+HALIDE_ALWAYS_INLINE auto h_add(A a, int lanes) noexcept -> VectorReduceOp<decltype(pattern_arg(a)), true, VectorReduce::Add> {
     return {pattern_arg(a), lanes};
 }
 
 template<typename A>
-HALIDE_ALWAYS_INLINE auto horizontal_add(A a) noexcept -> VectorReduceOp<decltype(pattern_arg(a)), false, VectorReduce::Add> {
+HALIDE_ALWAYS_INLINE auto h_add(A a) noexcept -> VectorReduceOp<decltype(pattern_arg(a)), false, VectorReduce::Add> {
     return {pattern_arg(a), 0};
 }
 
 template<typename A>
-HALIDE_ALWAYS_INLINE auto horizontal_min(A a, int lanes) noexcept -> VectorReduceOp<decltype(pattern_arg(a)), true, VectorReduce::Min> {
+HALIDE_ALWAYS_INLINE auto h_min(A a, int lanes) noexcept -> VectorReduceOp<decltype(pattern_arg(a)), true, VectorReduce::Min> {
     return {pattern_arg(a), lanes};
 }
 
 template<typename A>
-HALIDE_ALWAYS_INLINE auto horizontal_min(A a) noexcept -> VectorReduceOp<decltype(pattern_arg(a)), false, VectorReduce::Min> {
+HALIDE_ALWAYS_INLINE auto h_min(A a) noexcept -> VectorReduceOp<decltype(pattern_arg(a)), false, VectorReduce::Min> {
     return {pattern_arg(a), 0};
 }
 
 template<typename A>
-HALIDE_ALWAYS_INLINE auto horizontal_max(A a, int lanes) noexcept -> VectorReduceOp<decltype(pattern_arg(a)), true, VectorReduce::Max> {
+HALIDE_ALWAYS_INLINE auto h_max(A a, int lanes) noexcept -> VectorReduceOp<decltype(pattern_arg(a)), true, VectorReduce::Max> {
     return {pattern_arg(a), lanes};
 }
 
 template<typename A>
-HALIDE_ALWAYS_INLINE auto horizontal_max(A a) noexcept -> VectorReduceOp<decltype(pattern_arg(a)), false, VectorReduce::Max> {
+HALIDE_ALWAYS_INLINE auto h_max(A a) noexcept -> VectorReduceOp<decltype(pattern_arg(a)), false, VectorReduce::Max> {
     return {pattern_arg(a), 0};
 }
 
 template<typename A>
-HALIDE_ALWAYS_INLINE auto horizontal_and(A a, int lanes) noexcept -> VectorReduceOp<decltype(pattern_arg(a)), true, VectorReduce::And> {
+HALIDE_ALWAYS_INLINE auto h_and(A a, int lanes) noexcept -> VectorReduceOp<decltype(pattern_arg(a)), true, VectorReduce::And> {
     return {pattern_arg(a), lanes};
 }
 
 template<typename A>
-HALIDE_ALWAYS_INLINE auto horizontal_and(A a) noexcept -> VectorReduceOp<decltype(pattern_arg(a)), false, VectorReduce::And> {
+HALIDE_ALWAYS_INLINE auto h_and(A a) noexcept -> VectorReduceOp<decltype(pattern_arg(a)), false, VectorReduce::And> {
     return {pattern_arg(a), 0};
 }
 
 template<typename A>
-HALIDE_ALWAYS_INLINE auto horizontal_or(A a, int lanes) noexcept -> VectorReduceOp<decltype(pattern_arg(a)), true, VectorReduce::Or> {
+HALIDE_ALWAYS_INLINE auto h_or(A a, int lanes) noexcept -> VectorReduceOp<decltype(pattern_arg(a)), true, VectorReduce::Or> {
     return {pattern_arg(a), lanes};
 }
 
 template<typename A>
-HALIDE_ALWAYS_INLINE auto horizontal_or(A a) noexcept -> VectorReduceOp<decltype(pattern_arg(a)), false, VectorReduce::Or> {
+HALIDE_ALWAYS_INLINE auto h_or(A a) noexcept -> VectorReduceOp<decltype(pattern_arg(a)), false, VectorReduce::Or> {
     return {pattern_arg(a), 0};
 }
 

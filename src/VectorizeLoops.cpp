@@ -171,19 +171,15 @@ Interval bounds_of_lanes(const Expr &e) {
     }
 
     // Take the explicit min and max over the lanes
-    Expr min_lane = extract_lane(e, 0);
-    Expr max_lane = min_lane;
-    for (int i = 1; i < e.type().lanes(); i++) {
-        Expr next_lane = extract_lane(e, i);
-        if (e.type().is_bool()) {
-            min_lane = And::make(min_lane, next_lane);
-            max_lane = Or::make(max_lane, next_lane);
-        } else {
-            min_lane = Min::make(min_lane, next_lane);
-            max_lane = Max::make(max_lane, next_lane);
-        }
+    if (e.type().is_bool()) {
+        Expr min_lane = VectorReduce::make(VectorReduce::And, e, 1);
+        Expr max_lane = VectorReduce::make(VectorReduce::Or, e, 1);
+        return {min_lane, max_lane};
+    } else {
+        Expr min_lane = VectorReduce::make(VectorReduce::Min, e, 1);
+        Expr max_lane = VectorReduce::make(VectorReduce::Max, e, 1);
+        return {min_lane, max_lane};
     }
-    return {min_lane, max_lane};
 };
 
 // A ramp with the lanes repeated (e.g. <0 0 2 2 4 4 6 6>)
