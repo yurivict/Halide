@@ -47,12 +47,8 @@ endif ()
 # Convenience methods for defining tests.
 ##
 
-# TODO: this is intended to eventually replicate all of the interesting test targets from our Make build, but not all are implemented yet:
-# TODO(srj): add test_aotcpp_generators support
-# TODO(srj): add test_valgrind variant
-# TODO(srj): add test_avx512 variant
-# TODO(srj): add test_python variant
-# TODO(srj): add test_apps variant
+# TODO(srj): add valgrind variant
+# TODO(srj): add avx512 variant
 function(add_halide_test TARGET)
     set(options EXPECT_FAILURE)
     set(oneValueArgs WORKING_DIRECTORY)
