@@ -518,6 +518,7 @@ add_library(Halide ${HALIDE_LIBRARY_TYPE}
   EliminateBoolVectors.cpp
   EmulateFloat16Math.cpp
   Error.cpp
+  Expr.cpp
   FastIntegerDivide.cpp
   FindCalls.cpp
   Float16.cpp
