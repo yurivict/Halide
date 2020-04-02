@@ -12,6 +12,7 @@
 #include <string>
 
 #include "Argument.h"
+#include "Buffer.h"
 #include "Expr.h"
 #include "ExternalCode.h"
 #include "Function.h"  // for NameMangling

@@ -1,10 +1,12 @@
 #ifndef HALIDE_FAST_INTEGER_DIVIDE_H
 #define HALIDE_FAST_INTEGER_DIVIDE_H
 
-#include "Buffer.h"
 #include "Expr.h"
 
 namespace Halide {
+
+template<typename T>
+class Buffer;
 
 /** Built-in images used for fast_integer_divide below. Use of
  * fast_integer_divide will automatically embed the appropriate tables

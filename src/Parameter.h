@@ -5,11 +5,12 @@
  * Defines the internal representation of parameters to halide piplines
  */
 
-#include "Buffer.h"
 #include "Expr.h"
 
 namespace Halide {
 
+template<typename T>
+class Buffer;
 struct ArgumentEstimates;
 class OutputImageParam;
 
@@ -104,14 +105,14 @@ public:
 
     /** If the parameter is a buffer parameter, get its currently
      * bound buffer. Only relevant when jitting */
-    Buffer<> buffer() const;
+    Buffer<void> buffer() const;
 
     /** Get the raw currently-bound buffer. null if unbound */
     const halide_buffer_t *raw_buffer() const;
 
     /** If the parameter is a buffer parameter, set its current
      * value. Only relevant when jitting */
-    void set_buffer(const Buffer<> &b);
+    void set_buffer(const Buffer<void> &b);
 
     /** Get the pointer to the current value of the scalar
      * parameter. For a given parameter, this address will never

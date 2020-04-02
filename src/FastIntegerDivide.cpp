@@ -1,5 +1,6 @@
 #include <mutex>
 
+#include "Buffer.h"
 #include "FastIntegerDivide.h"
 #include "IROperator.h"
 #include "IntegerDivisionTable.h"

@@ -22,6 +22,7 @@
 
 namespace Halide {
 
+struct ExternFuncArgument;
 class OutputImageParam;
 class ParamMap;
 

@@ -899,6 +899,10 @@ const std::string &Function::debug_file() const {
     return contents->debug_file;
 }
 
+Function::operator ExternFuncArgument() const {
+    return ExternFuncArgument(contents);
+}
+
 std::string &Function::debug_file() {
     return contents->debug_file;
 }
