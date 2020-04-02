@@ -6,16 +6,11 @@
  */
 
 #include "Buffer.h"
-#include "Definition.h"
 #include "Expr.h"
 #include "FunctionPtr.h"
-#include "IntrusivePtr.h"
 #include "Parameter.h"
-#include "Schedule.h"
 
 namespace Halide {
-
-class Var;
 
 /** An argument to an extern-defined Func. May be a Function, Buffer,
  * ImageParam or Expr. */

@@ -12,8 +12,6 @@
 #include "Definition.h"
 #include "Expr.h"
 #include "FunctionPtr.h"
-#include "IntrusivePtr.h"
-#include "Parameter.h"
 #include "Schedule.h"
 
 namespace Halide {
@@ -31,6 +29,7 @@ enum class NameMangling {
 namespace Internal {
 
 struct Call;
+class Parameter;
 
 /** A reference-counted handle to Halide's internal representation of
  * a function. Similar to a front-end Func object, but with no
