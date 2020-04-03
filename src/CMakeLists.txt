@@ -368,7 +368,7 @@ add_library(Halide
 add_library(Halide::Halide ALIAS Halide)
 set_target_properties(Halide PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
-target_link_libraries(Halide PRIVATE LLVM::LLVM LLVM::Config)
+target_link_libraries(Halide PRIVATE Halide_LLVM)
 
 add_dependencies(Halide HalideIncludes)
 

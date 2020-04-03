@@ -6,30 +6,35 @@
 
 set(HALIDE_DIR "${CMAKE_CURRENT_BINARY_DIR}/_Halide_install")
 
+# TODO: "remove_directory" deprecated and replaced by "rm -rf" as of CMake 3.17.
+add_test(NAME delete_halide_distrib
+         COMMAND ${CMAKE_COMMAND} -E remove_directory "${HALIDE_DIR}")
+
+set_tests_properties(delete_halide_distrib PROPERTIES
+                     FIXTURES_SETUP apps)
+
 # TODO: if we can support CMake 3.15+, we can use ${CMAKE_COMMAND} --install ...
 add_test(NAME create_halide_distrib
          COMMAND ${CMAKE_COMMAND} "-DCMAKE_INSTALL_PREFIX=${HALIDE_DIR}" -P cmake_install.cmake
          WORKING_DIRECTORY ${Halide_BINARY_DIR})
 
-set_tests_properties(create_halide_distrib PROPERTIES FIXTURES_SETUP apps)
+set_tests_properties(create_halide_distrib PROPERTIES
+                     FIXTURES_SETUP apps
+                     DEPENDS delete_halide_distrib)
 
 function(add_app_test NAME)
+    unset(cmakeOpts)
+    if (NOT "${CMAKE_TOOLCHAIN_FILE}" STREQUAL "")
+        set(cmakeOpts "-DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}")
+    endif ()
     add_test(NAME ${NAME}
              COMMAND ${CMAKE_CTEST_COMMAND}
              --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/${NAME}" "${CMAKE_CURRENT_BINARY_DIR}/${NAME}"
              --build-generator ${CMAKE_GENERATOR}
-             --build-options "-DCMAKE_PREFIX_PATH=${HALIDE_DIR}" "-DCMAKE_BUILD_TYPE=Release"
+             --build-options "-DCMAKE_PREFIX_PATH=${HALIDE_DIR}" "-DCMAKE_BUILD_TYPE=Release" ${cmakeOpts}
              --test-command ${CMAKE_CTEST_COMMAND})
     set_tests_properties(${NAME} PROPERTIES FIXTURES_REQUIRED apps LABELS apps)
 endfunction()
-
-option(CLEANUP_AFTER_APPS "Delete the install directory after running apps build fixture (useful to disable for debugging)" ON)
-if (CLEANUP_AFTER_APPS)
-    # TODO: "remove_directory" deprecated and replaced by "rm -rf" as of CMake 3.17.
-    add_test(NAME delete_halide_distrib
-             COMMAND ${CMAKE_COMMAND} -E remove_directory "${HALIDE_DIR}")
-    set_tests_properties(delete_halide_distrib PROPERTIES FIXTURES_CLEANUP apps)
-endif ()
 
 # Actually add the apps
 

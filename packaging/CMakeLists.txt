@@ -94,12 +94,21 @@ install(DIRECTORY ${Halide_SOURCE_DIR}/tutorial
 # CMake scripts
 ##
 
+if(BUILD_SHARED_LIBS)
+    # Don't need to expose LLVM-related targets
+    unset(__find_LLVM_deps)
+else()
+    set(__find_LLVM_deps "find_dependency(LLVM CONFIG)")
+endif()
+
+configure_file(HalideConfig.cmake.in HalideConfig.cmake @ONLY)
+
 write_basic_package_version_file(
         HalideConfigVersion.cmake
         COMPATIBILITY SameMajorVersion)
 
 install(FILES
-        HalideConfig.cmake
+        ${CMAKE_CURRENT_BINARY_DIR}/HalideConfig.cmake
         ${CMAKE_CURRENT_BINARY_DIR}/HalideConfigVersion.cmake
         ${Halide_SOURCE_DIR}/cmake/HalideGeneratorHelpers.cmake
         DESTINATION ${HALIDE_INSTALL_CMAKEDIR})
