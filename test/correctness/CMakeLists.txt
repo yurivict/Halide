@@ -367,6 +367,7 @@ foreach (TEST IN ITEMS
          correctness_memoize_cloned
          correctness_memoize
          correctness_multiple_outputs_extern
+         correctness_non_nesting_extern_bounds_query
          correctness_parallel_fork
          correctness_pipeline_set_jit_externs_func
          correctness_process_some_tiles
