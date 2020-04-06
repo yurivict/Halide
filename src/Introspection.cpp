@@ -4,7 +4,6 @@
 
 #include "Debug.h"
 #include "Error.h"
-#include "LLVM_Headers.h"
 
 #include <iostream>
 #include <sstream>
@@ -398,7 +397,7 @@ public:
                     pos_bytes < array_size_bytes &&
                     pos_bytes % elem_type->size == 0) {
                     std::ostringstream oss;
-                    oss << v.name << '[' << (pos_bytes / elem_type->size) << ']';
+                    oss << v.name << "[" << (pos_bytes / elem_type->size) << "]";
                     debug(5) << "Successful match to array element\n";
                     return oss.str();
                 } else {
@@ -576,7 +575,7 @@ public:
                     addr -= containing_elem * elem_type->size;
                     debug(5) << "Query belongs to this array. Adjusting query address backwards to "
                              << std::hex << addr << std::dec << "\n";
-                    name << obj.members[i].name << '[' << containing_elem << ']';
+                    name << obj.members[i].name << "[" << containing_elem << "]";
                 }
             } else if (t->type == TypeInfo::Struct ||
                        t->type == TypeInfo::Class ||
@@ -586,7 +585,7 @@ public:
                 uint64_t struct_end_addr = struct_start_addr + t->size;
                 debug(5) << "Struct runs from " << std::hex << struct_start_addr << " to " << struct_end_addr << "\n";
                 if (addr >= struct_start_addr && addr < struct_end_addr) {
-                    name << obj.members[i].name << '.';
+                    name << obj.members[i].name << ".";
                 }
             }
         }
@@ -733,7 +732,7 @@ public:
                     pos_bytes < array_size_bytes &&
                     pos_bytes % elem_type->size == 0) {
                     std::ostringstream oss;
-                    oss << var.name << '[' << (pos_bytes / elem_type->size) << ']';
+                    oss << var.name << "[" << (pos_bytes / elem_type->size) << "]";
                     debug(5) << "Successful match to array element\n";
                     return oss.str();
                 } else {
@@ -966,7 +965,6 @@ private:
             iter->getName(name);
 #endif
             debug(2) << "Section: " << name.str() << "\n";
-#if LLVM_VERSION >= 90
             // ignore errors, just leave strings empty
             auto e = iter->getContents();
             if (e) {
@@ -982,19 +980,6 @@ private:
                     debug_ranges = *e;
                 }
             }
-#else
-            if (name == prefix + "debug_info") {
-                iter->getContents(debug_info);
-            } else if (name == prefix + "debug_abbrev") {
-                iter->getContents(debug_abbrev);
-            } else if (name == prefix + "debug_str") {
-                iter->getContents(debug_str);
-            } else if (name == prefix + "debug_line") {
-                iter->getContents(debug_line);
-            } else if (name == prefix + "debug_ranges") {
-                iter->getContents(debug_ranges);
-            }
-#endif
         }
 
         if (debug_info.empty() ||
@@ -1775,7 +1760,7 @@ private:
                     // Do we know the size?
                     if (t->size != 0) {
                         std::ostringstream oss;
-                        oss << '[' << t->size << ']';
+                        oss << "[" << t->size << "]";
                         suffix.push_back(oss.str());
                     } else {
                         suffix.push_back("[]");

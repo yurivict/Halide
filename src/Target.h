@@ -9,10 +9,8 @@
 #include <stdint.h>
 #include <string>
 
-#include "Error.h"
-#include "Expr.h"
+#include "DeviceAPI.h"
 #include "Type.h"
-#include "Util.h"
 #include "runtime/HalideRuntime.h"
 
 namespace Halide {
@@ -153,7 +151,7 @@ struct Target {
 
     void set_feature(Feature f, bool value = true);
 
-    void set_features(std::vector<Feature> features_to_set, bool value = true);
+    void set_features(const std::vector<Feature> &features_to_set, bool value = true);
 
     bool has_feature(Feature f) const;
 
@@ -161,9 +159,9 @@ struct Target {
         return has_feature((Feature)f);
     }
 
-    bool features_any_of(std::vector<Feature> test_features) const;
+    bool features_any_of(const std::vector<Feature> &test_features) const;
 
-    bool features_all_of(std::vector<Feature> test_features) const;
+    bool features_all_of(const std::vector<Feature> &test_features) const;
 
     /** Return a copy of the target with the given feature set.
      * This is convenient when enabling certain features (e.g. NoBoundsQuery)

@@ -7,7 +7,6 @@
 #include "Debug.h"
 #include "DeviceInterface.h"
 #include "Error.h"
-#include "LLVM_Headers.h"
 #include "Util.h"
 #include "WasmExecutor.h"
 
@@ -575,7 +574,7 @@ std::string Target::feature_to_name(Target::Feature feature) {
             return feature_entry.first;
         }
     }
-    internal_assert(false);
+    internal_error;
     return "";
 }
 
@@ -636,10 +635,7 @@ bool Target::supported() const {
 #if !defined(WITH_HEXAGON)
     bad |= arch == Target::Hexagon;
 #endif
-#if !defined(WITH_WEBASSEMBLY) || !(LLVM_VERSION >= 90)
-    // LLVM8 supports wasm, but there are fixes and improvements
-    // in trunk that may not be in 8 (or that we haven't tested with),
-    // so, for now, declare that wasm with LLVM < 9.0 is unsupported.
+#if !defined(WITH_WEBASSEMBLY)
     bad |= arch == Target::WebAssembly;
 #endif
 #if !defined(WITH_RISCV)
@@ -669,7 +665,7 @@ void Target::set_feature(Feature f, bool value) {
     features.set(f, value);
 }
 
-void Target::set_features(std::vector<Feature> features_to_set, bool value) {
+void Target::set_features(const std::vector<Feature> &features_to_set, bool value) {
     for (Feature f : features_to_set) {
         set_feature(f, value);
     }
@@ -681,7 +677,7 @@ bool Target::has_feature(Feature f) const {
     return features[f];
 }
 
-bool Target::features_any_of(std::vector<Feature> test_features) const {
+bool Target::features_any_of(const std::vector<Feature> &test_features) const {
     for (Feature f : test_features) {
         if (has_feature(f)) {
             return true;
@@ -690,7 +686,7 @@ bool Target::features_any_of(std::vector<Feature> test_features) const {
     return false;
 }
 
-bool Target::features_all_of(std::vector<Feature> test_features) const {
+bool Target::features_all_of(const std::vector<Feature> &test_features) const {
     for (Feature f : test_features) {
         if (!has_feature(f)) {
             return false;

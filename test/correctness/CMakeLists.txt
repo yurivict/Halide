@@ -117,6 +117,7 @@ tests(GROUPS correctness travis
       gpu_allocation_cache.cpp
       gpu_assertion_in_kernel.cpp
       gpu_bounds_inference_failure.cpp
+      gpu_condition_lifting.cpp
       gpu_cpu_simultaneous_read.cpp
       gpu_data_flows.cpp
       gpu_different_blocks_threads_dimensions.cpp
@@ -201,9 +202,11 @@ tests(GROUPS correctness travis
       multiple_outputs_extern.cpp
       multi_splits_with_diff_tail_strategies.cpp
       multi_way_select.cpp
+      mux.cpp
       named_updates.cpp
       nested_shiftinwards.cpp
       newtons_method.cpp
+      non_nesting_extern_bounds_query.cpp
       non_vector_aligned_embeded_buffer.cpp
       obscure_image_references.cpp
       oddly_sized_output.cpp

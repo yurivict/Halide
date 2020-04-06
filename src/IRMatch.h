@@ -5,13 +5,14 @@
  * Defines a method to match a fragment of IR against a pattern containing wildcards
  */
 
+#include <map>
+#include <random>
+#include <set>
+#include <vector>
+
 #include "IR.h"
 #include "IREquality.h"
 #include "IROperator.h"
-#include "ModulusRemainder.h"
-
-#include <random>
-#include <set>
 
 namespace Halide {
 namespace Internal {
@@ -33,7 +34,7 @@ namespace Internal {
  * should return true, and set result[0] to 3 and
  * result[1] to 2*k.
  */
-bool expr_match(Expr pattern, Expr expr, std::vector<Expr> &result);
+bool expr_match(const Expr &pattern, const Expr &expr, std::vector<Expr> &result);
 
 /** Does the first expression have the same structure as the second?
  * Variables are matched consistently. The first time a variable is
@@ -47,7 +48,7 @@ bool expr_match(Expr pattern, Expr expr, std::vector<Expr> &result);
  \endcode
  * should return true, and set result["x"] = a, and result["y"] = b.
  */
-bool expr_match(Expr pattern, Expr expr, std::map<std::string, Expr> &result);
+bool expr_match(const Expr &pattern, const Expr &expr, std::map<std::string, Expr> &result);
 
 void expr_match_test();
 
@@ -213,7 +214,7 @@ struct SpecificExpr {
     constexpr static bool foldable = false;
 };
 
-inline std::ostream &operator<<(std::ostream &s, SpecificExpr e) {
+inline std::ostream &operator<<(std::ostream &s, const SpecificExpr &e) {
     s << e.expr;
     return s;
 }
@@ -239,7 +240,7 @@ struct WildConstInt {
             halide_scalar_value_t val;
             halide_type_t type;
             state.get_bound_const(i, val, type);
-            return op->type == type && value == val.u.i64;
+            return e.type == type && value == val.u.i64;
         }
         state.set_bound_const(i, value, e.type);
         return true;
@@ -288,7 +289,7 @@ struct WildConstUInt {
             halide_scalar_value_t val;
             halide_type_t type;
             state.get_bound_const(i, val, type);
-            return op->type == type && value == val.u.u64;
+            return e.type == type && value == val.u.u64;
         }
         state.set_bound_const(i, value, e.type);
         return true;
@@ -325,7 +326,6 @@ struct WildConstFloat {
     template<uint32_t bound>
     HALIDE_ALWAYS_INLINE bool match(const BaseExprNode &e, MatcherState &state) const noexcept {
         static_assert(i >= 0 && i < max_wild, "Wild with out-of-range index");
-        halide_type_t ty = e.type;
         const BaseExprNode *op = &e;
         if (op->node_type == IRNodeType::Broadcast) {
             op = ((const Broadcast *)op)->value.get();
@@ -338,9 +338,9 @@ struct WildConstFloat {
             halide_scalar_value_t val;
             halide_type_t type;
             state.get_bound_const(i, val, type);
-            return op->type == type && value == val.u.f64;
+            return e.type == type && value == val.u.f64;
         }
-        state.set_bound_const(i, value, ty);
+        state.set_bound_const(i, value, e.type);
         return true;
     }
 

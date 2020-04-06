@@ -358,7 +358,7 @@ Expr Simplify::visit(const Call *op, ExprInfo *bounds) {
                 if (last) {
                     new_args.back() = last->value + buf;
                 } else {
-                    new_args.push_back(string(buf));
+                    new_args.emplace_back(string(buf));
                 }
                 changed = true;
             } else if (last && float_imm) {
@@ -366,7 +366,7 @@ Expr Simplify::visit(const Call *op, ExprInfo *bounds) {
                 if (last) {
                     new_args.back() = last->value + buf;
                 } else {
-                    new_args.push_back(string(buf));
+                    new_args.emplace_back(string(buf));
                 }
                 changed = true;
             } else {
@@ -411,10 +411,9 @@ Expr Simplify::visit(const Call *op, ExprInfo *bounds) {
 
                 if (is_one(mutate(extent_0 * stride_0 == stride_1, nullptr))) {
                     Expr new_extent = mutate(extent_0 * extent_1, nullptr);
-                    Expr new_stride = stride_0;
                     args.erase(args.begin() + j, args.begin() + j + 2);
                     args[i] = new_extent;
-                    args[i + 1] = new_stride;
+                    args[i + 1] = stride_0;
                     i -= 2;
                     break;
                 }
@@ -469,6 +468,41 @@ Expr Simplify::visit(const Call *op, ExprInfo *bounds) {
                                         Internal::Call::require,
                                         {std::move(cond), std::move(result), std::move(message)},
                                         Internal::Call::PureIntrinsic);
+        }
+    } else if (op->is_intrinsic(Call::promise_clamped) ||
+               op->is_intrinsic(Call::unsafe_promise_clamped)) {
+        // If the simplifier can infer that the clamp is unnecessary,
+        // we should be good to discard the promise.
+        internal_assert(op->args.size() == 3);
+        ExprInfo arg_info, lower_info, upper_info;
+        Expr arg = mutate(op->args[0], &arg_info);
+        Expr lower = mutate(op->args[1], &lower_info);
+        Expr upper = mutate(op->args[2], &upper_info);
+        if (arg_info.min_defined &&
+            arg_info.max_defined &&
+            lower_info.max_defined &&
+            upper_info.min_defined &&
+            arg_info.min >= lower_info.max &&
+            arg_info.max <= upper_info.min) {
+            return arg;
+        } else if (arg.same_as(op->args[0]) &&
+                   lower.same_as(op->args[1]) &&
+                   upper.same_as(op->args[2])) {
+            return op;
+        } else {
+            return Call::make(op->type, op->name,
+                              {arg, lower, upper},
+                              Call::Intrinsic);
+        }
+    } else if (op->is_intrinsic(Call::likely) ||
+               op->is_intrinsic(Call::likely_if_innermost)) {
+        // The bounds of the result are the bounds of the arg
+        internal_assert(op->args.size() == 1);
+        Expr arg = mutate(op->args[0], bounds);
+        if (arg.same_as(op->args[0])) {
+            return op;
+        } else {
+            return Call::make(op->type, op->name, {arg}, op->call_type);
         }
     } else if (op->call_type == Call::PureExtern) {
         // TODO: This could probably be simplified into a single map-lookup

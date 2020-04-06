@@ -6,10 +6,6 @@
 #include <string>
 
 namespace Halide {
-
-class Module;
-struct Target;
-
 namespace Internal {
 
 class PythonExtensionGen {
@@ -22,7 +18,7 @@ private:
     std::ostream &dest;
 
     void compile(const LoweredFunc &f);
-    void convert_buffer(std::string name, const LoweredArgument *arg);
+    void convert_buffer(const std::string &name, const LoweredArgument *arg);
 };
 
 }  // namespace Internal

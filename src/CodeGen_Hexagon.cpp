@@ -3,6 +3,7 @@
 #include <iostream>
 #include <mutex>
 #include <sstream>
+#include <utility>
 
 #include "AlignLoads.h"
 #include "CSE.h"
@@ -18,6 +19,7 @@
 #include "LICM.h"
 #include "LLVM_Headers.h"
 #include "LoopCarry.h"
+#include "Monotonic.h"
 #include "Simplify.h"
 #include "Substitute.h"
 #include "Target.h"
@@ -90,7 +92,7 @@ Stmt acquire_hvx_context(Stmt stmt, const Target &target) {
     stmt = Block::make(check_hvx_lock, stmt);
     return stmt;
 }
-bool is_dense_ramp(Expr x) {
+bool is_dense_ramp(const Expr &x) {
     const Ramp *r = x.as<Ramp>();
     if (!r) return false;
 
@@ -100,35 +102,191 @@ bool is_dense_ramp(Expr x) {
 // In Hexagon, we assume that we can read one vector past the end of
 // buffers. Using this assumption, this mutator replaces vector
 // predicated dense loads with scalar predicated dense loads.
-class SloppyUnpredicateLoads : public IRMutator {
+class SloppyUnpredicateLoadsAndStores : public IRMutator {
+    using IRMutator::visit;
+
+    // The first and last lanes of all monotonic vectors in scope
+    Scope<std::pair<Expr, Expr>> monotonic_vectors;
+
+    // If a vector monotonically increases or decreases across the
+    // lanes, return the first and last lane.
+    std::pair<Expr, Expr> get_extreme_lanes(const Expr &e) {
+        if (const Ramp *r = e.as<Ramp>()) {
+            return {r->base, r->base + r->stride * (r->lanes - 1)};
+        } else if (const Broadcast *b = e.as<Broadcast>()) {
+            return {b->value, b->value};
+        } else if (const LT *op = e.as<LT>()) {
+            if (!op->a.type().is_bool()) {
+                auto a = get_extreme_lanes(op->a);
+                auto b = get_extreme_lanes(op->b);
+                if (a.first.defined() && b.first.defined()) {
+                    return {a.first < b.first, a.second < b.second};
+                }
+            }
+        } else if (const LE *op = e.as<LE>()) {
+            if (!op->a.type().is_bool()) {
+                auto a = get_extreme_lanes(op->a);
+                auto b = get_extreme_lanes(op->b);
+                if (a.first.defined() && b.first.defined()) {
+                    return {a.first <= b.first, a.second <= b.second};
+                }
+            }
+        } else if (const Variable *op = e.as<Variable>()) {
+            if (monotonic_vectors.contains(op->name)) {
+                return monotonic_vectors.get(op->name);
+            }
+        } else if (const Let *op = e.as<Let>()) {
+            auto v = get_extreme_lanes(op->value);
+            ScopedBinding<std::pair<Expr, Expr>> bind(v.first.defined(), monotonic_vectors, op->name, v);
+            return get_extreme_lanes(op->body);
+        }
+        return {Expr(), Expr()};
+    }
+
+    Expr visit(const Let *op) override {
+        auto v = get_extreme_lanes(op->value);
+        ScopedBinding<std::pair<Expr, Expr>> bind(op->value.type().is_vector() && v.first.defined(),
+                                                  monotonic_vectors, op->name, v);
+        return IRMutator::visit(op);
+    }
+
     Expr visit(const Load *op) override {
-        // Don't handle loads with without predicates, scalar predicates, or
-        // non-dense ramps.
-        if (is_one(op->predicate) || op->predicate.as<Broadcast>() ||
-            !is_dense_ramp(op->index)) {
+        if (is_one(op->predicate)) {
+            // These are handled fine
             return IRMutator::visit(op);
         }
 
         Expr predicate = mutate(op->predicate);
         Expr index = mutate(op->index);
 
-        // Make the predicate into a scalar that is true if any of the lanes are
-        // true.
-        Expr condition = Shuffle::make({predicate}, {0});
-        for (int i = 1; i < op->type.lanes(); i++) {
-            condition = condition || Shuffle::make({predicate}, {i});
-        }
-        predicate = Broadcast::make(condition, predicate.type().lanes());
+        if (is_dense_ramp(index) || index.as<Broadcast>()) {
+            // Make the predicate into a scalar that is true if any of the lanes are
+            // true.
 
-        return Load::make(op->type, op->name, index, op->image, op->param,
-                          predicate, op->alignment);
+            Expr condition;
+
+            // If the predicate is monotonic increasing or decreasing
+            // over the vector lanes, we can just check the last or
+            // first lane, respectively. We won't bother to
+            // distinguish between the two cases though, so we just or
+            // them both together.
+            auto v = get_extreme_lanes(predicate);
+            if (v.first.defined()) {
+                internal_assert(v.first.type() == Bool() &&
+                                v.second.type() == Bool())
+                    << "The extreme lanes of a bool vector should be scalar bools\n";
+                condition = simplify(v.first || v.second);
+            } else {
+                // Take an OR over all lanes. Consider replacing this
+                // with a VectorReduce node once those are available
+                // and codegen to something useful on hexagon.
+                condition = Shuffle::make({predicate}, {0});
+                for (int i = 1; i < op->type.lanes(); i++) {
+                    condition = condition || Shuffle::make({predicate}, {i});
+                }
+                condition = simplify(condition);
+            }
+
+            Expr load = Load::make(op->type, op->name, index, op->image, op->param,
+                                   const_true(op->type.lanes()), op->alignment);
+
+            return Call::make(op->type, Call::if_then_else,
+                              {condition, load, make_zero(op->type)}, Call::Intrinsic);
+
+            return load;
+        } else {
+            // It's a predicated vector gather. Just scalarize. We'd
+            // prefer to keep it in a loop, but that would require
+            // some sort of loop Expr. Another option would be
+            // introducing a set of runtime functions to do predicated
+            // loads.
+            Expr load = Load::make(op->type, op->name, index, op->image, op->param,
+                                   const_true(op->type.lanes()), op->alignment);
+            return Call::make(op->type, Call::if_then_else,
+                              {predicate, load, make_zero(op->type)}, Call::Intrinsic);
+        }
     }
 
-    using IRMutator::visit;
+    Stmt visit(const Store *op) override {
+        if (is_one(op->predicate)) {
+            return IRMutator::visit(op);
+        }
+
+        Expr predicate = mutate(op->predicate);
+        Expr value = mutate(op->value);
+        Expr index = mutate(op->index);
+
+        int lanes = value.type().lanes();
+
+        if (const Broadcast *scalar_pred = predicate.as<Broadcast>()) {
+            Stmt unpredicated_store = Store::make(op->name, value, index, op->param, const_true(lanes), op->alignment);
+            return IfThenElse::make(scalar_pred->value, unpredicated_store);
+        } else {
+            string value_name = unique_name("scalarized_store_value");
+            string index_name = unique_name("scalarized_store_index");
+            string predicate_name = unique_name("scalarized_store_predicate");
+
+            const Ramp *index_ramp = index.as<Ramp>();
+
+            // Store entire vectors to the stack
+            vector<Stmt> stmts;
+            Expr predicate_mask = select(predicate, make_one(UInt(8, lanes)), make_zero(UInt(8, lanes)));
+            stmts.emplace_back(Store::make(predicate_name, predicate_mask, Ramp::make(0, 1, lanes),
+                                           Parameter(), const_true(lanes),
+                                           ModulusRemainder()));
+            stmts.emplace_back(Store::make(value_name, value, Ramp::make(0, 1, lanes),
+                                           Parameter(), const_true(lanes),
+                                           ModulusRemainder()));
+            if (!index_ramp) {
+                stmts.emplace_back(Store::make(index_name, index, Ramp::make(0, 1, lanes),
+                                               Parameter(), const_true(lanes),
+                                               ModulusRemainder()));
+            }
+
+            // Then load each element one by one in a loop and do a conditional scalar store
+            string lane_name = unique_name('t');
+            Expr lane_var = Variable::make(Int(32), lane_name);
+
+            Expr pred_i = Load::make(UInt(8), predicate_name, lane_var,
+                                     Buffer<>(), Parameter(), const_true(), ModulusRemainder());
+            Expr value_i = Load::make(value.type().element_of(), value_name, lane_var,
+                                      Buffer<>(), Parameter(), const_true(), ModulusRemainder());
+            Expr index_i;
+            if (index_ramp) {
+                index_i = index_ramp->base + lane_var * index_ramp->stride;
+            } else {
+                index_i = Load::make(Int(32), index_name, lane_var,
+                                     Buffer<>(), Parameter(), const_true(), ModulusRemainder());
+            }
+
+            Stmt store_lanes = Store::make(op->name, value_i, index_i,
+                                           op->param, const_true(),
+                                           ModulusRemainder());
+            store_lanes = IfThenElse::make(pred_i != 0, store_lanes);
+            store_lanes = For::make(lane_name, 0, lanes,
+                                    ForType::Serial, DeviceAPI::None, store_lanes);
+            stmts.emplace_back(std::move(store_lanes));
+
+            Stmt result = Block::make(stmts);
+
+            // Wrap with allocate nodes
+
+            result = Allocate::make(predicate_name, UInt(8), MemoryType::Stack,
+                                    {predicate.type().lanes()}, const_true(), result);
+            if (!index_ramp) {
+                result = Allocate::make(index_name, Int(32), MemoryType::Stack,
+                                        {index.type().lanes()}, const_true(), result);
+            }
+            result = Allocate::make(value_name, value.type().element_of(), MemoryType::Stack,
+                                    {value.type().lanes()}, const_true(), result);
+
+            return result;
+        }
+    }
 };
 
-Stmt sloppy_unpredicate_loads(Stmt s) {
-    return SloppyUnpredicateLoads().mutate(s);
+Stmt sloppy_unpredicate_loads_and_stores(const Stmt &s) {
+    return SloppyUnpredicateLoadsAndStores().mutate(s);
 }
 
 class InjectHVXLocks : public IRMutator {
@@ -270,10 +428,10 @@ void CodeGen_Hexagon::compile_func(const LoweredFunc &f,
     Stmt body = f.body;
 
     debug(1) << "Unpredicating loads and stores...\n";
-    // Before running unpredicate_loads_stores, replace dense vector
-    // predicated loads with sloppy scalarized predicates.
-    body = sloppy_unpredicate_loads(body);
-    body = unpredicate_loads_stores(body);
+    // Replace dense vector predicated loads with sloppy scalarized
+    // predicates, and scalarize predicated stores
+    body = sloppy_unpredicate_loads_and_stores(body);
+
     debug(2) << "Lowering after unpredicating loads/stores:\n"
              << body << "\n\n";
 
@@ -1107,7 +1265,7 @@ void CodeGen_Hexagon::init_module() {
             if (a.bits == 0) {
                 break;
             }
-            arg_types.push_back(fix_lanes(a));
+            arg_types.emplace_back(fix_lanes(a));
         }
         define_hvx_intrinsic(intrin, ret_type, i.name, arg_types, i.flags);
     }
@@ -1247,7 +1405,7 @@ Value *CodeGen_Hexagon::call_intrin_cast(llvm::Type *ret_ty, int id,
                                          vector<Value *> Ops) {
     llvm::Function *intrin =
         Intrinsic::getDeclaration(module.get(), (llvm::Intrinsic::ID)id);
-    return call_intrin_cast(ret_ty, intrin, Ops);
+    return call_intrin_cast(ret_ty, intrin, std::move(Ops));
 }
 
 Value *CodeGen_Hexagon::interleave_vectors(const vector<llvm::Value *> &v) {
@@ -1857,7 +2015,12 @@ Value *CodeGen_Hexagon::vdelta(Value *lut, const vector<int> &indices) {
 static Value *create_vector(llvm::Type *ty, int val) {
     llvm::Type *scalar_ty = ty->getScalarType();
     Constant *value = ConstantInt::get(scalar_ty, val);
-    return ConstantVector::getSplat(ty->getVectorNumElements(), value);
+#if LLVM_VERSION >= 110
+    const llvm::ElementCount elem_count(ty->getVectorNumElements(), /*scalable*/ false);
+#else
+    const int elem_count = ty->getVectorNumElements();
+#endif
+    return ConstantVector::getSplat(elem_count, value);
 }
 
 Value *CodeGen_Hexagon::vlut(Value *lut, Value *idx, int min_index, int max_index) {
@@ -1942,7 +2105,7 @@ Value *CodeGen_Hexagon::vlut(Value *lut, Value *idx, int min_index, int max_inde
         int range_extent_i = std::min(max_index - min_index_i, 255);
         Value *range_i = vlut256(slice_vector(lut, min_index_i, range_extent_i),
                                  indices, 0, range_extent_i);
-        ranges.push_back({range_i, use_index});
+        ranges.emplace_back(range_i, use_index);
     }
 
     // TODO: This could be reduced hierarchically instead of in
@@ -2013,11 +2176,11 @@ string type_suffix(Type type, bool signed_variants = true) {
     return "";
 }
 
-string type_suffix(Expr a, bool signed_variants = true) {
+string type_suffix(const Expr &a, bool signed_variants = true) {
     return type_suffix(a.type(), signed_variants);
 }
 
-string type_suffix(Expr a, Expr b, bool signed_variants = true) {
+string type_suffix(const Expr &a, const Expr &b, bool signed_variants = true) {
     return type_suffix(a, signed_variants) + type_suffix(b, signed_variants);
 }
 
@@ -2048,7 +2211,7 @@ Value *CodeGen_Hexagon::call_intrin(Type result_type, const string &name,
         }
     }
     return call_intrin(result_type, fn->getReturnType()->getVectorNumElements(),
-                       get_llvm_function_name(fn), args);
+                       get_llvm_function_name(fn), std::move(args));
 }
 
 Value *CodeGen_Hexagon::call_intrin(llvm::Type *result_type, const string &name,
@@ -2067,7 +2230,7 @@ Value *CodeGen_Hexagon::call_intrin(llvm::Type *result_type, const string &name,
         }
     }
     return call_intrin(result_type, fn->getReturnType()->getVectorNumElements(),
-                       get_llvm_function_name(fn), args);
+                       get_llvm_function_name(fn), std::move(args));
 }
 
 string CodeGen_Hexagon::mcpu() const {

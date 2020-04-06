@@ -4,7 +4,6 @@
 #include "DeviceInterface.h"
 #include "Expr.h"
 #include "IntrusivePtr.h"
-#include "Util.h"
 #include "runtime/HalideBuffer.h"
 
 namespace Halide {
@@ -128,6 +127,9 @@ public:
     /** Trivial copy assignment operator. */
     Buffer &operator=(const Buffer &that) = default;
 
+    /** Trivial move assignment operator. */
+    Buffer &operator=(Buffer &&) noexcept = default;
+
     /** Make a Buffer from a Buffer of a different type */
     template<typename T2>
     Buffer(const Buffer<T2> &other)
@@ -137,7 +139,7 @@ public:
 
     /** Move construct from a Buffer of a different type */
     template<typename T2>
-    Buffer(Buffer<T2> &&other) {
+    Buffer(Buffer<T2> &&other) noexcept {
         assert_can_convert_from(other);
         contents = std::move(other.contents);
     }
@@ -531,7 +533,7 @@ public:
     /** Make an Expr that loads from this concrete buffer at a computed coordinate. */
     // @{
     template<typename... Args>
-    Expr operator()(Expr first, Args... rest) const {
+    Expr operator()(const Expr &first, Args... rest) const {
         std::vector<Expr> args = {first, rest...};
         return (*this)(args);
     };

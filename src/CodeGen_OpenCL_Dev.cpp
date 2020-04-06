@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <sstream>
+#include <utility>
 
 #include "CSE.h"
 #include "CodeGen_Internal.h"
@@ -40,7 +41,9 @@ string CodeGen_OpenCL_Dev::CodeGen_OpenCL_C::print_type(Type type, AppendSpaceIf
         }
 
     } else {
-        if (type.is_uint() && type.bits() > 1) oss << 'u';
+        if (type.is_uint() && type.bits() > 1) {
+            oss << "u";
+        }
         switch (type.bits()) {
         case 1:
             internal_assert(type.lanes() == 1) << "Encountered vector of bool\n";
@@ -76,7 +79,7 @@ string CodeGen_OpenCL_Dev::CodeGen_OpenCL_C::print_type(Type type, AppendSpaceIf
         }
     }
     if (space == AppendSpace) {
-        oss << ' ';
+        oss << " ";
     }
     return oss.str();
 }
@@ -85,7 +88,7 @@ string CodeGen_OpenCL_Dev::CodeGen_OpenCL_C::print_type(Type type, AppendSpaceIf
 void CodeGen_OpenCL_Dev::CodeGen_OpenCL_C::add_vector_typedefs(const std::set<Type> &vector_types) {
 }
 
-string CodeGen_OpenCL_Dev::CodeGen_OpenCL_C::print_reinterpret(Type type, Expr e) {
+string CodeGen_OpenCL_Dev::CodeGen_OpenCL_C::print_reinterpret(Type type, const Expr &e) {
     ostringstream oss;
     oss << "as_" << print_type(type) << "(" << print_expr(e) << ")";
     return oss.str();
@@ -545,7 +548,7 @@ void CodeGen_OpenCL_Dev::CodeGen_OpenCL_C::visit(const Allocate *op) {
             << "Only fixed-size allocations are supported on the gpu. "
             << "Try storing into shared memory instead.";
 
-        stream << get_indent() << print_type(op->type) << ' '
+        stream << get_indent() << print_type(op->type) << " "
                << print_name(op->name) << "[" << size << "];\n";
         stream << get_indent() << "#define " << get_memory_space(op->name) << " __private\n";
 
@@ -644,7 +647,7 @@ void CodeGen_OpenCL_Dev::CodeGen_OpenCL_C::visit(const Atomic *op) {
 
     // Issue atomic stores.
     ScopedValue<bool> old_emit_atomic_stores(emit_atomic_stores, true);
-    IRVisitor::visit(op);
+    CodeGen_C::visit(op);
 }
 
 void CodeGen_OpenCL_Dev::add_kernel(Stmt s,
@@ -666,7 +669,7 @@ struct BufferSize {
         : size(0) {
     }
     BufferSize(string name, size_t size)
-        : name(name), size(size) {
+        : name(std::move(name)), size(size) {
     }
 
     bool operator<(const BufferSize &r) const {
@@ -700,7 +703,7 @@ void CodeGen_OpenCL_Dev::CodeGen_OpenCL_C::add_kernel(Stmt s,
         if (args[i].is_buffer &&
             CodeGen_GPU_Dev::is_buffer_constant(s, args[i].name) &&
             args[i].size > 0) {
-            constants.push_back(BufferSize(args[i].name, args[i].size));
+            constants.emplace_back(args[i].name, args[i].size);
         }
     }
 
@@ -920,7 +923,7 @@ void CodeGen_OpenCL_Dev::init_module() {
         src_stream << "#pragma OPENCL EXTENSION cl_khr_int64_extended_atomics : enable\n";
     }
 
-    src_stream << '\n';
+    src_stream << "\n";
 
     clc.add_common_macros(src_stream);
 
@@ -945,7 +948,7 @@ string CodeGen_OpenCL_Dev::get_current_kernel_name() {
 }
 
 void CodeGen_OpenCL_Dev::dump() {
-    std::cerr << src_stream.str() << std::endl;
+    std::cerr << src_stream.str() << "\n";
 }
 
 std::string CodeGen_OpenCL_Dev::print_gpu_name(const std::string &name) {

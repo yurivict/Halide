@@ -421,6 +421,7 @@ LIB_DIR     = lib
 BIN_DIR     = bin
 DISTRIB_DIR = distrib
 INCLUDE_DIR = include
+DOC_DIR     = doc
 BUILD_DIR   = $(BIN_DIR)/build
 FILTERS_DIR = $(BIN_DIR)/$(TARGET)/build
 TMP_DIR     = $(BUILD_DIR)/tmp
@@ -491,6 +492,7 @@ SOURCE_FILES = \
   EliminateBoolVectors.cpp \
   EmulateFloat16Math.cpp \
   Error.cpp \
+  Expr.cpp \
   FastIntegerDivide.cpp \
   FindCalls.cpp \
   Float16.cpp \
@@ -545,6 +547,7 @@ SOURCE_FILES = \
   Qualify.cpp \
   Random.cpp \
   RDom.cpp \
+  Realization.cpp \
   RealizationOrder.cpp \
   Reduction.cpp \
   RegionCosts.cpp \
@@ -654,6 +657,7 @@ HEADER_FILES = \
   Deinterleave.h \
   Derivative.h \
   DerivativeUtils.h \
+  DeviceAPI.h \
   DeviceArgument.h \
   DeviceInterface.h \
   Dimension.h \
@@ -665,6 +669,7 @@ HEADER_FILES = \
   Expr.h \
   ExprUsesVar.h \
   Extern.h \
+  ExternFuncArgument.h \
   FastIntegerDivide.h \
   FindCalls.h \
   Float16.h \
@@ -981,9 +986,15 @@ $(LIB_DIR)/libHalide.a: $(OBJECTS) $(INITIAL_MODULES) $(BUILD_DIR)/llvm_objects/
 	ar q $(LIB_DIR)/libHalide.a $(OBJECTS) $(INITIAL_MODULES) $(BUILD_DIR)/llvm_objects/llvm_*.o*
 	ranlib $(LIB_DIR)/libHalide.a
 
+ifeq ($(UNAME), Linux)
+LIBHALIDE_SONAME_FLAGS=-Wl,-soname,libHalide.so
+else
+LIBHALIDE_SONAME_FLAGS=
+endif
+
 $(BIN_DIR)/libHalide.$(SHARED_EXT): $(OBJECTS) $(INITIAL_MODULES) $(V8_DEPS)
 	@mkdir -p $(@D)
-	$(CXX) -shared $(OBJECTS) $(INITIAL_MODULES) $(LLVM_LIBS_FOR_SHARED_LIBHALIDE) $(LLVM_SYSTEM_LIBS) $(COMMON_LD_FLAGS) $(V8_DEPS_LIBS) $(INSTALL_NAME_TOOL_LD_FLAGS) -o $(BIN_DIR)/libHalide.$(SHARED_EXT)
+	$(CXX) -shared $(OBJECTS) $(INITIAL_MODULES) $(LLVM_LIBS_FOR_SHARED_LIBHALIDE) $(LLVM_SYSTEM_LIBS) $(COMMON_LD_FLAGS) $(V8_DEPS_LIBS) $(INSTALL_NAME_TOOL_LD_FLAGS) $(LIBHALIDE_SONAME_FLAGS) -o $(BIN_DIR)/libHalide.$(SHARED_EXT)
 ifeq ($(UNAME), Darwin)
 	install_name_tool -id $(CURDIR)/$(BIN_DIR)/libHalide.$(SHARED_EXT) $(BIN_DIR)/libHalide.$(SHARED_EXT)
 endif
@@ -1104,6 +1115,7 @@ clean:
 	rm -rf $(TMP_DIR)
 	rm -rf $(FILTERS_DIR)
 	rm -rf $(INCLUDE_DIR)
+	rm -rf $(DOC_DIR)
 	rm -rf $(DISTRIB_DIR)
 	rm -rf $(ROOT_DIR)/apps/*/bin
 
@@ -1413,7 +1425,7 @@ ifneq ($(TEST_CUDA), )
 # run this code, just check for link errors.)
 $(FILTERS_DIR)/cxx_mangling_gpu.a: $(BIN_DIR)/cxx_mangling.generator $(FILTERS_DIR)/cxx_mangling_externs.o
 	@mkdir -p $(@D)
-	$(CURDIR)/$< -g cxx_mangling $(GEN_AOT_OUTPUTS) -o $(CURDIR)/$(FILTERS_DIR) target=$(TARGET)-no_runtime-c_plus_plus_name_mangling-cuda -f "HalideTest::cxx_mangling_gpu"
+	$(CURDIR)/$< -g cxx_mangling $(GEN_AOT_OUTPUTS) -o $(CURDIR)/$(FILTERS_DIR) target=$(TARGET)-no_runtime-c_plus_plus_name_mangling-cuda-cuda_capability_30 -f "HalideTest::cxx_mangling_gpu"
 	$(ROOT_DIR)/tools/makelib.sh $@ $@ $(FILTERS_DIR)/cxx_mangling_externs.o
 endif
 
@@ -2125,7 +2137,7 @@ $(BUILD_DIR)/clang_ok:
 	@exit 1
 endif
 
-ifneq (,$(findstring $(LLVM_VERSION_TIMES_10), 80 90 100 110))
+ifneq (,$(findstring $(LLVM_VERSION_TIMES_10), 90 100 110))
 LLVM_OK=yes
 endif
 
@@ -2282,6 +2294,41 @@ $(BIN_DIR)/HalideTraceDump: $(ROOT_DIR)/util/HalideTraceDump.cpp $(ROOT_DIR)/uti
 .PHONY: format
 format:
 	find "${ROOT_DIR}/apps" "${ROOT_DIR}/src" "${ROOT_DIR}/tools" "${ROOT_DIR}/test" "${ROOT_DIR}/util" "${ROOT_DIR}/python_bindings" -name *.cpp -o -name *.h -o -name *.c | xargs ${CLANG}-format -i -style=file
+
+# run-clang-tidy.py is a script that comes with LLVM for running clang
+# tidy in parallel. Assume it's in the standard install path relative to clang.
+RUN_CLANG_TIDY ?= $(shell dirname $(CLANG))/../share/clang/run-clang-tidy.py
+
+# Run clang-tidy on everything in src/. In future we may increase this
+# surface. Not doing it for now because things outside src are not
+# performance-critical.
+CLANG_TIDY_TARGETS= $(addprefix $(SRC_DIR)/,$(SOURCE_FILES))
+
+INVOKE_CLANG_TIDY ?= $(RUN_CLANG_TIDY) -p $(BUILD_DIR) $(CLANG_TIDY_TARGETS) -clang-tidy-binary $(CLANG)-tidy -clang-apply-replacements-binary $(CLANG)-apply-replacements -quiet
+
+$(BUILD_DIR)/compile_commands.json:
+	mkdir -p $(BUILD_DIR)
+	echo '[' >> $@
+	BD=$$(realpath $(BUILD_DIR)); \
+	SD=$$(realpath $(SRC_DIR)); \
+	ID=$$(realpath $(INCLUDE_DIR)); \
+	for S in $(SOURCE_FILES); do \
+	echo "{ \"directory\": \"$${BD}\"," >> $@; \
+	echo "  \"command\": \"$(CXX) $(CXX_FLAGS) -c $$SD/$$S -o /dev/null\"," >> $@; \
+	echo "  \"file\": \"$$SD/$$S\" }," >> $@; \
+	done
+	# Add a sentinel to make it valid json (no trailing comma)
+	echo "{ \"directory\": \"$${BD}\"," >> $@; \
+	echo "  \"command\": \"$(CXX) -c /dev/null -o /dev/null\"," >> $@; \
+	echo "  \"file\": \"$$S\" }]" >> $@; \
+
+.PHONY: clang-tidy
+clang-tidy: $(BUILD_DIR)/compile_commands.json
+	@$(INVOKE_CLANG_TIDY) 2>&1 | grep -v "warnings generated" | grep -v '^$(CLANG)-tidy '
+
+.PHONY: clang-tidy-fix
+clang-tidy-fix: $(BUILD_DIR)/compile_commands.json
+	@$(INVOKE_CLANG_TIDY) -fix 2>&1 | grep -v "warnings generated" | grep -v '^$(CLANG)-tidy '
 
 # Build the documentation. Be sure to keep this synchronized with doc/CMakeLists.txt
 # if you choose to edit it.

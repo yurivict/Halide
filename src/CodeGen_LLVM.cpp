@@ -410,6 +410,7 @@ void CodeGen_LLVM::initialize_llvm() {
 #define LLVM_ASM_PRINTER(target) \
     Initialize##target##AsmPrinter();
 #include <llvm/Config/AsmPrinters.def>
+#include <utility>
 #undef LLVM_ASM_PRINTER
     });
 }
@@ -525,10 +526,10 @@ MangledNames get_mangled_names(const std::string &name,
         std::vector<ExternFuncArgument> mangle_args;
         for (const auto &arg : args) {
             if (arg.kind == Argument::InputScalar) {
-                mangle_args.push_back(ExternFuncArgument(make_zero(arg.type)));
+                mangle_args.emplace_back(make_zero(arg.type));
             } else if (arg.kind == Argument::InputBuffer ||
                        arg.kind == Argument::OutputBuffer) {
-                mangle_args.push_back(ExternFuncArgument(Buffer<>()));
+                mangle_args.emplace_back(Buffer<>());
             }
         }
         names.extern_name = cplusplus_function_mangled_name(names.simple_name, namespaces, type_of<int>(), mangle_args, target);
@@ -961,7 +962,7 @@ void CodeGen_LLVM::compile_buffer(const Buffer<> &buf) {
     sym_push(buf.name() + ".buffer", global_ptr);
 }
 
-Constant *CodeGen_LLVM::embed_constant_scalar_value_t(Expr e) {
+Constant *CodeGen_LLVM::embed_constant_scalar_value_t(const Expr &e) {
     if (!e.defined()) {
         return Constant::getNullValue(scalar_value_t_type->getPointerTo());
     }
@@ -1226,7 +1227,6 @@ void CodeGen_LLVM::optimize_module() {
     const bool do_loop_opt = !get_target().has_feature(Target::DisableLLVMLoopOpt) ||
                              get_target().has_feature(Target::EnableLLVMLoopOpt);
 
-#if LLVM_VERSION >= 90
     PipelineTuningOptions pto;
     pto.LoopInterleaving = do_loop_opt;
     pto.LoopVectorization = do_loop_opt;
@@ -1239,7 +1239,6 @@ void CodeGen_LLVM::optimize_module() {
     // 21.04 -> 14.78 using current ToT release build. (See also https://reviews.llvm.org/rL358304)
     pto.ForgetAllSCEVInLoopUnroll = true;
 
-    // Note: pto exists only for LLVM_VERSION >= 90
     llvm::PassBuilder pb(tm.get(), pto);
 
     bool debug_pass_manager = false;
@@ -1320,110 +1319,6 @@ void CodeGen_LLVM::optimize_module() {
     if (llvm::verifyModule(*module, &errs()))
         report_fatal_error("Transformation resulted in an invalid module\n");
 
-#else
-    // Keep the legacy pass manager for LLVM < 90
-
-    // We override PassManager::add so that we have an opportunity to
-    // blacklist problematic LLVM passes.
-    class MyFunctionPassManager : public legacy::FunctionPassManager {
-    public:
-        MyFunctionPassManager(llvm::Module *m)
-            : legacy::FunctionPassManager(m) {
-        }
-        void add(Pass *p) override {
-            debug(2) << "Adding function pass: " << p->getPassName().str() << "\n";
-            legacy::FunctionPassManager::add(p);
-        }
-    };
-
-    class MyModulePassManager : public legacy::PassManager {
-    public:
-        void add(Pass *p) override {
-            debug(2) << "Adding module pass: " << p->getPassName().str() << "\n";
-            legacy::PassManager::add(p);
-        }
-    };
-
-    MyFunctionPassManager function_pass_manager(module.get());
-    MyModulePassManager module_pass_manager;
-
-    module_pass_manager.add(createTargetTransformInfoWrapperPass(tm ? tm->getTargetIRAnalysis() : TargetIRAnalysis()));
-    function_pass_manager.add(createTargetTransformInfoWrapperPass(tm ? tm->getTargetIRAnalysis() : TargetIRAnalysis()));
-
-    PassManagerBuilder b;
-    b.OptLevel = 3;
-    b.Inliner = createFunctionInliningPass(b.OptLevel, 0, false);
-    b.LoopVectorize = do_loop_opt;
-    b.DisableUnrollLoops = !do_loop_opt;
-    b.SLPVectorize = true;  // Note: SLP vectorization has no analogue in the Halide scheduling model
-#if LLVM_VERSION >= 90
-    // Clear ScEv info for all loops. Certain Halide applications spend a very
-    // long time compiling in forgetLoop, and prefer to forget everything
-    // and rebuild SCEV (aka "Scalar Evolution") from scratch.
-    // Sample difference in compile time reduction at the time of this change was
-    // 21.04 -> 14.78 using current ToT release build. (See also https://reviews.llvm.org/rL358304)
-    b.ForgetAllSCEVInLoopUnroll = true;
-#endif
-
-    if (tm) {
-        tm->adjustPassManager(b);
-    }
-
-    if (get_target().has_feature(Target::ASAN)) {
-        auto addAddressSanitizerPasses = [](const PassManagerBuilder &builder, legacy::PassManagerBase &pm) {
-            constexpr bool compile_kernel = false;   // always false for user code
-            constexpr bool recover = false;          // -fsanitize-recover, always false here
-            constexpr bool use_after_scope = false;  // enable -fsanitize-address-use-after-scope?
-            constexpr bool use_globals_gc = false;   // Should ASan use GC-friendly instrumentation for globals?
-
-            pm.add(createAddressSanitizerFunctionPass(compile_kernel, recover, use_after_scope));
-#if LLVM_VERSION >= 90
-            pm.add(createModuleAddressSanitizerLegacyPassPass(compile_kernel, recover, use_globals_gc));
-#else
-            pm.add(createAddressSanitizerModulePass(compile_kernel, recover, use_globals_gc));
-#endif
-        };
-        b.addExtension(PassManagerBuilder::EP_OptimizerLast, addAddressSanitizerPasses);
-        b.addExtension(PassManagerBuilder::EP_EnabledOnOptLevel0, addAddressSanitizerPasses);
-    }
-
-    if (get_target().has_feature(Target::TSAN)) {
-        auto addThreadSanitizerPass = [](const PassManagerBuilder &builder, legacy::PassManagerBase &pm) {
-            pm.add(createThreadSanitizerLegacyPassPass());
-        };
-        b.addExtension(PassManagerBuilder::EP_OptimizerLast, addThreadSanitizerPass);
-        b.addExtension(PassManagerBuilder::EP_EnabledOnOptLevel0, addThreadSanitizerPass);
-    }
-
-    b.populateFunctionPassManager(function_pass_manager);
-    b.populateModulePassManager(module_pass_manager);
-
-    // Run optimization passes
-    function_pass_manager.doInitialization();
-    for (llvm::Module::iterator i = module->begin(); i != module->end(); i++) {
-        if (get_target().has_feature(Target::ASAN)) {
-            i->addFnAttr(Attribute::SanitizeAddress);
-        }
-        if (get_target().has_feature(Target::TSAN)) {
-            // Do not annotate any of Halide's low-level synchronization code as it has
-            // tsan interface calls to mark its behavior and is much faster if
-            // it is not analyzed instruction by instruction.
-            if (!(i->getName().startswith("_ZN6Halide7Runtime8Internal15Synchronization") ||
-                  // TODO: this is a benign data race that re-initializes the detected features;
-                  // we should really fix it properly inside the implementation, rather than disabling
-                  // it here as a band-aid.
-                  i->getName().startswith("halide_default_can_use_target_features") ||
-                  i->getName().startswith("halide_mutex_") ||
-                  i->getName().startswith("halide_cond_"))) {
-                i->addFnAttr(Attribute::SanitizeThread);
-            }
-        }
-        function_pass_manager.run(*i);
-    }
-    function_pass_manager.doFinalization();
-    module_pass_manager.run(*module);
-#endif
-
     debug(3) << "After LLVM optimizations:\n";
     if (debug::debug_level() >= 2) {
         module->print(dbgs(), nullptr, false, true);
@@ -1465,7 +1360,7 @@ bool CodeGen_LLVM::sym_exists(const string &name) const {
     return symbol_table.contains(name);
 }
 
-Value *CodeGen_LLVM::codegen(Expr e) {
+Value *CodeGen_LLVM::codegen(const Expr &e) {
     internal_assert(e.defined());
     debug(4) << "Codegen: " << e.type() << ", " << e << "\n";
     value = nullptr;
@@ -1491,7 +1386,7 @@ Value *CodeGen_LLVM::codegen(Expr e) {
     return value;
 }
 
-void CodeGen_LLVM::codegen(Stmt s) {
+void CodeGen_LLVM::codegen(const Stmt &s) {
     internal_assert(s.defined());
     debug(3) << "Codegen: " << s << "\n";
     value = nullptr;
@@ -1869,7 +1764,7 @@ void CodeGen_LLVM::visit(const Select *op) {
 }
 
 namespace {
-Expr promote_64(Expr e) {
+Expr promote_64(const Expr &e) {
     if (const Add *a = e.as<Add>()) {
         return Add::make(promote_64(a->a), promote_64(a->b));
     } else if (const Sub *s = e.as<Sub>()) {
@@ -1886,10 +1781,10 @@ Expr promote_64(Expr e) {
 }
 }  // namespace
 
-Value *CodeGen_LLVM::codegen_buffer_pointer(string buffer, Halide::Type type, Expr index) {
+Value *CodeGen_LLVM::codegen_buffer_pointer(const string &buffer, Halide::Type type, Expr index) {
     // Find the base address from the symbol table
     Value *base_address = symbol_table.get(buffer);
-    return codegen_buffer_pointer(base_address, type, index);
+    return codegen_buffer_pointer(base_address, type, std::move(index));
 }
 
 Value *CodeGen_LLVM::codegen_buffer_pointer(Value *base_address, Halide::Type type, Expr index) {
@@ -1902,7 +1797,7 @@ Value *CodeGen_LLVM::codegen_buffer_pointer(Value *base_address, Halide::Type ty
     return codegen_buffer_pointer(base_address, type, codegen(index));
 }
 
-Value *CodeGen_LLVM::codegen_buffer_pointer(string buffer, Halide::Type type, Value *index) {
+Value *CodeGen_LLVM::codegen_buffer_pointer(const string &buffer, Halide::Type type, Value *index) {
     // Find the base address from the symbol table
     Value *base_address = symbol_table.get(buffer);
     return codegen_buffer_pointer(base_address, type, index);
@@ -1946,7 +1841,7 @@ int next_power_of_two(int x) {
 }
 }  // namespace
 
-void CodeGen_LLVM::add_tbaa_metadata(llvm::Instruction *inst, string buffer, Expr index) {
+void CodeGen_LLVM::add_tbaa_metadata(llvm::Instruction *inst, string buffer, const Expr &index) {
 
     // Get the unique name for the block of memory this allocate node
     // is using.
@@ -2192,7 +2087,12 @@ llvm::Value *CodeGen_LLVM::create_broadcast(llvm::Value *v, int lanes) {
     Constant *undef = UndefValue::get(VectorType::get(v->getType(), lanes));
     Constant *zero = ConstantInt::get(i32_t, 0);
     v = builder->CreateInsertElement(undef, v, zero);
-    Constant *zeros = ConstantVector::getSplat(lanes, zero);
+#if LLVM_VERSION >= 110
+    const llvm::ElementCount elem_count(lanes, /*scalable*/ false);
+#else
+    const int elem_count = lanes;
+#endif
+    Constant *zeros = ConstantVector::getSplat(elem_count, zero);
     return builder->CreateShuffleVector(v, undef, zeros);
 }
 
@@ -2272,7 +2172,7 @@ Value *CodeGen_LLVM::interleave_vectors(const std::vector<Value *> &vecs) {
     }
 }
 
-void CodeGen_LLVM::scalarize(Expr e) {
+void CodeGen_LLVM::scalarize(const Expr &e) {
     llvm::Type *result_type = llvm_type_of(e.type());
 
     Value *result = UndefValue::get(result_type);
@@ -2510,15 +2410,11 @@ void CodeGen_LLVM::codegen_atomic_store(const Store *op) {
                                                 op->value.type(),
                                                 op->index);
             // llvm 9 has FAdd which can be used for atomic floats.
-#if LLVM_VERSION >= 90
             if (value_type.is_float()) {
                 builder->CreateAtomicRMW(AtomicRMWInst::FAdd, ptr, val, AtomicOrdering::Monotonic);
             } else {
                 builder->CreateAtomicRMW(AtomicRMWInst::Add, ptr, val, AtomicOrdering::Monotonic);
             }
-#else
-            builder->CreateAtomicRMW(AtomicRMWInst::Add, ptr, val, AtomicOrdering::Monotonic);
-#endif
         } else {
             Value *index = codegen(op->index);
             // Scalarize vector store.
@@ -2527,15 +2423,11 @@ void CodeGen_LLVM::codegen_atomic_store(const Store *op) {
                 Value *idx = builder->CreateExtractElement(index, lane);
                 Value *v = builder->CreateExtractElement(val, lane);
                 Value *ptr = codegen_buffer_pointer(op->name, value_type.element_of(), idx);
-#if LLVM_VERSION >= 90
                 if (value_type.is_float()) {
                     builder->CreateAtomicRMW(AtomicRMWInst::FAdd, ptr, v, AtomicOrdering::Monotonic);
                 } else {
                     builder->CreateAtomicRMW(AtomicRMWInst::Add, ptr, v, AtomicOrdering::Monotonic);
                 }
-#else
-                builder->CreateAtomicRMW(AtomicRMWInst::Add, ptr, v, AtomicOrdering::Monotonic);
-#endif
             }
         }
     } else {
@@ -3347,7 +3239,7 @@ void CodeGen_LLVM::visit(const Call *op) {
             name = extract_namespaces(op->name, namespaces);
             std::vector<ExternFuncArgument> mangle_args;
             for (const auto &arg : op->args) {
-                mangle_args.push_back(ExternFuncArgument(arg));
+                mangle_args.emplace_back(arg);
             }
             name = cplusplus_function_mangled_name(name, namespaces, op->type, mangle_args, get_target());
         } else {
@@ -3534,7 +3426,7 @@ Constant *CodeGen_LLVM::create_binary_blob(const vector<char> &data, const strin
     return ptr;
 }
 
-void CodeGen_LLVM::create_assertion(Value *cond, Expr message, llvm::Value *error_code) {
+void CodeGen_LLVM::create_assertion(Value *cond, const Expr &message, llvm::Value *error_code) {
 
     internal_assert(!message.defined() || message.type() == Int(32))
         << "Assertion result is not an int: " << message;
@@ -4002,7 +3894,7 @@ void add_suffix(std::pair<string, int> &prefix, const string &suffix) {
 
 }  // namespace
 
-void CodeGen_LLVM::get_parallel_tasks(Stmt s, vector<ParallelTask> &result, std::pair<string, int> prefix) {
+void CodeGen_LLVM::get_parallel_tasks(const Stmt &s, vector<ParallelTask> &result, std::pair<string, int> prefix) {
     const For *loop = s.as<For>();
     const Acquire *acquire = loop ? loop->body.as<Acquire>() : s.as<Acquire>();
     if (const Fork *f = s.as<Fork>()) {
@@ -4043,7 +3935,7 @@ void CodeGen_LLVM::get_parallel_tasks(Stmt s, vector<ParallelTask> &result, std:
     }
 }
 
-void CodeGen_LLVM::do_as_parallel_task(Stmt s) {
+void CodeGen_LLVM::do_as_parallel_task(const Stmt &s) {
     vector<ParallelTask> tasks;
     get_parallel_tasks(s, tasks, {function->getName().str(), 0});
     do_parallel_tasks(tasks);
