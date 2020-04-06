@@ -6,7 +6,7 @@ tests(GROUPS correctness travis
       async_copy_chain.cpp
       async.cpp
       async_device_copy.cpp
-#      atomics.cpp
+      atomics.cpp
       autodiff.cpp
       autoschedule_small_pure_update.cpp
       autotune_bug_2.cpp
@@ -343,6 +343,7 @@ endforeach ()
 # Tests which use external funcs need to enable exports.
 foreach (TEST IN ITEMS
          correctness_async
+         correctness_atomics
          correctness_c_function
          correctness_compute_at_split_rvar
          correctness_concat
@@ -378,6 +379,5 @@ foreach (TEST IN ITEMS
          correctness_sliding_reduction
          correctness_sliding_window
          correctness_storage_folding)
-    # target_link_libraries(${TEST} PRIVATE ${CMAKE_DL_LIBS})
     set_target_properties(${TEST} PROPERTIES ENABLE_EXPORTS TRUE)
 endforeach ()
