@@ -27,8 +27,8 @@ define_property(TARGET PROPERTY HL_TARGET
 
 function(add_halide_library TARGET)
     set(options GRADIENT_DESCENT)
-    set(oneValueArgs FROM GENERATOR FUNCTION_NAME USE_RUNTIME)
-    set(multiValueArgs PARAMS EXTRA_OUTPUTS TARGETS FEATURES)
+    set(oneValueArgs FROM GENERATOR FUNCTION_NAME USE_RUNTIME PYTHON_EXTENSION)
+    set(multiValueArgs PARAMS TARGETS FEATURES)
     cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
     if (ARG_GRADIENT_DESCENT)
@@ -109,7 +109,21 @@ function(add_halide_library TARGET)
         message(FATAL_ERROR "Invalid runtime target ${ARG_USE_RUNTIME}")
     endif ()
 
-    # TODO: handle extra outputs
+    ##
+    # Handle extra outputs
+    ##
+
+    set(GENERATOR_OUTPUTS static_library c_header registration)
+    set(GENERATOR_OUTPUT_FILES
+        "${TARGET}${CMAKE_STATIC_LIBRARY_SUFFIX}"
+        "${TARGET}.h"
+        "${TARGET}.registration.cpp")
+
+    if (ARG_PYTHON_EXTENSION)
+        set(${ARG_PYTHON_EXTENSION} "${TARGET}.py.cpp" PARENT_SCOPE)
+        list(APPEND GENERATOR_OUTPUT_FILES "${TARGET}.py.cpp")
+        list(APPEND GENERATOR_OUTPUTS python_extension)
+    endif ()
 
     ##
     # Main library target for filter.
@@ -124,18 +138,19 @@ function(add_halide_library TARGET)
                           HL_PARAMS "${ARG_PARAMS}"
                           HL_TARGET "${TARGETS}")
 
-    add_custom_command(OUTPUT
-                       "${TARGET}${CMAKE_STATIC_LIBRARY_SUFFIX}"
-                       "${TARGET}.h"
-                       "${TARGET}.registration.cpp"
-                       COMMAND "${ARG_FROM}" -n "${TARGET}" -d "${GRADIENT_DESCENT}" -g "${ARG_GENERATOR}" -f "${ARG_FUNCTION_NAME}" -o . target=${TARGETS} ${ARG_PARAMS}
+    add_custom_command(OUTPUT ${GENERATOR_OUTPUT_FILES}
+                       COMMAND "${ARG_FROM}"
+                       -n "${TARGET}"
+                       -d "${GRADIENT_DESCENT}"
+                       -g "${ARG_GENERATOR}"
+                       -f "${ARG_FUNCTION_NAME}"
+                       -e "$<JOIN:${GENERATOR_OUTPUTS},$<COMMA>>"
+                       -o .
+                       target=${TARGETS} ${ARG_PARAMS}
                        DEPENDS "${ARG_FROM}")
 
-    add_custom_target("${TARGET}.update"
-                      DEPENDS
-                      "${CMAKE_CURRENT_BINARY_DIR}/${TARGET}${CMAKE_STATIC_LIBRARY_SUFFIX}"
-                      "${CMAKE_CURRENT_BINARY_DIR}/${TARGET}.h"
-                      "${CMAKE_CURRENT_BINARY_DIR}/${TARGET}.registration.cpp")
+    list(TRANSFORM GENERATOR_OUTPUT_FILES PREPEND "${CMAKE_CURRENT_BINARY_DIR}/")
+    add_custom_target("${TARGET}.update" DEPENDS ${GENERATOR_OUTPUT_FILES})
 
     set_target_properties("${TARGET}" PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/${TARGET}${CMAKE_STATIC_LIBRARY_SUFFIX}")
     add_dependencies("${TARGET}" "${TARGET}.update")
