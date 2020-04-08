@@ -20,7 +20,11 @@ foreach (TEST IN LISTS TESTS)
     get_filename_component(TEST_NAME ${TEST} NAME_WE)
     file(TO_NATIVE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/${TEST}" NATIVE_SCRIPT)
     add_test(NAME python_tutorial_${TEST_NAME}
-             COMMAND "${CMAKE_COMMAND}" -E env "PYTHONPATH=$<TARGET_FILE_DIR:Halide::Python>" "HL_TARGET=host"
+             COMMAND "${CMAKE_COMMAND}"
+             -E env "PYTHONPATH=${CMAKE_CURRENT_BINARY_DIR}:$<TARGET_FILE_DIR:Halide::Python>" "HL_TARGET=host"
              "$<TARGET_FILE:Python3::Interpreter>" "${NATIVE_SCRIPT}")
     set_tests_properties(python_tutorial_${TEST_NAME} PROPERTIES LABELS python)
 endforeach ()
+
+set_tests_properties(python_tutorial_lesson_10_aot_compilation_generate PROPERTIES FIXTURES_SETUP py_lesson_10)
+set_tests_properties(python_tutorial_lesson_10_aot_compilation_run PROPERTIES FIXTURES_REQUIRED py_lesson_10)

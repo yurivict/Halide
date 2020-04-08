@@ -10,6 +10,7 @@ foreach (GEN IN LISTS GENERATORS)
     add_generator_python(${TARGET} ${GEN})
 endforeach ()
 
+# Handle addconstant, bit, user_context
 add_subdirectory(ext)
 
 add_library(the_sort_function MODULE the_sort_function.c)
