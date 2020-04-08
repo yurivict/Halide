@@ -1,17 +1,16 @@
 set(GENERATORS
-    addconstant_generator.cpp
-    bit_generator.cpp
     complexstub_generator.cpp
     nobuildmethod_generator.cpp
     partialbuildmethod_generator.cpp
     simplestub_generator.cpp
-    user_context_generator.cpp
     )
 
 foreach (GEN IN LISTS GENERATORS)
     string(REPLACE "_generator.cpp" "" TARGET "${GEN}")
     add_generator_python(${TARGET} ${GEN})
 endforeach ()
+
+add_subdirectory(ext)
 
 add_library(the_sort_function MODULE the_sort_function.c)
 target_link_libraries(the_sort_function PRIVATE Halide::Runtime)
@@ -43,7 +42,10 @@ foreach (TEST IN LISTS TESTS)
     get_filename_component(TEST_NAME ${TEST} NAME_WE)
     file(TO_NATIVE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/${TEST}" NATIVE_SCRIPT)
     add_test(NAME python_correctness_${TEST_NAME}
-             COMMAND "${CMAKE_COMMAND}" -E env "PYTHONPATH=$<TARGET_FILE_DIR:Halide::Python>:${CMAKE_CURRENT_BINARY_DIR}" "HL_TARGET=host"
-             "$<TARGET_FILE:Python3::Interpreter>" "${NATIVE_SCRIPT}")
+             COMMAND "${CMAKE_COMMAND}" -E env
+             "PYTHONPATH=${CMAKE_CURRENT_BINARY_DIR}/ext:${CMAKE_CURRENT_BINARY_DIR}:$<TARGET_FILE_DIR:Halide::Python>"
+             "HL_TARGET=host"
+             "$<TARGET_FILE:Python3::Interpreter>"
+             "${NATIVE_SCRIPT}")
     set_tests_properties(python_correctness_${TEST_NAME} PROPERTIES LABELS python)
 endforeach ()
