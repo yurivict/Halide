@@ -27,12 +27,22 @@ function(add_app_test NAME)
     if (NOT "${CMAKE_TOOLCHAIN_FILE}" STREQUAL "")
         set(cmakeOpts "-DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}")
     endif ()
+
+    unset(cmakeGenOpts)
+    if (NOT "${CMAKE_GENERATOR_TOOLSET}" STREQUAL "")
+        list(APPEND cmakeGenOpts --build-generator-toolset "${CMAKE_GENERATOR_TOOLSET}")
+    endif ()
+    if (NOT "${CMAKE_GENERATOR_PLATFORM}" STREQUAL "")
+        list(APPEND cmakeGenOpts --build-generator-platform "${CMAKE_GENERATOR_PLATFORM}")
+    endif ()
+
     add_test(NAME ${NAME}
              COMMAND ${CMAKE_CTEST_COMMAND}
              --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/${NAME}" "${CMAKE_CURRENT_BINARY_DIR}/${NAME}"
-             --build-generator ${CMAKE_GENERATOR}
-             --build-options "-DCMAKE_PREFIX_PATH=${HALIDE_DIR}" "-DCMAKE_BUILD_TYPE=Release" ${cmakeOpts}
-             --test-command ${CMAKE_CTEST_COMMAND})
+             --build-generator "${CMAKE_GENERATOR}"
+             ${cmakeGenOpts}
+             --build-options "-DCMAKE_PREFIX_PATH=${HALIDE_DIR}" "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}" ${cmakeOpts}
+             --test-command ${CMAKE_CTEST_COMMAND} -C ${CMAKE_BUILD_TYPE})
     set_tests_properties(${NAME} PROPERTIES FIXTURES_REQUIRED apps LABELS apps)
 endfunction()
 
@@ -53,7 +63,7 @@ add_app_test(iir_blur)
 add_app_test(interpolate)
 add_app_test(lens_blur)
 #add_app_test(linear_algebra)  # TODO: halide blas has issues; see #4631
-#add_app_test(linear_blur)  # TODO: uses stubs, for which we're dropping support
+#add_app_test(linear_blur)  # TODO: uses stubs, for which we're dropping CMake support
 add_app_test(local_laplacian)
 add_app_test(max_filter)
 add_app_test(nl_means)

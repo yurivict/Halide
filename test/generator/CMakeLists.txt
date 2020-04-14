@@ -61,7 +61,7 @@ set(GENERATOR_SRCS
     memory_profiler_mandelbrot_generator.cpp
     metadata_tester_generator.cpp
     msan_generator.cpp
-    #multitarget_generator.cpp  # see issue #4619
+    #multitarget_generator.cpp  # TODO: see issue #4619
     nested_externs_generator.cpp
     output_assign_generator.cpp
     pyramid_generator.cpp

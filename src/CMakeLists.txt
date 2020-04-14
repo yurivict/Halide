@@ -439,12 +439,15 @@ target_compile_options(Halide
                        # the operator new overload in LLVM/IR/Function.h and Instruction.h otherwise.
                        # See LLVM PR: 23513 (https://llvm.org/bugs/show_bug.cgi?id=23513)
                        $<$<CXX_COMPILER_ID:MSVC>:/Zc:sizedDealloc->
-
-                       # Disable warnings about standard C functions that have more secure replacements
-                       # in the Windows API.
-                       $<$<CXX_COMPILER_ID:MSVC>:_CRT_SECURE_NO_WARNINGS>
-                       $<$<CXX_COMPILER_ID:MSVC>:_SCL_SECURE_NO_WARNINGS>
                        )
+
+target_compile_definitions(Halide
+                           PRIVATE
+                           # Disable warnings about standard C functions that have more secure replacements
+                           # in the Windows API.
+                           $<$<CXX_COMPILER_ID:MSVC>:_CRT_SECURE_NO_WARNINGS>
+                           $<$<CXX_COMPILER_ID:MSVC>:_SCL_SECURE_NO_WARNINGS>
+                           )
 
 ##
 # Set up macro definitions for libHalide
