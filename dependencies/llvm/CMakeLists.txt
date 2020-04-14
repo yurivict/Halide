@@ -18,7 +18,7 @@ if ("${LLVM_PACKAGE_VERSION}" VERSION_LESS 8.0)
 endif ()
 
 if ("${LLVM_PACKAGE_VERSION}" VERSION_GREATER 11.0)
-    message(FATAL_ERROR "LLVM version must be 11.0 or older")
+    message(WARNING "Halide is not tested on LLVM versions beyond 11.0")
 endif ()
 
 ##

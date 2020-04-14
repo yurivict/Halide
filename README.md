@@ -70,7 +70,11 @@ then to point Halide to it:
 
     export LLVM_CONFIG=<path to llvm>/install/bin/llvm-config
 
-(Note that you *must* add `clang` to `LLVM_ENABLE_PROJECTS`; adding `lld` to `LLVM_ENABLE_PROJECTS` is only required when using WebAssembly, and adding `clang-tools-extra` is only necessary if you plan to contribute code to Halide (so that you can run clang-tidy on your pull requests). We recommend enabling both in all cases, to simplify builds.)
+Note that you *must* add `clang` to `LLVM_ENABLE_PROJECTS`; adding `lld` to
+`LLVM_ENABLE_PROJECTS` is only required when using WebAssembly, and adding
+`clang-tools-extra` is only necessary if you plan to contribute code to Halide
+(so that you can run clang-tidy on your pull requests).
+We recommend enabling both in all cases, to simplify builds.
 
 #### Building Halide with make
 
@@ -107,30 +111,33 @@ If you wish to use cmake to build Halide, the build procedure is:
 
 Acquire MSVC 2015 Update 3 or newer. Earlier versions may work but are
 not part of our tests. MSBuild and cmake should also be in your
-path. The instructions below assume Halide is checked out under
-`C:\Code\Halide`, and LLVM and Clang are checked out under
-`C:\Code\llvm`.
+path. We assume you have cloned this repository to `D:\Halide`.
 
-    % mkdir C:\Code\llvm-build
-    % cd C:\Code\llvm-build
-    % cmake -DLLVM_ENABLE_PROJECTS="clang;lld;clang-tools-extra" -DCMAKE_INSTALL_PREFIX=../llvm-install -DLLVM_ENABLE_TERMINFO=OFF -DLLVM_TARGETS_TO_BUILD=X86;ARM;NVPTX;AArch64;Mips;Hexagon -DLLVM_ENABLE_ASSERTIONS=ON -DLLVM_BUILD_32_BITS=OFF -DCMAKE_BUILD_TYPE=Release ../llvm/llvm -G "Visual Studio 14" -A x64
+    D:\> git clone https://github.com/llvm/llvm-project.git --depth 1 -b release/10.x
+    D:\> md llvm-build
+    D:\> cd llvm-build
+    D:\llvm-build> cmake -G "Visual Studio 16 2019" -Thost=x64 -A x64 -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../llvm-install -DLLVM_ENABLE_PROJECTS="clang;lld;clang-tools-extra" -DLLVM_ENABLE_TERMINFO=OFF -DLLVM_TARGETS_TO_BUILD=X86;ARM;NVPTX;AArch64;Mips;Hexagon -DLLVM_ENABLE_ASSERTIONS=ON -DLLVM_BUILD_32_BITS=OFF ..\llvm-project\llvm
 
 For a 32-bit build use:
 
-    % cmake -DLLVM_ENABLE_PROJECTS="clang;lld;clang-tools-extra" -DCMAKE_INSTALL_PREFIX=../llvm-install -DLLVM_ENABLE_TERMINFO=OFF -DLLVM_TARGETS_TO_BUILD=X86;ARM;NVPTX;AArch64;Mips;Hexagon -DLLVM_ENABLE_ASSERTIONS=ON -DLLVM_BUILD_32_BITS=ON -DCMAKE_BUILD_TYPE=Release ../llvm/llvm -G "Visual Studio 14" -A Win32
+    D:\llvm-build> cmake -G "Visual Studio 16 2019" -Thost=x64 -A Win32 -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../llvm-install -DLLVM_ENABLE_PROJECTS="clang;lld;clang-tools-extra" -DLLVM_ENABLE_TERMINFO=OFF -DLLVM_TARGETS_TO_BUILD=X86;ARM;NVPTX;AArch64;Mips;Hexagon -DLLVM_ENABLE_ASSERTIONS=ON -DLLVM_BUILD_32_BITS=ON ..\llvm-project\llvm
 
 Then build it like so:
 
-    % MSBuild.exe /m /t:Build /p:Configuration=Release .\INSTALL.vcxproj
+    D:\llvm-build> cmake --build . --config Release --target INSTALL -j %NUMBER_OF_PROCESSORS%
 
-You can substitute `Debug` for `Release` in both commands if you want a debug build.
+You can substitute `Debug` for `Release` in both `cmake` commands if you want a debug build.
 
 To configure and build Halide:
 
-    % mkdir C:\Code\halide-build
-    % cd C:\Code\halide-build
-    % cmake -DLLVM_DIR=../llvm-install/lib/cmake/llvm -DCMAKE_BUILD_TYPE=Release -G "Visual Studio 14 Win64" ../halide
-    % MSBuild.exe /m /t:Build /p:Configuration=Release .\ALL_BUILD.vcxproj
+    D:\> md Halide-build
+    D:\> cd Halide-build
+    D:\Halide-build> cmake -G "Visual Studio 16 2019" -Thost=x64 -A x64 -DLLVM_DIR=D:/llvm-install/lib/cmake/llvm -DCMAKE_BUILD_TYPE=Release ..\Halide
+    D:\Halide-build> cmake --build . --config Release -j %NUMBER_OF_PROCESSORS%
+
+To run the tests:
+
+    D:\Halide-build> ctest -C Release -L correctness
 
 #### If all else fails...
 

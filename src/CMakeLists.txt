@@ -373,6 +373,7 @@ add_library(Halide::Halide ALIAS Halide)
 set_target_properties(Halide PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 target_link_libraries(Halide PRIVATE Halide_LLVM)
+target_compile_definitions(Halide PRIVATE $<$<STREQUAL:$<TARGET_PROPERTY:TYPE>,STATIC_LIBRARY>:Halide_STATIC_DEFINE>)
 
 add_dependencies(Halide HalideIncludes)
 
@@ -396,7 +397,7 @@ endif ()
 
 if (NOT HALIDE_ENABLE_RTTI)
     target_compile_options(Halide PUBLIC
-                           $<$<COMPILE_LANG_AND_ID:CXX,MSVC>:/GR- >
+                           $<$<COMPILE_LANG_AND_ID:CXX,MSVC>:/GR->
                            $<$<COMPILE_LANG_AND_ID:CXX,GNU,Clang,AppleClang>:-fno-rtti>)
 endif ()
 
@@ -437,16 +438,17 @@ target_compile_options(Halide
                        # Disable sized deallocation if the flag is supported. MSVC fails to compile
                        # the operator new overload in LLVM/IR/Function.h and Instruction.h otherwise.
                        # See LLVM PR: 23513 (https://llvm.org/bugs/show_bug.cgi?id=23513)
-                       $<$<CXX_COMPILER_ID:MSVC>:/Zc:sizedDealloc- >
+                       $<$<CXX_COMPILER_ID:MSVC>:/Zc:sizedDealloc->
+
+                       # Disable warnings about standard C functions that have more secure replacements
+                       # in the Windows API.
+                       $<$<CXX_COMPILER_ID:MSVC>:_CRT_SECURE_NO_WARNINGS>
+                       $<$<CXX_COMPILER_ID:MSVC>:_SCL_SECURE_NO_WARNINGS>
                        )
 
 ##
 # Set up macro definitions for libHalide
 ##
-
-target_compile_definitions(Halide PRIVATE
-                           $<$<CXX_COMPILER_ID:MSVC>:_CRT_SECURE_NO_WARNINGS>
-                           $<$<CXX_COMPILER_ID:MSVC>:_SCL_SECURE_NO_WARNINGS>)
 
 option(TARGET_OPENCL "Include OpenCL-C target" ON)
 if (TARGET_OPENCL)
