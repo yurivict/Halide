@@ -15,6 +15,8 @@ endif ()
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
     set(CMAKE_OBJECT_PATH_MAX 260)
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/bin")
+
     message("Windows: setting CMAKE_OBJECT_PATH_MAX to ${CMAKE_OBJECT_PATH_MAX}")
 endif ()
 
