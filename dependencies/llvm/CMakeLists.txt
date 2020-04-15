@@ -34,8 +34,11 @@ set_target_properties(llvm-config PROPERTIES IMPORTED_GLOBAL TRUE)
 ##
 
 add_library(Halide_LLVM INTERFACE)
+add_library(Halide::LLVM ALIAS Halide_LLVM)
 
-target_include_directories(Halide_LLVM INTERFACE ${LLVM_INCLUDE_DIRS})
+set_target_properties(Halide_LLVM PROPERTIES EXPORT_NAME LLVM)
+
+target_include_directories(Halide_LLVM INTERFACE $<BUILD_INTERFACE:${LLVM_INCLUDE_DIRS}>)
 target_compile_definitions(Halide_LLVM INTERFACE
                            "LLVM_VERSION=${LLVM_VERSION_MAJOR}${LLVM_VERSION_MINOR}"
                            ${LLVM_DEFINITIONS})
@@ -169,7 +172,6 @@ endif ()
 # fully private implementation detail as far as CMake is concerned, so it
 # then doesn't need to expose any LLVM-related dependencies through targets.
 if (NOT BUILD_SHARED_LIBS)
-    set_target_properties(Halide_LLVM PROPERTIES EXPORT_NAME LLVM)
-    add_library(Halide::LLVM ALIAS Halide_LLVM)  # Optional, but provided for completeness
-    install(TARGETS Halide_LLVM EXPORT Halide_Targets)
+    install(TARGETS Halide_LLVM 
+            EXPORT Halide_Targets)
 endif ()
