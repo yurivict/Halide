@@ -53,6 +53,11 @@ function(add_halide_library TARGET)
         set(ARG_TARGETS host)
     endif ()
 
+    set(generatorCommand ${ARG_FROM})
+    if (WIN32)
+        set(generatorCommand ${CMAKE_COMMAND} -E env "PATH=$<SHELL_PATH:$<TARGET_FILE_DIR:Halide::Halide>>" "$<TARGET_FILE:${ARG_FROM}>")
+    endif ()
+
     if (opengl IN_LIST ARG_FEATURES)
         if (NOT TARGET X11::X11)
             message(AUTHOR_WARNING "OpenGL with Halide requires target X11::X11. Attempting to find_package(X11) and create target X11::X11.")
@@ -96,7 +101,8 @@ function(add_halide_library TARGET)
                               IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/${TARGET}.runtime${CMAKE_STATIC_LIBRARY_SUFFIX}")
 
         add_custom_command(OUTPUT "${TARGET}.runtime${CMAKE_STATIC_LIBRARY_SUFFIX}"
-                           COMMAND "${ARG_FROM}" -r "${TARGET}.runtime" -o . target=${TARGETS})
+                           COMMAND ${generatorCommand} -r "${TARGET}.runtime" -o . target=${TARGETS}
+                           DEPENDS "${ARG_FROM}")
 
         add_custom_target("${TARGET}.runtime.update"
                           DEPENDS "${TARGET}.runtime${CMAKE_STATIC_LIBRARY_SUFFIX}")
@@ -139,7 +145,7 @@ function(add_halide_library TARGET)
                           HL_TARGET "${TARGETS}")
 
     add_custom_command(OUTPUT ${GENERATOR_OUTPUT_FILES}
-                       COMMAND "${ARG_FROM}"
+                       COMMAND ${generatorCommand}
                        -n "${TARGET}"
                        -d "${GRADIENT_DESCENT}"
                        -g "${ARG_GENERATOR}"

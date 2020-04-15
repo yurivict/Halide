@@ -31,3 +31,8 @@ target_link_libraries(blur_test
 
 # Test that the app actually works!
 add_test(NAME blur COMMAND blur_test)
+if (WIN32)
+    # On Windows, need Halide.dll to be in the PATH
+    set_tests_properties(blur PROPERTIES
+                         ENVIRONMENT "PATH=$<SHELL_PATH:$<TARGET_FILE_DIR:Halide::Halide>>$<SEMICOLON>$ENV{PATH}")
+endif ()
