@@ -77,9 +77,9 @@ function(add_halide_library TARGET)
         set(EXTRA_RT_LIBS OpenGL::GL X11::X11)
     endif ()
 
-    set(TARGETS)
+    unset(TARGETS)
     foreach (T IN LISTS ARG_TARGETS)
-        if (NOT T)
+        if ("${T}" STREQUAL "")
             set(T host)
         endif ()
         foreach (F IN LISTS ARG_FEATURES)
@@ -100,8 +100,16 @@ function(add_halide_library TARGET)
                               PROPERTIES
                               IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/${TARGET}.runtime${CMAKE_STATIC_LIBRARY_SUFFIX}")
 
+        # Remove features that should not be attached to a runtime
+        # The fact that profile being here fixes a linker error on Windows smells like a bug.
+        # It complains about a symbol being duplicated between the runtime and the object.
+        set(RT_TARGETS ${TARGETS})
+        foreach (T IN ITEMS user_context no_asserts no_bounds_query no_runtime profile)
+            string(REPLACE "-${T}" "" RT_TARGETS "${RT_TARGETS}")
+        endforeach ()
+        
         add_custom_command(OUTPUT "${TARGET}.runtime${CMAKE_STATIC_LIBRARY_SUFFIX}"
-                           COMMAND ${generatorCommand} -r "${TARGET}.runtime" -o . target=${TARGETS}
+                           COMMAND ${generatorCommand} -r "${TARGET}.runtime" -o . target=${RT_TARGETS}
                            DEPENDS "${ARG_FROM}")
 
         add_custom_target("${TARGET}.runtime.update"
@@ -152,7 +160,8 @@ function(add_halide_library TARGET)
                        -f "${ARG_FUNCTION_NAME}"
                        -e "$<JOIN:${GENERATOR_OUTPUTS},$<COMMA>>"
                        -o .
-                       target=${TARGETS} ${ARG_PARAMS}
+                       "target=${TARGETS}"
+                       ${ARG_PARAMS}
                        DEPENDS "${ARG_FROM}")
 
     list(TRANSFORM GENERATOR_OUTPUT_FILES PREPEND "${CMAKE_CURRENT_BINARY_DIR}/")

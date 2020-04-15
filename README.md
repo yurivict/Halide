@@ -132,12 +132,17 @@ To configure and build Halide:
 
     D:\> md Halide-build
     D:\> cd Halide-build
-    D:\Halide-build> cmake -G "Visual Studio 16 2019" -Thost=x64 -A x64 -DBUILD_SHARED_LIBS=YES -DLLVM_DIR=D:/llvm-install/lib/cmake/llvm -DCMAKE_BUILD_TYPE=Release ..\Halide
+    D:\Halide-build> cmake -G "Visual Studio 16 2019" -Thost=x64 -A x64 -DBUILD_SHARED_LIBS=YES -DLLVM_DIR=D:/llvm-install/lib/cmake/llvm ..\Halide
     D:\Halide-build> cmake --build . --config Release -j %NUMBER_OF_PROCESSORS%
 
 To run the tests:
 
     D:\Halide-build> ctest -C Release -L correctness
+
+To use Ninja to build Halide:
+
+    D:\Halide-build> "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" x64
+    D:\Halide-build> cmake -G Ninja -DBUILD_SHARED_LIBS=YES -DLLVM_DIR=D:/llvm-install/lib/cmake/llvm -DCMAKE_BUILD_TYPE=Release ..\Halide
 
 #### If all else fails...
 
