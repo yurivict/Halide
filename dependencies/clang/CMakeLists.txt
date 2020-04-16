@@ -1,8 +1,8 @@
-find_package(Clang)
+find_package(Clang QUIET)
 
 if (NOT TARGET clang)
     if (DEFINED LLVM_DIR)
-        message(STATUS "Could not find Clang in module path. Trying from LLVM_DIR...")
+        message(STATUS "find_package(Clang) failed. Trying to infer CLANG_DIR from LLVM_DIR...")
         set(Clang_DIR "${LLVM_DIR}/../clang")
         find_package(Clang REQUIRED)
     else ()
@@ -12,7 +12,7 @@ endif ()
 
 set_target_properties(clang PROPERTIES IMPORTED_GLOBAL TRUE)
 
-# clang-tools-extra is optional, but enables the format target
+# clang-tools-extra is optional, but provides the clang-format target
 if (TARGET clang-format)
     set_target_properties(clang-format PROPERTIES IMPORTED_GLOBAL TRUE)
 endif ()
