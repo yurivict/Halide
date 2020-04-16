@@ -11,3 +11,8 @@ if (NOT TARGET clang)
 endif ()
 
 set_target_properties(clang PROPERTIES IMPORTED_GLOBAL TRUE)
+
+# clang-tools-extra is optional, but enables the format target
+if (TARGET clang-format)
+    set_target_properties(clang-format PROPERTIES IMPORTED_GLOBAL TRUE)
+endif ()

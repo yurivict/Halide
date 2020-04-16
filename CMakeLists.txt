@@ -7,12 +7,17 @@ enable_testing()
 # Set up project-wide properties
 ##
 
+# Make our custom helpers available throughout the project via include().
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
-get_property(USE_FOLDERS_WAS_SET GLOBAL PROPERTY USE_FOLDERS SET)
-if (NOT USE_FOLDERS_WAS_SET)
-    set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
+# Build Halide as a shared lib by default, but still honor command-line settings.
+if (NOT DEFINED BUILD_SHARED_LIBS)
+    set(BUILD_SHARED_LIBS YES)
 endif ()
 
+# Windows has file name length restrictions and lacks an RPATH mechanism.
+# We work around this by setting a path max and putting all exes / dlls in
+# the same output directory.
 if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
     set(CMAKE_OBJECT_PATH_MAX 260)
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/bin")
@@ -20,12 +25,10 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
     message("Windows: setting CMAKE_OBJECT_PATH_MAX to ${CMAKE_OBJECT_PATH_MAX}")
 endif ()
 
-# Export all symbols
-# TODO: reevaluate this. We should probably be selective about what we export.
+# Export all symbols on Windows to match GCC/Clang behavior on Linux / macOS
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
-# Require the given C++ standard
-# TODO: evaluate if we actually need to match LLVM on this or if C++14 is universally safe.
+# Require standard C++14
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -44,7 +47,7 @@ add_subdirectory(src)
 add_subdirectory(tools)
 
 ##
-# Add tests, apps, tutorials, etc. if we're not being imported.
+# Add tests, apps, tutorials, etc. if we're not being imported into another CMake project.
 ##
 
 if (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
@@ -105,7 +108,16 @@ if (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
     add_custom_target(distrib
                       COMMAND ${CMAKE_COMMAND} -E echo "\\'distrib\\' is not available under CMake. Use \\'package\\' instead.")
 
-    # TODO: use clang-format target.
-    add_custom_target(format
-                      COMMAND find "${Halide_SOURCE_DIR}/apps" "${Halide_SOURCE_DIR}/src" "${Halide_SOURCE_DIR}/tools" "${Halide_SOURCE_DIR}/test" "${Halide_SOURCE_DIR}/util" "${Halide_SOURCE_DIR}/python_bindings" -name *.cpp -o -name *.h -o -name *.c | xargs clang-format -i -style=file)
+    if (TARGET clang-format AND NOT WIN32)
+        add_custom_target(format COMMAND 
+                          find
+                          "${Halide_SOURCE_DIR}/apps" 
+                          "${Halide_SOURCE_DIR}/src" 
+                          "${Halide_SOURCE_DIR}/tools" 
+                          "${Halide_SOURCE_DIR}/test" 
+                          "${Halide_SOURCE_DIR}/util" 
+                          "${Halide_SOURCE_DIR}/python_bindings" 
+                          -name *.cpp -o -name *.h -o -name *.c | 
+                          xargs $<TARGET_FILE:clang-format> -i -style=file)
+    endif ()
 endif ()
