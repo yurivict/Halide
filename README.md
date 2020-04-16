@@ -52,19 +52,21 @@ Download an appropriate package and then either install it, or at least put the
 
 If you want to build it yourself, first check it out from GitHub:
 
-    % git clone https://github.com/llvm/llvm-project.git
-    % git checkout release/9.x  # to build LLVM 9.x
+    % git clone https://github.com/llvm/llvm-project.git --depth 1 -b release/10.x
 
 (If you want to build LLVM 9.x, use `git checkout release/9.x`; for LLVM 8.0, use `release 8.x`; for current trunk, use `git checkout master`)
 
 Then build it like so:
 
-    % cd llvm-project
-    % mkdir build
-    % mkdir install
-    % cd build
-    % cmake -DLLVM_ENABLE_PROJECTS="clang;lld;clang-tools-extra" -DLLVM_ENABLE_RTTI=ON -DLLVM_ENABLE_TERMINFO=OFF -DLLVM_TARGETS_TO_BUILD="X86;ARM;NVPTX;AArch64;Mips;PowerPC;Hexagon" -DLLVM_ENABLE_ASSERTIONS=ON -DCMAKE_BUILD_TYPE=Release -DLLVM_BUILD_32_BITS=OFF -DCMAKE_INSTALL_PREFIX=../install ../llvm
-    % make install -j8
+    % mkdir llvm-build
+    % cd llvm-build
+    % cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../llvm-install \
+            -DLLVM_ENABLE_PROJECTS="clang;lld;clang-tools-extra" \
+            -DLLVM_TARGETS_TO_BUILD="X86;ARM;NVPTX;AArch64;Mips;Hexagon" \
+            -DLLVM_ENABLE_TERMINFO=OFF -DLLVM_ENABLE_ASSERTIONS=ON \
+            -DLLVM_ENABLE_EH=ON -DLLVM_ENABLE_RTTI=ON -DLLVM_BUILD_32_BITS=OFF \
+            ../llvm-project/llvm
+    % cmake --build . --target install
 
 then to point Halide to it:
 
@@ -75,6 +77,7 @@ Note that you *must* add `clang` to `LLVM_ENABLE_PROJECTS`; adding `lld` to
 `clang-tools-extra` is only necessary if you plan to contribute code to Halide
 (so that you can run clang-tidy on your pull requests).
 We recommend enabling both in all cases, to simplify builds.
+You can disable exception handling (EH) and RTTI if you don't want the Python bindings.
 
 #### Building Halide with make
 
@@ -100,10 +103,10 @@ like so:
 
 If you wish to use cmake to build Halide, the build procedure is:
 
-    % mkdir cmake_build
-    % cd cmake_build
-    % cmake -DLLVM_DIR=/path-to-llvm-build/lib/cmake/llvm -DCMAKE_BUILD_TYPE=Release /path/to/halide
-    % make -j8
+    % mkdir Halide-build
+    % cd Halide-build
+    % cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=YES -DLLVM_DIR=/path/to/llvm-install/lib/cmake/llvm ../Halide
+    % cmake --build .
 
 `LLVM_DIR` should be the folder in the LLVM installation or build tree that contains `LLVMConfig.cmake`.
 
