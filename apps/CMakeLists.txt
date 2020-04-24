@@ -53,7 +53,6 @@ endfunction()
 
 # Actually add the apps
 
-#add_app_test(autoscheduler)  # TODO: reorganize into module
 add_app_test(bgu)
 add_app_test(bilateral_grid)
 add_app_test(blur)
@@ -76,3 +75,7 @@ add_app_test(resize)
 add_app_test(stencil_chain)
 add_app_test(unsharp)
 add_app_test(wavelet)
+
+# Add the autoschedulers. TODO: refactor into separate modules
+add_subdirectory(autoscheduler)
+#add_subdirectory(gradient_autoscheduler)

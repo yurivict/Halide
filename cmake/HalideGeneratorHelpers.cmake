@@ -27,8 +27,8 @@ define_property(TARGET PROPERTY HL_TARGET
 
 function(add_halide_library TARGET)
     set(options GRADIENT_DESCENT)
-    set(oneValueArgs FROM GENERATOR FUNCTION_NAME USE_RUNTIME PYTHON_EXTENSION)
-    set(multiValueArgs PARAMS TARGETS FEATURES)
+    set(oneValueArgs FROM GENERATOR FUNCTION_NAME USE_RUNTIME PYTHON_EXTENSION SCHEDULER REGISTRATION)
+    set(multiValueArgs PARAMS TARGETS FEATURES PLUGINS)
     cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
     if (ARG_GRADIENT_DESCENT)
@@ -107,7 +107,7 @@ function(add_halide_library TARGET)
         foreach (T IN ITEMS user_context no_asserts no_bounds_query no_runtime profile)
             string(REPLACE "-${T}" "" RT_TARGETS "${RT_TARGETS}")
         endforeach ()
-        
+
         add_custom_command(OUTPUT "${TARGET}.runtime${CMAKE_STATIC_LIBRARY_SUFFIX}"
                            COMMAND ${generatorCommand} -r "${TARGET}.runtime" -o . target=${RT_TARGETS}
                            DEPENDS "${ARG_FROM}")
@@ -139,11 +139,30 @@ function(add_halide_library TARGET)
         list(APPEND GENERATOR_OUTPUTS python_extension)
     endif ()
 
+    if (ARG_REGISTRATION)
+        set(${ARG_REGISTRATION} "${TARGET}.registration.cpp" PARENT_SCOPE)
+    endif ()
+
+    unset(GEN_SCHEDULER)
+    if (ARG_SCHEDULER)
+        set(GEN_SCHEDULER -s ${ARG_SCHEDULER})
+    endif ()
+
     ##
     # Main library target for filter.
     ##
 
     add_library("${TARGET}" STATIC IMPORTED)
+
+    # load the plugins and setup dependencies
+    unset(GEN_PLUGINS)
+    if (ARG_PLUGINS)
+        add_dependencies("${TARGET}" ${ARG_PLUGINS})
+        foreach (P IN LISTS ARG_PLUGINS)
+            list(APPEND GEN_PLUGINS "$<TARGET_FILE:${P}>")
+        endforeach ()
+        set(GEN_PLUGINS -p ${GEN_PLUGINS})
+    endif ()
 
     set_target_properties("${TARGET}" PROPERTIES
                           HL_GEN_TARGET "${ARG_FROM}"
@@ -159,6 +178,8 @@ function(add_halide_library TARGET)
                        -g "${ARG_GENERATOR}"
                        -f "${ARG_FUNCTION_NAME}"
                        -e "$<JOIN:${GENERATOR_OUTPUTS},$<COMMA>>"
+                       ${GEN_PLUGINS}
+                       ${GEN_SCHEDULER}
                        -o .
                        "target=${TARGETS}"
                        ${ARG_PARAMS}
