@@ -82,37 +82,27 @@ add_test(NAME demo_apps_autoscheduler
 
 set_tests_properties(demo_apps_autoscheduler PROPERTIES LABELS autoscheduler)
 
-return()
-
 # =======================================================
 # TODO: move this to a separate folder since it's a demo/app
 
-# demo_included_schedule_file
-halide_library(included_schedule_file
-               SRCS included_schedule_file_generator.cpp
-               FUNCTION_NAME included_schedule_file
-               GENERATOR_ARGS auto_schedule=true -p $<TARGET_FILE:auto_schedule> -s Adams2019)
-add_dependencies(included_schedule_file auto_schedule)
+add_executable(included_schedule_file.generator included_schedule_file_generator.cpp)
+target_link_libraries(included_schedule_file.generator PRIVATE Halide::Generator)
 
-_halide_genfiles_dir(included_schedule_file GENFILES_DIR)
-set(INCLUDED_SCHEDULE_FILE_REGISTRATION_FILE
-    ${GENFILES_DIR}/included_schedule_file.registration.cpp)
+add_halide_library(included_schedule_file FROM included_schedule_file.generator
+                   PARAMS auto_schedule=true
+                   PLUGINS auto_schedule
+                   SCHEDULER Adams2019
+                   REGISTRATION INCLUDED_SCHEDULE_FILE_REGISTRATION_FILE)
 
-add_executable(demo_included_schedule_file ${HALIDE_TOOLS_DIR}/RunGenMain.cpp
-               ${INCLUDED_SCHEDULE_FILE_REGISTRATION_FILE})
-target_include_directories(
-        demo_included_schedule_file
-        PRIVATE "${HALIDE_INCLUDE_DIR}" "${HALIDE_TOOLS_DIR}")
-target_link_libraries(demo_included_schedule_file PRIVATE Halide::ImageIO included_schedule_file)
-add_dependencies(demo_included_schedule_file included_schedule_file
-                 auto_schedule)
+add_executable(demo_included_schedule_file ${INCLUDED_SCHEDULE_FILE_REGISTRATION_FILE})
+target_link_libraries(demo_included_schedule_file PRIVATE included_schedule_file Halide::RunGenMain)
 
-add_custom_command(TARGET demo_included_schedule_file POST_BUILD
-                   COMMAND $<TARGET_FILE:demo_included_schedule_file>
-                   --benchmarks=all
-                   --benchmark_min_time=1
-                   --estimate_all
-                   WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+add_test(NAME demo_included_schedule_file
+         COMMAND demo_included_schedule_file --benchmarks=all --benchmark_min_time=1 --estimate_all)
+
+set_tests_properties(demo_included_schedule_file PROPERTIES LABELS autoscheduler)
+
+return()
 
 # =======================================================
 # TODO: move this to a separate folder since it's a demo/app
