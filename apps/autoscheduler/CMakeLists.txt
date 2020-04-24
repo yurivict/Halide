@@ -47,6 +47,7 @@ if (NOT HALIDE_ENABLE_RTTI)
                            $<$<AND:$<COMPILE_LANGUAGE:CXX>,$<NOT:$<CXX_COMPILER_ID:MSVC>>>:-fno-rtti>)
 endif ()
 
+# TODO: move to /packaging
 include(GNUInstallDirs)
 install(TARGETS auto_schedule
         EXPORT Halide_Targets

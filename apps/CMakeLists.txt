@@ -78,4 +78,4 @@ add_app_test(wavelet)
 
 # Add the autoschedulers. TODO: refactor into separate modules
 add_subdirectory(autoscheduler)
-#add_subdirectory(gradient_autoscheduler)
+add_subdirectory(gradient_autoscheduler)
