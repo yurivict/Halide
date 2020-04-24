@@ -39,7 +39,7 @@ add_library(auto_schedule
             Weights.cpp
             ${WF_CPP})
 
-target_link_libraries(auto_schedule PRIVATE cost_model train_cost_model Halide::Runtime)
+target_link_libraries(auto_schedule PRIVATE cost_model train_cost_model Halide::Halide)
 
 if (NOT HALIDE_ENABLE_RTTI)
     target_compile_options(auto_schedule PRIVATE

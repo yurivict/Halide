@@ -1,7 +1,7 @@
 # TODO: rename gradient_autoscheduler target to Li2018 or something similar.
 
 add_library(gradient_autoscheduler MODULE GradientAutoscheduler.cpp ASLog.cpp)
-target_link_libraries(gradient_autoscheduler PRIVATE Halide::Runtime)
+target_link_libraries(gradient_autoscheduler PRIVATE Halide::Halide)
 
 if (NOT HALIDE_ENABLE_RTTI)
     target_compile_options(gradient_autoscheduler PRIVATE
@@ -62,16 +62,13 @@ set_tests_properties(gradient_autoscheduler_test_cpp PROPERTIES LABELS Li2018)
 
 ##
 
-return()
-
-# TODO: update to use Python3 package.
 if (WITH_PYTHON_BINDINGS)
-    add_test(NAME run_gradient_autoscheduler_test_py
-             COMMAND "${PYTHON_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/test.py")
-    set_tests_properties(run_gradient_autoscheduler_test_py PROPERTIES LABELS Li2018)
-    set_property(TEST run_gradient_autoscheduler_test_py
-                 PROPERTY ENVIRONMENT
-                 "PYTHONPATH=$<TARGET_FILE_DIR:halide_py>"
-                 "$<$<NOT:$<PLATFORM_ID:Windows>>:LD_LIBRARY_PATH=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}>"
-                 "$<$<PLATFORM_ID:Windows>:PATH=$<TARGET_FILE_DIR:${HALIDE_COMPILER_LIB}>\;$<TARGET_FILE_DIR:gradient_autoscheduler>>")
+    # TODO: move this whole test/app to python_bindings/apps and remove this find_package.
+    find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
+
+    add_test(NAME gradient_autoscheduler_test_py
+             COMMAND Python3::Interpreter "${CMAKE_CURRENT_SOURCE_DIR}/test.py")
+
+    set_tests_properties(gradient_autoscheduler_test_py PROPERTIES LABELS Li2018)
+    set_property(TEST gradient_autoscheduler_test_py PROPERTY ENVIRONMENT "PYTHONPATH=$<TARGET_FILE_DIR:Halide::Python>")
 endif ()
