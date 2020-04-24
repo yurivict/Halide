@@ -1,3 +1,5 @@
+# TODO: rename auto_schedule target to Adams2019 or something similar.
+
 # weights
 set(WF_CPP baseline.cpp)
 configure_file(baseline.weights baseline.weights COPYONLY)
@@ -80,9 +82,9 @@ target_link_libraries(demo_apps_autoscheduler PRIVATE demo Halide::RunGenMain)
 add_test(NAME demo_apps_autoscheduler
          COMMAND demo_apps_autoscheduler --benchmarks=all --benchmark_min_time=1 --estimate_all)
 
-set_tests_properties(demo_apps_autoscheduler PROPERTIES LABELS autoscheduler)
+set_tests_properties(demo_apps_autoscheduler PROPERTIES LABELS Adams2019)
 
-# =======================================================
+# ==========================================================
 # TODO: move this to a separate folder since it's a demo/app
 
 add_executable(included_schedule_file.generator included_schedule_file_generator.cpp)
@@ -100,35 +102,44 @@ target_link_libraries(demo_included_schedule_file PRIVATE included_schedule_file
 add_test(NAME demo_included_schedule_file
          COMMAND demo_included_schedule_file --benchmarks=all --benchmark_min_time=1 --estimate_all)
 
-set_tests_properties(demo_included_schedule_file PROPERTIES LABELS autoscheduler)
+set_tests_properties(demo_included_schedule_file PROPERTIES LABELS Adams2019)
 
-return()
-
-# =======================================================
-# TODO: move this to a separate folder since it's a demo/app
+# =============================================
+# Auto-tuning support utilities.
+# TODO: implement auto-tuning support in CMake?
 
 add_executable(featurization_to_sample featurization_to_sample.cpp)
 
 add_executable(get_host_target get_host_target.cpp)
-target_include_directories(get_host_target PRIVATE "${HALIDE_INCLUDE_DIR}")
-target_link_libraries(get_host_target PRIVATE Halide)
+target_link_libraries(get_host_target PRIVATE Halide::Halide)
+
+add_executable(weightsdir_to_weightsfile weightsdir_to_weightsfile.cpp Weights.cpp)
+target_link_libraries(weightsdir_to_weightsfile PRIVATE Halide::Runtime)
+
+# ==========================================================
+# TODO: move these to a separate folder since they're tests.
 
 add_executable(test_apps_autoscheduler test.cpp)
-target_include_directories(
-        test_apps_autoscheduler
-        PRIVATE "${HALIDE_INCLUDE_DIR}" "${HALIDE_TOOLS_DIR}")
-target_link_libraries(test_apps_autoscheduler PRIVATE Halide)
-if (NOT WIN32)
-    target_link_libraries(test_apps_autoscheduler PRIVATE dl)
-endif ()
+target_link_libraries(test_apps_autoscheduler PRIVATE Halide::Halide Halide::Tools ${CMAKE_DL_LIBS})
+
+add_test(NAME test_apps_autoscheduler
+         COMMAND test_apps_autoscheduler
+         # Test expects to find module in the library path. Same directory is sufficient across all platforms.
+         WORKING_DIRECTORY $<TARGET_FILE_DIR:auto_schedule>)
+
+set_tests_properties(test_apps_autoscheduler PROPERTIES LABELS Adams2019)
+
+##
 
 add_executable(test_perfect_hash_map test_perfect_hash_map.cpp)
 
-add_executable(test_function_dag test_function_dag.cpp FunctionDAG.cpp ASLog.cpp)
-target_include_directories(
-        test_function_dag
-        PRIVATE "${HALIDE_INCLUDE_DIR}" "${HALIDE_TOOLS_DIR}")
-target_link_libraries(test_function_dag PRIVATE Halide)
+add_test(NAME test_perfect_hash_map COMMAND test_perfect_hash_map)
+set_tests_properties(test_perfect_hash_map PROPERTIES LABELS Adams2019)
 
-add_executable(weightsdir_to_weightsfile weightsdir_to_weightsfile.cpp
-               Weights.cpp)
+##
+
+add_executable(test_function_dag test_function_dag.cpp FunctionDAG.cpp ASLog.cpp)
+target_link_libraries(test_function_dag PRIVATE Halide::Halide Halide::Tools)
+
+add_test(NAME test_function_dag COMMAND test_function_dag)
+set_tests_properties(test_function_dag PROPERTIES LABELS Adams2019)
