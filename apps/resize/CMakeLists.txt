@@ -88,11 +88,5 @@ if (EXISTS ${IMAGE})
         add_test(NAME resize_${VARIANT}
                  COMMAND resize ${INPUT} out_${VARIANT}.png -i ${INTERP} -t ${TYPE} -f ${F})
         set_tests_properties(resize_${VARIANT} PROPERTIES FIXTURES_REQUIRED rgb_small)
-
-        if (WIN32)
-            # On Windows, need Halide.dll to be in the PATH
-            set_tests_properties(resize_${VARIANT} PROPERTIES
-                                 ENVIRONMENT "PATH=$<SHELL_PATH:$<TARGET_FILE_DIR:Halide::Halide>>$<SEMICOLON>$ENV{PATH}")
-        endif ()
     endforeach ()
 endif ()

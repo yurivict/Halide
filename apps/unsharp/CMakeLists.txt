@@ -36,10 +36,4 @@ if (EXISTS ${IMAGE})
     configure_file(${IMAGE} rgb.png COPYONLY)
     add_test(NAME unsharp_filter
              COMMAND unsharp_filter rgb.png out.png)
-
-    if (WIN32)
-        # On Windows, need Halide.dll to be in the PATH
-        set_tests_properties(unsharp_filter PROPERTIES
-                             ENVIRONMENT "PATH=$<SHELL_PATH:$<TARGET_FILE_DIR:Halide::Halide>>$<SEMICOLON>$ENV{PATH}")
-    endif ()
 endif ()

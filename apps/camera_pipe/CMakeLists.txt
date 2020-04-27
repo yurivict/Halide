@@ -39,10 +39,4 @@ if (EXISTS ${IMAGE})
     configure_file(${IMAGE} rgb.png COPYONLY)
     add_test(NAME camera_pipe_process
              COMMAND camera_pipe_process rgb.png 2 50 5 output.png)
-
-    if (WIN32)
-        # On Windows, need Halide.dll to be in the PATH
-        set_tests_properties(camera_pipe_process PROPERTIES
-                             ENVIRONMENT "PATH=$<SHELL_PATH:$<TARGET_FILE_DIR:Halide::Halide>>$<SEMICOLON>$ENV{PATH}")
-    endif ()
 endif ()

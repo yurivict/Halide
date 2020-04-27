@@ -110,7 +110,7 @@ If you wish to use cmake to build Halide, the build procedure is:
 
 `LLVM_DIR` should be the folder in the LLVM installation or build tree that contains `LLVMConfig.cmake`.
 
-#### Building Halide and LLVM on Windows
+#### Building LLVM on Windows
 
 Acquire MSVC 2015 Update 3 or newer. Earlier versions may work but are
 not part of our tests. MSBuild and cmake should also be in your
@@ -131,11 +131,29 @@ Then build it like so:
 
 You can substitute `Debug` for `Release` in both `cmake` commands if you want a debug build.
 
+#### PNG & JPEG on Windows
+
+The best way to get compatible libpng ang libjpeg builds on Windows is to use [vcpkg](https://github.com/Microsoft/vcpkg).
+
+Install it like so:
+
+    D:\> git clone https://github.com/Microsoft/vcpkg.git
+    D:\> cd vcpkg
+    D:\vcpkg> .\vcpkg integrate install
+    ...
+    CMake projects should use: "-DCMAKE_TOOLCHAIN_FILE=D:/vcpkg/scripts/buildsystems/vcpkg.cmake"
+    
+Then install the libraries.
+
+    D:\vcpkg> .\vcpkg install libpng:x64-windows libjpeg-turbo:x64-windows
+
+#### Building Halide on Windows
+
 To configure and build Halide:
 
     D:\> md Halide-build
     D:\> cd Halide-build
-    D:\Halide-build> cmake -G "Visual Studio 16 2019" -Thost=x64 -A x64 -DBUILD_SHARED_LIBS=YES -DLLVM_DIR=D:/llvm-install/lib/cmake/llvm ..\Halide
+    D:\Halide-build> cmake -G "Visual Studio 16 2019" -Thost=x64 -A x64 -DBUILD_SHARED_LIBS=YES -DCMAKE_TOOLCHAIN_FILE=D:/vcpkg/scripts/buildsystems/vcpkg.cmake -DLLVM_DIR=D:/llvm-install/lib/cmake/llvm ..\Halide
     D:\Halide-build> cmake --build . --config Release -j %NUMBER_OF_PROCESSORS%
 
 To run the tests:
@@ -145,7 +163,7 @@ To run the tests:
 To use Ninja to build Halide:
 
     D:\Halide-build> "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" x64
-    D:\Halide-build> cmake -G Ninja -DBUILD_SHARED_LIBS=YES -DLLVM_DIR=D:/llvm-install/lib/cmake/llvm -DCMAKE_BUILD_TYPE=Release ..\Halide
+    D:\Halide-build> cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=YES -DCMAKE_TOOLCHAIN_FILE=D:/vcpkg/scripts/buildsystems/vcpkg.cmake -DLLVM_DIR=D:/llvm-install/lib/cmake/llvm ..\Halide
 
 #### If all else fails...
 

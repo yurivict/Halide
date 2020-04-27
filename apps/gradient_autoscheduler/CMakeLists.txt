@@ -62,10 +62,7 @@ set_tests_properties(gradient_autoscheduler_test_cpp PROPERTIES LABELS Li2018)
 
 ##
 
-if (WITH_PYTHON_BINDINGS)
-    # TODO: move this whole test/app to python_bindings/apps and remove this find_package.
-    find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
-
+if (TARGET Halide::Python AND TARGET Python3::Interpreter)
     add_test(NAME gradient_autoscheduler_test_py
              COMMAND Python3::Interpreter "${CMAKE_CURRENT_SOURCE_DIR}/test.py")
 

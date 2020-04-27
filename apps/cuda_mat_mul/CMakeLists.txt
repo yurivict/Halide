@@ -2,11 +2,7 @@ cmake_minimum_required(VERSION 3.14)
 project(cuda_mat_mul)
 
 # TODO: do we need to add automatic cuda propagation to dependent targets of add_halide_library?
-find_package(CUDA)
-if (NOT CUDA_FOUND)
-    message(STATUS "Couldn't find CUDA. Not building anything.")
-    return()
-endif ()
+find_package(CUDA REQUIRED)
 
 enable_testing()
 
@@ -42,8 +38,3 @@ target_link_libraries(runner
 
 # Test that the app actually works!
 add_test(NAME mat_mul COMMAND runner)
-if (WIN32)
-    # On Windows, need Halide.dll to be in the PATH
-    set_tests_properties(mat_mul PROPERTIES
-                         ENVIRONMENT "PATH=$<SHELL_PATH:$<TARGET_FILE_DIR:Halide::Halide>>$<SEMICOLON>$ENV{PATH}")
-endif ()

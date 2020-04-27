@@ -36,10 +36,4 @@ if (EXISTS ${IMAGE})
     configure_file(${IMAGE} rgba.png COPYONLY)
     add_test(NAME interpolate_filter
              COMMAND interpolate_filter rgba.png out.png)
-
-    if (WIN32)
-        # On Windows, need Halide.dll to be in the PATH
-        set_tests_properties(interpolate_filter PROPERTIES
-                             ENVIRONMENT "PATH=$<SHELL_PATH:$<TARGET_FILE_DIR:Halide::Halide>>$<SEMICOLON>$ENV{PATH}")
-    endif ()
 endif ()
