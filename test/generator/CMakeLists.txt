@@ -61,7 +61,7 @@ set(GENERATOR_SRCS
     memory_profiler_mandelbrot_generator.cpp
     metadata_tester_generator.cpp
     msan_generator.cpp
-    #multitarget_generator.cpp  # TODO: see issue #4619
+    multitarget_generator.cpp
     nested_externs_generator.cpp
     output_assign_generator.cpp
     pyramid_generator.cpp
@@ -120,7 +120,7 @@ set(PARAMS_metadata_tester
 
 set(FEATURES_msan msan)
 
-set(HL_TARGET_multitarget host host-debug)
+set(HL_TARGET_multitarget host host-no_bounds_query)
 set(FEATURES_multitarget c_plus_plus_name_mangling)
 set(FN_NAME_multitarget HalideTest::multitarget)
 
@@ -199,7 +199,7 @@ halide_define_aot_test(image_from_array)
 halide_define_aot_test(mandelbrot)
 halide_define_aot_test(memory_profiler_mandelbrot)
 halide_define_aot_test(msan)
-#halide_define_aot_test(multitarget)  # see issue #4619
+halide_define_aot_test(multitarget)
 halide_define_aot_test(output_assign)
 halide_define_aot_test(pyramid)
 halide_define_aot_test(string_param)
