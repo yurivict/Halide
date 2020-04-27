@@ -2,15 +2,38 @@
 
 ## Overview
 
-The primary support for Halide in CMake is the
-[`halide_library`](#halide_library) rule, which allows you to build a Generator
-into an executable for various architectures.
+The primary support for Halide in CMake is the `add_halide_library` function.
+This is provided when adding Halide to your project via either `add_subdirectory`
+or `find_package`. This function assists in creating targets for the various
+outputs of Halide generators.
+
+We also support using Halide in JIT mode by linking to `Halide::Halide`.
 
 Halide code is produced in a two-stage build that may seem a bit unusual at
 first, so before documenting the build rules, let's recap: a *Generator* is a
 C++ class in which you define a Halide pipeline and schedule, as well as
 well-defined input and output parameters; it can be compiled into an executable
-(often referred to as a *Filter*) that efficiently runs the Halide pipeline.
+(called the "generator executable") which manages compiling your pipeline.
+
+This generator executable can produce a library which efficiently runs your Halide
+pipeline. This library is often called a "filter".
+
+## Getting CMake
+
+Halide requires at least version 3.14 of CMake, which is easy to install. On
+Windows, Visual Studio 2019 bundles CMake 3.16. Older versions of Visual Studio
+bundle old releases of CMake, which should be updated by installing from [Kitware's
+website](https://cmake.org/download/).
+
+On macOS, a recent version of CMake is easily available from [Homebrew](https://brew.sh).
+
+On Ubuntu Linux, Kitware provides an [APT repository](https://cmake.org/download/)
+for up-to-date releases. Ubuntu 20.04 (focal) bundles 3.16. Users of other Linux
+distributions should refer to their package managers and community repositories
+(eg. the AUR).
+
+On all platforms, the latest CMake is available as a pip package. With an up-to-date
+version of Python and pip, running `pip3 install cmake` should be sufficient.
 
 ## Halide Compilation Process
 
@@ -36,19 +59,22 @@ of dependencies involved:
 ## Using the Halide Build Rules
 
 The easiest way to use CMake rules for Halide is via a prebuilt Halide
-distribution that includes them. In your CMakeLists.txt file, just set
-`HALIDE_DISTRIB_DIR` to point to the distribution directory, then include
-`halide.cmake`:
+distribution that includes them. Add the root of this directory to the
+`CMAKE_MODULE_PATH` variable at the command line:
 
-    set(HALIDE_DISTRIB_DIR "/path/to/halide/distrib")
-    include("${HALIDE_DISTRIB_DIR}/halide.cmake")
+    $ cmake ... -DCMAKE_MODULE_PATH="/path/to/halide;..." ...
 
 Then, using a Generator can be as simple as
 
-    halide_library(coolness SRCS coolness_generator.cpp)
+    find_package(Halide REQUIRED)
+
+    add_executable(coolness.gen coolness_generator.cpp)
+    target_link_libraries(coolness.gen PRIVATE Halide::Generator)
+
+    add_halide_library(coolness FROM coolness.gen)
 
     add_executable(my_app my_app.cpp)
-    target_link_libraries(my_app PUBLIC coolness)
+    target_link_libraries(my_app PRIVATE coolness)
 
 For an example of "standalone" use of the CMake rules, see [apps/wavelet](apps/wavelet).
 
