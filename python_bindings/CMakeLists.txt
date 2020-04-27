@@ -19,21 +19,15 @@ FetchContent_MakeAvailable(pybind11)
 ##
 
 function(make_shell_path OUTVAR)
-    if ("${CMAKE_VERSION}" VERSION_GREATER_EQUAL "3.15")
-        # Version 3.15 and greater almost implemented this in the generator expression.
-        string(REPLACE ";" "\\\\;" ARGN "${ARGN}")
-        set(${OUTVAR} "$<SHELL_PATH:${ARGN}>" PARENT_SCOPE)
+    if (WIN32)
+        set(SEP "\\$<SEMICOLON>")
     else ()
-        if (WIN32)
-            set(SEP "\\$<SEMICOLON>")
-        else ()
-            set(SEP ":")
-        endif ()
-
-        list(TRANSFORM ARGN REPLACE "^(.+)$" "$<SHELL_PATH:\\1>")
-        string(REPLACE ";" "${SEP}" ARGN "${ARGN}")
-        set(${OUTVAR} "${ARGN}" PARENT_SCOPE)
+        set(SEP ":")
     endif ()
+
+    list(TRANSFORM ARGN REPLACE "^(.+)$" "$<SHELL_PATH:\\1>")
+    string(REPLACE ";" "${SEP}" ARGN "${ARGN}")
+    set(${OUTVAR} "${ARGN}" PARENT_SCOPE)
 endfunction()
 
 ##
