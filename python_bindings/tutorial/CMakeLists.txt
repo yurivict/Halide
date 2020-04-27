@@ -18,12 +18,13 @@ set(TESTS
 
 foreach (TEST IN LISTS TESTS)
     get_filename_component(TEST_NAME ${TEST} NAME_WE)
-    file(TO_NATIVE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/${TEST}" NATIVE_SCRIPT)
     add_test(NAME python_tutorial_${TEST_NAME}
-             COMMAND "${CMAKE_COMMAND}"
-             -E env "PYTHONPATH=${CMAKE_CURRENT_BINARY_DIR}:$<TARGET_FILE_DIR:Halide::Python>" "HL_TARGET=host"
-             "$<TARGET_FILE:Python3::Interpreter>" "${NATIVE_SCRIPT}")
-    set_tests_properties(python_tutorial_${TEST_NAME} PROPERTIES LABELS python)
+             COMMAND Python3::Interpreter "$<SHELL_PATH:${CMAKE_CURRENT_SOURCE_DIR}/${TEST}>")
+
+    make_shell_path(PYTHONPATH "${CMAKE_CURRENT_BINARY_DIR}" "$<TARGET_FILE_DIR:Halide::Python>")
+    set_tests_properties(python_tutorial_${TEST_NAME} PROPERTIES 
+                         LABELS python
+                         ENVIRONMENT "PYTHONPATH=${PYTHONPATH};HL_TARGET=host")
 endforeach ()
 
 ## Add some hacks for getting CMake to delay compiling lesson_10_halide until after the test has run. The "better" way
@@ -32,14 +33,14 @@ endforeach ()
 
 # This dummy command "generates" the files that the TEST python_tutorial_lesson_10_aot_compilation_generate will
 # actually generate as part of the fixture below.
-add_custom_command(OUTPUT lesson_10_halide.py.cpp lesson_10_halide${CMAKE_CXX_OUTPUT_EXTENSION}
+add_custom_command(OUTPUT lesson_10_halide.py.cpp lesson_10_halide.o #TODO: Python output should honor platform naming and use ${CMAKE_CXX_OUTPUT_EXTENSION}
                    COMMAND "${CMAKE_COMMAND}" -E echo Dummy command for lesson 10 sources.)
 
 # This target allows CMake to build lesson_10_halide.so (or whatever the correct extension is) as part of the tests
 # later. It is excluded from ALL since it isn't valid to build outside of this context.
 Python3_add_library(lesson_10_halide MODULE EXCLUDE_FROM_ALL
                     lesson_10_halide.py.cpp
-                    lesson_10_halide${CMAKE_CXX_OUTPUT_EXTENSION})
+                    lesson_10_halide.o)
 
 target_link_libraries(lesson_10_halide PRIVATE Halide::Runtime)
 
@@ -47,7 +48,7 @@ target_link_libraries(lesson_10_halide PRIVATE Halide::Runtime)
 # library, and finally runs python_tutorial_lesson_10_aot_compilation_run. The ..._compile test invokes CMake on
 # the current build for the above library.
 add_test(NAME python_tutorial_lesson_10_compile
-         COMMAND "${CMAKE_COMMAND}" --build ${CMAKE_BINARY_DIR} --target lesson_10_halide)
+         COMMAND "${CMAKE_COMMAND}" --build "${CMAKE_BINARY_DIR}" --target lesson_10_halide)
 
 set_tests_properties(python_tutorial_lesson_10_aot_compilation_generate PROPERTIES
                      FIXTURES_SETUP py_lesson_10)
