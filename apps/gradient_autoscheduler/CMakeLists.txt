@@ -62,10 +62,27 @@ set_tests_properties(gradient_autoscheduler_test_cpp PROPERTIES LABELS Li2018)
 
 ##
 
-if (TARGET Halide::Python AND TARGET Python3::Interpreter)
-    add_test(NAME gradient_autoscheduler_test_py
-             COMMAND Python3::Interpreter "${CMAKE_CURRENT_SOURCE_DIR}/test.py")
+if (WITH_PYTHON_BINDINGS)
+    # TODO: rework this as an app under python_bindings.
+    # Disabled due to issue #4876
+    if (FALSE)
+        find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
 
-    set_tests_properties(gradient_autoscheduler_test_py PROPERTIES LABELS Li2018)
-    set_property(TEST gradient_autoscheduler_test_py PROPERTY ENVIRONMENT "PYTHONPATH=$<TARGET_FILE_DIR:Halide::Python>")
+        add_test(NAME gradient_autoscheduler_test_py
+                 COMMAND Python3::Interpreter "${CMAKE_CURRENT_SOURCE_DIR}/test.py")
+
+        set(PYTHONPATH "$<SHELL_PATH:$<TARGET_FILE_DIR:Halide::Python>>")
+
+        if (WIN32)
+            set(SEP "\\$<SEMICOLON>")
+        else ()
+            set(SEP ":")
+        endif ()
+
+        set(_PATH "$<SHELL_PATH:$<TARGET_FILE_DIR:gradient_autoscheduler>>;$<SHELL_PATH:$<TARGET_FILE_DIR:Halide::Halide>>;$ENV{PATH}")
+        string(REPLACE ";" "${SEP}" _PATH "${_PATH}")
+        set_tests_properties(gradient_autoscheduler_test_py PROPERTIES 
+                             LABELS Li2018
+                             ENVIRONMENT "PYTHONPATH=${PYTHONPATH};PATH=${_PATH}")
+    endif ()
 endif ()

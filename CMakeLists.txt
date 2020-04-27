@@ -46,11 +46,26 @@ add_subdirectory(dependencies)
 add_subdirectory(src)
 add_subdirectory(tools)
 
+include(HalideGeneratorHelpers)
+
 ##
 # Add tests, apps, tutorials, etc. if we're not being imported into another CMake project.
 ##
 
 if (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+    option(WITH_PYTHON_BINDINGS "Build Python bindings" ON)
+    if (WITH_PYTHON_BINDINGS)
+        if (HALIDE_ENABLE_RTTI)
+            message(STATUS "Building Python bindings enabled")
+            add_subdirectory(python_bindings)
+        else ()
+            message(WARNING "Building Python bindings disabled: must compile with RTTI")
+            set(WITH_PYTHON_BINDINGS OFF CACHE BOOL "Build Python bindings" FORCE)
+        endif ()
+    else ()
+        message(STATUS "Building Python bindings disabled")
+    endif ()
+
     option(WITH_TESTS "Build tests" ON)
     if (WITH_TESTS)
         message(STATUS "Building tests enabled")
@@ -89,18 +104,6 @@ if (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
         add_subdirectory(util)
     else ()
         message(STATUS "Building utils disabled")
-    endif ()
-
-    option(WITH_PYTHON_BINDINGS "Build Python bindings" ON)
-    if (WITH_PYTHON_BINDINGS)
-        if (HALIDE_ENABLE_RTTI)
-            message(STATUS "Building Python bindings enabled")
-            add_subdirectory(python_bindings)
-        else ()
-            message(STATUS "Building Python bindings disabled: must compile with RTTI")
-        endif ()
-    else ()
-        message(STATUS "Building Python bindings disabled")
     endif ()
 
     add_subdirectory(packaging)

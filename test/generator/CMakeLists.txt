@@ -1,5 +1,3 @@
-include(HalideGeneratorHelpers)
-
 ##
 # Convenience method for defining test cases in this directory.
 ##
