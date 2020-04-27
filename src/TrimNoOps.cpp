@@ -303,14 +303,9 @@ class SimplifyUsingBounds : public IRMutator {
     template<typename StmtOrExpr, typename LetStmtOrLet>
     StmtOrExpr visit_let(const LetStmtOrLet *op) {
         Expr value = mutate(op->value);
-        StmtOrExpr body;
-        if (value.type() == Int(32) && is_pure(value)) {
-            containing_loops.push_back({op->name, {value, value}});
-            body = mutate(op->body);
-            containing_loops.pop_back();
-        } else {
-            body = mutate(op->body);
-        }
+        containing_loops.push_back({op->name, {value, value}});
+        StmtOrExpr body = mutate(op->body);
+        containing_loops.pop_back();
         return LetStmtOrLet::make(op->name, value, body);
     }
 

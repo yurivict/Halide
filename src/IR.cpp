@@ -582,7 +582,6 @@ namespace {
 const char *const intrinsic_op_names[] = {
     "abs",
     "absd",
-    "add_image_checks_marker",
     "alloca",
     "bitwise_and",
     "bitwise_not",

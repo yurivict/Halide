@@ -37,13 +37,7 @@ class AllocationInference : public IRMutator {
         Stmt new_body = mutate(op->body);
         Stmt stmt = Realize::make(op->name, op->types, op->memory_type, op->bounds, op->condition, new_body);
 
-        // If the realization is dead and there's is no access to the
-        // buffer (e.g. because we're in a specialization), then
-        // b.size() may be zero. In this case just drop the realize
-        // node.
-        if (b.empty() && !op->bounds.empty()) {
-            return new_body;
-        }
+        internal_assert(b.size() == op->bounds.size()) << b.size() << " " << op->bounds.size() << "\n";
 
         for (size_t i = 0; i < b.size(); i++) {
             // Get any applicable bound on this dimension
