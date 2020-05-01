@@ -11,14 +11,16 @@ int main() {
 
 #include <cstdio>
 
-#include <GL/glut.h>
+#if __APPLE__
+// TODO: why are these deprecated? Can we update this test?
+#define GL_SILENCE_DEPRECATIONS
+#include <OpenGL/gl3.h>
+#else
+#include <GL/gl.h>
+#include <GL/glu.h>
+#endif
 
 using namespace Halide;
-
-extern "C" void glGenTextures(GLsizei, GLuint *);
-extern "C" void glTexParameteri(GLenum, GLenum, GLint);
-extern "C" void glBindTexture(GLenum, GLuint);
-extern "C" void glTexImage2D(GLenum, GLint, GLint, GLsizei, GLsizei, GLint, GLenum, GLenum, const GLvoid *);
 
 int main() {
 
