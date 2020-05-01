@@ -35,12 +35,12 @@ Build Status
 Building Halide with Make
 =========================
 
-#### TL;DR
+### TL;DR
 
 Have llvm-9.0 (or greater) installed and run `make` in the root
 directory of the repository (where this README is).
 
-#### Acquiring LLVM
+### Acquiring LLVM
 
 Building Halide requires at least LLVM 9.0, along with the matching
 version of Clang; we recommend using the most recent stable version of LLVM for
@@ -79,7 +79,7 @@ Note that you *must* add `clang` to `LLVM_ENABLE_PROJECTS`; adding `lld` to
 We recommend enabling both in all cases, to simplify builds.
 You can disable exception handling (EH) and RTTI if you don't want the Python bindings.
 
-#### Building Halide with make
+### Building Halide with make
 
 With `LLVM_CONFIG` set (or `llvm-config` in your path), you should be
 able to just run `make` in the root directory of the Halide source tree.
@@ -89,7 +89,7 @@ make sure all the apps compile and run (but won't check their output).
 There is no `make install` yet. If you want to make an install
 package, run `make distrib`.
 
-#### Building Halide out-of-tree with make
+### Building Halide out-of-tree with make
 
 If you wish to build Halide in a separate directory, you can do that
 like so:
@@ -409,11 +409,11 @@ To build and run an example app using the Hexagon target,
   2. Download and install the Hexagon SDK and version 8.0 Hexagon Tools
   3. Build and run an example for Hexagon HVX
 
-#### 1. Obtain and build trunk LLVM and Clang
+### 1. Obtain and build trunk LLVM and Clang
 
 (Instructions given previous, just be sure to check out the `master` branch.)
 
-#### 2. Download and install the Hexagon SDK and version 8.0 Hexagon Tools
+### 2. Download and install the Hexagon SDK and version 8.0 Hexagon Tools
 Go to https://developer.qualcomm.com/software/hexagon-dsp-sdk/tools
   1. Select the Hexagon Series 600 Software and download the 3.0 version for Linux.
   2. untar the installer
@@ -423,7 +423,7 @@ Go to https://developer.qualcomm.com/software/hexagon-dsp-sdk/tools
 
     export SDK_LOC=/location/of/SDK
 
-#### 3. Build and run an example for Hexagon HVX
+### 3. Build and run an example for Hexagon HVX
 In addition to running Hexagon code on device, Halide also supports running Hexagon
 code on the simulator from the Hexagon tools.
 
@@ -434,7 +434,7 @@ To build and run the blur example in Halide/apps/blur on the simulator:
     export HL_HEXAGON_TOOLS=$SDK_LOC/Hexagon_Tools/8.0/Tools/
     LD_LIBRARY_PATH=../../src/runtime/hexagon_remote/bin/host/:$HL_HEXAGON_TOOLS/lib/iss/:. HL_TARGET=host-hvx_128 make test
 
-#### To build and run the blur example in Halide/apps/blur on Android:
+### To build and run the blur example in Halide/apps/blur on Android:
 
 To build the example for Android, first ensure that you have a standalone toolchain
 created from the NDK using the make-standalone-toolchain.sh script:
