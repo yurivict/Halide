@@ -28,6 +28,7 @@ jobs:
       - name: Install clang-tidy
         run: |
           sudo apt-get install llvm-9 clang-9 libclang-9-dev clang-tidy-9
+          sudo apt-get remove llvm-8 clang-8 libclang-8-dev clang-tidy-8
       - name: Build Compilation DB
         run: |
           cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DLLVM_DIR=/usr/lib/llvm-9/lib/cmake/llvm -S . -B build
