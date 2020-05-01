@@ -17,7 +17,6 @@ int main() {
 #include <OpenGL/gl3.h>
 #else
 #include <GL/gl.h>
-#include <GL/glu.h>
 #endif
 
 using namespace Halide;
