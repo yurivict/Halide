@@ -13,7 +13,7 @@ int main() {
 
 #if __APPLE__
 // TODO: why are these deprecated? Can we update this test?
-#define GL_SILENCE_DEPRECATIONS
+#define GL_SILENCE_DEPRECATION
 #include <OpenGL/gl3.h>
 #else
 #include <GL/gl.h>
