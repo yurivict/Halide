@@ -45,7 +45,7 @@ foreach (TEST IN LISTS TESTS)
              COMMAND Python3::Interpreter "$<SHELL_PATH:${CMAKE_CURRENT_SOURCE_DIR}/${TEST}>")
 
     make_shell_path(PYTHONPATH "${CMAKE_CURRENT_BINARY_DIR}/ext" "${CMAKE_CURRENT_BINARY_DIR}" "$<TARGET_FILE_DIR:Halide::Python>")
-    set_tests_properties(python_correctness_${TEST_NAME} PROPERTIES 
+    set_tests_properties(python_correctness_${TEST_NAME} PROPERTIES
                          LABELS "python;python-correctness"
                          ENVIRONMENT "PYTHONPATH=${PYTHONPATH};HL_TARGET=host")
 endforeach ()

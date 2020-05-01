@@ -43,6 +43,7 @@ set(HEADER_FILES
     CodeGen_RISCV.h
     CodeGen_WebAssembly.h
     CodeGen_X86.h
+    CompilerLogger.h
     ConciseCasts.h
     CPlusPlusMangle.h
     CSE.h
@@ -208,6 +209,7 @@ set(SOURCE_FILES
     CodeGen_RISCV.cpp
     CodeGen_WebAssembly.cpp
     CodeGen_X86.cpp
+    CompilerLogger.cpp
     CPlusPlusMangle.cpp
     CSE.cpp
     Debug.cpp

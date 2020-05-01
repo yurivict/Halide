@@ -81,7 +81,7 @@ if (WITH_PYTHON_BINDINGS)
 
         set(_PATH "$<SHELL_PATH:$<TARGET_FILE_DIR:gradient_autoscheduler>>;$<SHELL_PATH:$<TARGET_FILE_DIR:Halide::Halide>>;$ENV{PATH}")
         string(REPLACE ";" "${SEP}" _PATH "${_PATH}")
-        set_tests_properties(gradient_autoscheduler_test_py PROPERTIES 
+        set_tests_properties(gradient_autoscheduler_test_py PROPERTIES
                              LABELS Li2018
                              ENVIRONMENT "PYTHONPATH=${PYTHONPATH};PATH=${_PATH}")
     endif ()

@@ -42,10 +42,10 @@ function(add_app_test NAME)
              --build-generator "${CMAKE_GENERATOR}"
              ${cmakeGenOpts}
              --build-config "${CMAKE_BUILD_TYPE}"
-             --build-options 
-             "-DCMAKE_PREFIX_PATH=${HALIDE_DIR}" 
-             "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}" 
-             "-DLLVM_DIR=${LLVM_DIR}" 
+             --build-options
+             "-DCMAKE_PREFIX_PATH=${HALIDE_DIR}"
+             "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
+             "-DLLVM_DIR=${LLVM_DIR}"
              ${cmakeOpts}
              --test-command ${CMAKE_CTEST_COMMAND} -C ${CMAKE_BUILD_TYPE} -V)
     set_tests_properties(${NAME} PROPERTIES FIXTURES_REQUIRED apps LABELS apps)

@@ -161,9 +161,16 @@ if (HALIDE_ENABLE_RTTI AND NOT LLVM_ENABLE_RTTI)
 endif ()
 
 if (NOT LLVM_ENABLE_RTTI)
+    message(STATUS "LLVM built with RTTI disabled. Adding to interface requirements.")
     target_compile_options(Halide_LLVM INTERFACE
                            $<$<COMPILE_LANG_AND_ID:CXX,MSVC>:/GR->
                            $<$<AND:$<COMPILE_LANGUAGE:CXX>,$<NOT:$<CXX_COMPILER_ID:MSVC>>>:-fno-rtti>)
+endif ()
+
+if (LLVM_LIBCXX GREATER -1)
+    message(STATUS "LLVM linked to libc++. Adding to interface requirements.")
+    target_compile_options(Halide_LLVM INTERFACE $<$<STREQUAL:$<TARGET_PROPERTY:LINKER_LANGUAGE>,CXX>:-stdlib=libc++>)
+    target_link_options(Halide_LLVM INTERFACE $<$<STREQUAL:$<TARGET_PROPERTY:LINKER_LANGUAGE>,CXX>:-stdlib=libc++>)
 endif ()
 
 # When building the Halide library as a static library, we have to expose
@@ -172,6 +179,6 @@ endif ()
 # fully private implementation detail as far as CMake is concerned, so it
 # then doesn't need to expose any LLVM-related dependencies through targets.
 if (NOT BUILD_SHARED_LIBS)
-    install(TARGETS Halide_LLVM 
+    install(TARGETS Halide_LLVM
             EXPORT Halide_Targets)
 endif ()

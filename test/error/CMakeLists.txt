@@ -7,9 +7,9 @@ tests(GROUPS error travis
       atomics_gpu_mutex.cpp
       atomics_self_reference.cpp
       atomics_vectorized_mutex.cpp
-      autodiff_unbounded.cpp
       auto_schedule_no_parallel.cpp
       auto_schedule_no_reorder.cpp
+      autodiff_unbounded.cpp
       bad_bound.cpp
       bad_compute_at.cpp
       bad_compute_with.cpp
@@ -27,8 +27,10 @@ tests(GROUPS error travis
       broken_promise.cpp
       buffer_larger_than_two_gigs.cpp
       clamp_out_of_range.cpp
-      constraint_uses_non_param.cpp
+      compute_with_crossing_edges1.cpp
+      compute_with_crossing_edges2.cpp
       constrain_wrong_output_buffer.cpp
+      constraint_uses_non_param.cpp
       define_after_realize.cpp
       define_after_use.cpp
       device_dirty_with_no_device_support.cpp
@@ -59,8 +61,8 @@ tests(GROUPS error travis
       reduction_bounds.cpp
       reduction_type_mismatch.cpp
       require_fail.cpp
-      reused_args.cpp
       reuse_var_in_schedule.cpp
+      reused_args.cpp
       rfactor_inner_dim_non_commutative.cpp
       specialize_fail.cpp
       split_inner_wrong_tail_strategy.cpp
@@ -77,10 +79,10 @@ tests(GROUPS error travis
       undefined_pipeline_realize.cpp
       undefined_rdom_dimension.cpp
       unknown_target.cpp
-      vectorized_extern.cpp
       vectorize_dynamic.cpp
       vectorize_too_little.cpp
       vectorize_too_much.cpp
+      vectorized_extern.cpp
       wrap_custom_after_shared.cpp
       wrap_frozen.cpp
       wrapper_never_used.cpp

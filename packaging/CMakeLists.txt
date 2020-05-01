@@ -94,12 +94,12 @@ install(DIRECTORY ${Halide_SOURCE_DIR}/tutorial
 # CMake scripts
 ##
 
-if(BUILD_SHARED_LIBS)
+if (BUILD_SHARED_LIBS)
     # Don't need to expose LLVM-related targets
     unset(__find_LLVM_deps)
-else()
+else ()
     set(__find_LLVM_deps "find_dependency(LLVM CONFIG)")
-endif()
+endif ()
 
 configure_file(HalideConfig.cmake.in HalideConfig.cmake @ONLY)
 

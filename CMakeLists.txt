@@ -112,15 +112,15 @@ if (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
                       COMMAND ${CMAKE_COMMAND} -E echo "\\'distrib\\' is not available under CMake. Use \\'package\\' instead.")
 
     if (TARGET clang-format AND NOT WIN32)
-        add_custom_target(format COMMAND 
+        add_custom_target(format COMMAND
                           find
-                          "${Halide_SOURCE_DIR}/apps" 
-                          "${Halide_SOURCE_DIR}/src" 
-                          "${Halide_SOURCE_DIR}/tools" 
-                          "${Halide_SOURCE_DIR}/test" 
-                          "${Halide_SOURCE_DIR}/util" 
-                          "${Halide_SOURCE_DIR}/python_bindings" 
-                          -name *.cpp -o -name *.h -o -name *.c | 
+                          "${Halide_SOURCE_DIR}/apps"
+                          "${Halide_SOURCE_DIR}/src"
+                          "${Halide_SOURCE_DIR}/tools"
+                          "${Halide_SOURCE_DIR}/test"
+                          "${Halide_SOURCE_DIR}/util"
+                          "${Halide_SOURCE_DIR}/python_bindings"
+                          -name *.cpp -o -name *.h -o -name *.c |
                           xargs $<TARGET_FILE:clang-format> -i -style=file)
     endif ()
 endif ()

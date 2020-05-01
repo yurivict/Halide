@@ -3,29 +3,29 @@ tests(GROUPS correctness travis
       align_bounds.cpp
       argmax.cpp
       assertion_failure_in_parallel_for.cpp
-      async_copy_chain.cpp
       async.cpp
+      async_copy_chain.cpp
       async_device_copy.cpp
       atomics.cpp
       autodiff.cpp
       autoschedule_small_pure_update.cpp
+      autotune_bug.cpp
       autotune_bug_2.cpp
       autotune_bug_3.cpp
       autotune_bug_4.cpp
       autotune_bug_5.cpp
-      autotune_bug.cpp
       bad_likely.cpp
       bit_counting.cpp
       bitwise_ops.cpp
       bool_compute_root_vectorize.cpp
-      boundary_conditions.cpp
       bound.cpp
+      bound_small_allocations.cpp
+      boundary_conditions.cpp
       bounds.cpp
+      bounds_inference.cpp
       bounds_inference_chunk.cpp
       bounds_inference_complex.cpp
-      bounds_inference.cpp
       bounds_inference_outer_split.cpp
-      bound_small_allocations.cpp
       bounds_of_abs.cpp
       bounds_of_cast.cpp
       bounds_of_func.cpp
@@ -33,26 +33,27 @@ tests(GROUPS correctness travis
       bounds_of_multiply.cpp
       bounds_query.cpp
       buffer_t.cpp
+      c_function.cpp
       cascaded_filters.cpp
       cast.cpp
       cast_handle.cpp
-      c_function.cpp
       chunk.cpp
       chunk_sharing.cpp
       circular_reference_leak.cpp
       code_explosion.cpp
       compare_vars.cpp
-      compile_to_bitcode.cpp
       compile_to.cpp
+      compile_to_bitcode.cpp
       compile_to_lowered_stmt.cpp
       compile_to_multitarget.cpp
       compute_at_reordered_update_stage.cpp
       compute_at_split_rvar.cpp
-      computed_index.cpp
+      compute_inside_guard.cpp
       compute_outermost.cpp
       compute_with.cpp
       compute_with_in.cpp
       compute_with_inlined.cpp
+      computed_index.cpp
       concat.cpp
       constant_expr.cpp
       constant_type.cpp
@@ -64,6 +65,7 @@ tests(GROUPS correctness travis
       custom_auto_scheduler.cpp
       custom_error_reporter.cpp
       custom_lowering_pass.cpp
+      dead_realization_in_specialization.cpp
       debug_to_file.cpp
       debug_to_file_multiple_outputs.cpp
       debug_to_file_reorder.cpp
@@ -80,7 +82,6 @@ tests(GROUPS correctness travis
       erf.cpp
       exception.cpp
       explicit_inline_reductions.cpp
-      external_code.cpp
       extern_bounds_inference.cpp
       extern_consumer.cpp
       extern_consumer_tiled.cpp
@@ -92,23 +93,24 @@ tests(GROUPS correctness travis
       extern_sort.cpp
       extern_stage.cpp
       extern_stage_on_device.cpp
+      external_code.cpp
       failed_unroll.cpp
       fast_trigonometric.cpp
       fibonacci.cpp
       fit_function.cpp
+      float16_t.cpp
       float16_t_comparison.cpp
       float16_t_constants.cpp
-      float16_t.cpp
       float16_t_image_type.cpp
-      force_onto_stack.cpp
       for_each_element.cpp
+      force_onto_stack.cpp
       func_clone.cpp
-      func_lifetime_2.cpp
       func_lifetime.cpp
+      func_lifetime_2.cpp
       func_wrapper.cpp
       fuse.cpp
-      fused_where_inner_extent_is_zero.cpp
       fuse_gpu_threads.cpp
+      fused_where_inner_extent_is_zero.cpp
       fuzz_cse.cpp
       fuzz_float_stores.cpp
       fuzz_simplify.cpp
@@ -155,10 +157,10 @@ tests(GROUPS correctness travis
       image_wrapper.cpp
       implicit_args.cpp
       implicit_args_tests.cpp
-      infer_arguments.cpp
-      inlined_generator.cpp
-      inline_reduction.cpp
       in_place.cpp
+      infer_arguments.cpp
+      inline_reduction.cpp
+      inlined_generator.cpp
       input_image_bounds_check.cpp
       input_larger_than_two_gigs.cpp
       integer_powers.cpp
@@ -190,21 +192,22 @@ tests(GROUPS correctness travis
       many_updates.cpp
       math.cpp
       median3x3.cpp
-      memoize_cloned.cpp
       memoize.cpp
+      memoize_cloned.cpp
       min_extent.cpp
       mod.cpp
       mul_div_mod.cpp
       multi_output_pipeline_with_bad_sizes.cpp
-      multipass_constraints.cpp
       multi_pass_reduction.cpp
-      multiple_outputs.cpp
-      multiple_outputs_extern.cpp
       multi_splits_with_diff_tail_strategies.cpp
       multi_way_select.cpp
+      multipass_constraints.cpp
+      multiple_outputs.cpp
+      multiple_outputs_extern.cpp
       mux.cpp
       named_updates.cpp
       nested_shiftinwards.cpp
+      nested_tail_strategies.cpp
       newtons_method.cpp
       non_nesting_extern_bounds_query.cpp
       non_vector_aligned_embeded_buffer.cpp
@@ -214,21 +217,21 @@ tests(GROUPS correctness travis
       out_constraint.cpp
       out_of_memory.cpp
       output_larger_than_two_gigs.cpp
-      parallel_alloc.cpp
       parallel.cpp
+      parallel_alloc.cpp
       parallel_fork.cpp
       parallel_gpu_nested.cpp
-      parallel_nested_1.cpp
       parallel_nested.cpp
+      parallel_nested_1.cpp
       parallel_reductions.cpp
       parallel_rvar.cpp
       param.cpp
-      parameter_constraints.cpp
       param_map.cpp
+      parameter_constraints.cpp
       partial_application.cpp
       partial_realization.cpp
-      partition_loops_bug.cpp
       partition_loops.cpp
+      partition_loops_bug.cpp
       pipeline_set_jit_externs_func.cpp
       plain_c_includes.c
       popc_clz_ctz_bounds.cpp
@@ -256,6 +259,7 @@ tests(GROUPS correctness travis
       saturating_casts.cpp
       scatter.cpp
       set_custom_trace.cpp
+      shadowed_bound.cpp
       shared_self_references.cpp
       shifted_image.cpp
       side_effects.cpp
@@ -267,6 +271,7 @@ tests(GROUPS correctness travis
       skip_stages_external_array_functions.cpp
       skip_stages_memoize.cpp
       sliding_backwards.cpp
+      sliding_over_guard_with_if.cpp
       sliding_reduction.cpp
       sliding_window.cpp
       sort_exprs.cpp
@@ -282,14 +287,14 @@ tests(GROUPS correctness travis
       storage_folding.cpp
       store_in.cpp
       stream_compaction.cpp
-      strict_float_bounds.cpp
       strict_float.cpp
+      strict_float_bounds.cpp
       strided_load.cpp
       target.cpp
       thread_safety.cpp
+      tracing.cpp
       tracing_bounds.cpp
       tracing_broadcast.cpp
-      tracing.cpp
       tracing_stack.cpp
       transitive_bounds.cpp
       trim_no_ops.cpp
@@ -312,15 +317,15 @@ tests(GROUPS correctness travis
       vector_bounds_inference.cpp
       vector_cast.cpp
       vector_extern.cpp
+      vector_math.cpp
+      vector_print_bug.cpp
+      vectorize_guard_with_if.cpp
+      vectorize_mixed_widths.cpp
+      vectorize_varying_allocation_size.cpp
       vectorized_gpu_allocation.cpp
       vectorized_initialization.cpp
       vectorized_load_from_vectorized_allocation.cpp
       vectorized_reduction_bug.cpp
-      vectorize_guard_with_if.cpp
-      vectorize_mixed_widths.cpp
-      vectorize_varying_allocation_size.cpp
-      vector_math.cpp
-      vector_print_bug.cpp
       widening_reduction.cpp
       )
 
@@ -365,8 +370,8 @@ foreach (TEST IN ITEMS
          correctness_loop_invariant_extern_calls
          correctness_make_struct
          correctness_many_small_extern_stages
-         correctness_memoize_cloned
          correctness_memoize
+         correctness_memoize_cloned
          correctness_multiple_outputs_extern
          correctness_non_nesting_extern_bounds_query
          correctness_parallel_fork

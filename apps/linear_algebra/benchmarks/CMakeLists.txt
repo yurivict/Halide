@@ -4,11 +4,23 @@ target_link_libraries(halide_benchmarks PRIVATE halide_blas Halide::Runtime Hali
 set(BENCHMARK_TARGETS halide_benchmarks)
 
 find_package(Eigen3)
-if (TARGET Eigen3::Eigen)
+set(Eigen3 Eigen3::Eigen)
+
+if (NOT TARGET Eigen3)
+    find_package(PkgConfig)
+    if (COMMAND pkg_check_modules)
+        pkg_check_modules(Eigen3 QUIET IMPORTED_TARGET eigen3)
+        set(Eigen3 PkgConfig::Eigen3)
+    endif ()
+endif ()
+
+if (TARGET ${Eigen3})
     add_executable(eigen_benchmarks eigen_benchmarks.cpp)
     target_compile_definitions(eigen_benchmarks PRIVATE EIGEN_DONT_PARALLELIZE ENABLE_FTZ_DAZ)
-    target_link_libraries(eigen_benchmarks PRIVATE Eigen3::Eigen Halide::Tools)
+    target_link_libraries(eigen_benchmarks PRIVATE ${Eigen3} Halide::Tools)
     list(APPEND BENCHMARK_TARGETS eigen_benchmarks)
+else ()
+    message(STATUS "Could not find Eigen3 via find_package or PkgConfig. Skipping Eigen3 benchmarks...")
 endif ()
 
 foreach (BLAS_TARGET IN LISTS BLAS_TARGETS)
