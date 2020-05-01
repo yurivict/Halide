@@ -13,7 +13,7 @@ FetchContent_Declare(pybind11 GIT_REPOSITORY https://github.com/pybind/pybind11.
 # Configure pybind11 to use the same interpreter version as was detected above.
 set(PYBIND11_PYTHON_VERSION ${Python3_VERSION})
 if (Python3_ROOT_DIR)
-    message(STATUS "Python3_ROOT_DIR set -- forcing pybind11 to use Python installed at ${Python3_ROOT_DIR}.")
+    message(STATUS "Python3_ROOT_DIR set. Forcing pybind11 to use Python installed at ${Python3_ROOT_DIR}. This prepends to CMAKE_PREFIX_PATH.")
     set(CMAKE_PREFIX_PATH "${Python3_ROOT_DIR};${CMAKE_PREFIX_PATH}")
 endif ()
 

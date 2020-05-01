@@ -32,8 +32,8 @@ Build Status
 [1]: https://travis-ci.org/halide/Halide.svg?branch=master
 [2]: https://travis-ci.org/halide/Halide
 
-Building Halide
-===============
+Building Halide with Make
+=========================
 
 #### TL;DR
 
@@ -99,37 +99,64 @@ like so:
     % cd halide_build
     % make -f ../Halide/Makefile
 
-#### Building Halide with cmake
+Building Halide with CMake
+==========================
 
-If you wish to use cmake to build Halide, the build procedure is:
+### MacOS and Linux
+
+Follow the above instructions to build LLVM or aquire a suitable binary release.
+Then create a separate build folder for Halide and run CMake, pointing it to your LLVM installation.
 
     % mkdir Halide-build
     % cd Halide-build
-    % cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=YES -DLLVM_DIR=/path/to/llvm-install/lib/cmake/llvm ../Halide
+    % cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=YES -DLLVM_DIR=/path/to/llvm-install/lib/cmake/llvm /path/to/Halide
     % cmake --build .
 
 `LLVM_DIR` should be the folder in the LLVM installation or build tree that contains `LLVMConfig.cmake`.
+Omit `-G Ninja` if you do not have Ninja build installed.
 
-#### Building LLVM on Windows
+### Windows
 
-Acquire MSVC 2015 Update 3 or newer. Earlier versions may work but are
-not part of our tests. MSBuild and cmake should also be in your
-path. We assume you have cloned this repository to `D:\Halide`.
+We recommend building with MSVC 2019, but MSVC 2015 Update 3 and newer are supported (earlier versions
+might work, but are not part of our tests).
+Be sure to install the CMake Individual Component in the Visual Studio 2019 installer.
+For older versions of Visual Studio, acquire CMake and Ninja from their respective project websites.
+
+These instructions run from the `D:` drive. We assume this git repo is cloned to `D:\Halide`.
+
+#### Building LLVM
+
+For a 64-bit build, run:
+
+    D:\> "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" x64
+
+For a 32-bit build, run:
+
+    D:\> "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" x86
+
+Then download LLVM's sources (these instructions use the latest 10.0 release)
 
     D:\> git clone https://github.com/llvm/llvm-project.git --depth 1 -b release/10.x
+
+For a 64-bit build, run:
+
     D:\> md llvm-build
     D:\> cd llvm-build
-    D:\llvm-build> cmake -G "Visual Studio 16 2019" -Thost=x64 -A x64 -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../llvm-install -DLLVM_ENABLE_PROJECTS="clang;lld;clang-tools-extra" -DLLVM_ENABLE_TERMINFO=OFF -DLLVM_TARGETS_TO_BUILD=X86;ARM;NVPTX;AArch64;Mips;Hexagon -DLLVM_ENABLE_ASSERTIONS=ON -DLLVM_ENABLE_EH=ON -DLLVM_ENABLE_RTTI=ON -DLLVM_BUILD_32_BITS=OFF ..\llvm-project\llvm
+    D:\llvm-build>   cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../llvm-install   -DLLVM_ENABLE_PROJECTS="clang;lld;clang-tools-extra" -DLLVM_ENABLE_TERMINFO=OFF -DLLVM_TARGETS_TO_BUILD=X86;ARM;NVPTX;AArch64;Mips;Hexagon -DLLVM_ENABLE_ASSERTIONS=ON -DLLVM_ENABLE_EH=ON -DLLVM_ENABLE_RTTI=ON -DLLVM_BUILD_32_BITS=OFF ..\llvm-project\llvm
 
-For a 32-bit build use:
+For a 32-bit build, run:
+    
+    D:\> md llvm32-build
+    D:\> cd llvm32-build
+    D:\llvm32-build> cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../llvm32-install -DLLVM_ENABLE_PROJECTS="clang;lld;clang-tools-extra" -DLLVM_ENABLE_TERMINFO=OFF -DLLVM_TARGETS_TO_BUILD=X86;ARM;NVPTX;AArch64;Mips;Hexagon -DLLVM_ENABLE_ASSERTIONS=ON -DLLVM_ENABLE_EH=ON -DLLVM_ENABLE_RTTI=ON -DLLVM_BUILD_32_BITS=ON  ..\llvm-project\llvm
 
-    D:\llvm-build> cmake -G "Visual Studio 16 2019" -Thost=x64 -A Win32 -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../llvm-install -DLLVM_ENABLE_PROJECTS="clang;lld;clang-tools-extra" -DLLVM_ENABLE_TERMINFO=OFF -DLLVM_TARGETS_TO_BUILD=X86;ARM;NVPTX;AArch64;Mips;Hexagon -DLLVM_ENABLE_ASSERTIONS=ON -DLLVM_ENABLE_EH=ON -DLLVM_ENABLE_RTTI=ON -DLLVM_BUILD_32_BITS=ON ..\llvm-project\llvm
+Finally, run:
 
-Then build it like so:
+    D:\llvm-build> cmake --build . --config Release --target install -j %NUMBER_OF_PROCESSORS%
 
-    D:\llvm-build> cmake --build . --config Release --target INSTALL -j %NUMBER_OF_PROCESSORS%
+You can substitute `Debug` for `Release` in the above `cmake` commands if you want a debug build.
 
-You can substitute `Debug` for `Release` in both `cmake` commands if you want a debug build.
+**MSBuild:** If you want to build LLVM with MSBuild instead of Ninja, use `"Visual Studio 16 2019" -Thost=x64 -A x64` or "Visual Studio 16 2019" -Thost=x64 -A Win32` in place of `-G Ninja`.
 
 #### PNG & JPEG on Windows
 
@@ -143,27 +170,40 @@ Install it like so:
     ...
     CMake projects should use: "-DCMAKE_TOOLCHAIN_FILE=D:/vcpkg/scripts/buildsystems/vcpkg.cmake"
     
-Then install the libraries.
+Then install the libraries. For a 64-bit build, run:
 
     D:\vcpkg> .\vcpkg install libpng:x64-windows libjpeg-turbo:x64-windows
 
-#### Building Halide on Windows
+For a 32-bit build, run:
 
-To configure and build Halide:
+    D:\vcpkg> .\vcpkg install libpng:x86-windows libjpeg-turbo:x86-windows
+
+#### Building Halide
+
+For a 64-bit build, run:
 
     D:\> md Halide-build
     D:\> cd Halide-build
-    D:\Halide-build> cmake -G "Visual Studio 16 2019" -Thost=x64 -A x64 -DBUILD_SHARED_LIBS=YES -DCMAKE_TOOLCHAIN_FILE=D:/vcpkg/scripts/buildsystems/vcpkg.cmake -DLLVM_DIR=D:/llvm-install/lib/cmake/llvm ..\Halide
+    D:\Halide-build> cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=YES -DCMAKE_TOOLCHAIN_FILE=D:/vcpkg/scripts/buildsystems/vcpkg.cmake -DLLVM_DIR=D:/llvm-install/lib/cmake/llvm ..\Halide
+    
+For a 32-bit build, run:
+
+    D:\> md Halide32-build
+    D:\> cd Halide32-build
+    D:\Halide32-build> cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=YES -DCMAKE_TOOLCHAIN_FILE=D:/vcpkg/scripts/buildsystems/vcpkg.cmake -DLLVM_DIR=D:/llvm32-install/lib/cmake/llvm ..\Halide
+
+**Note:** If building with Python bindings on 32-bit (the default), be sure to point CMake to the installation path of a 32-bit Python3.
+You can do this by specifying, for example: `"-DPython3_ROOT_DIR=C:\Program Files (x86)\Python38-32"`.
+
+Then run the build with:
+
     D:\Halide-build> cmake --build . --config Release -j %NUMBER_OF_PROCESSORS%
 
-To run the tests:
+To run all the tests:
 
-    D:\Halide-build> ctest -C Release -L correctness
+    D:\Halide-build> ctest -C Release
 
-To use Ninja to build Halide:
-
-    D:\Halide-build> "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" x64
-    D:\Halide-build> cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=YES -DCMAKE_TOOLCHAIN_FILE=D:/vcpkg/scripts/buildsystems/vcpkg.cmake -DLLVM_DIR=D:/llvm-install/lib/cmake/llvm ..\Halide
+Subsets of the tests can be selected with `-L` and include `correctness`, `python`, `error`, and the other directory names under `/tests`.
 
 #### If all else fails...
 
