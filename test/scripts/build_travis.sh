@@ -14,14 +14,11 @@ fi
 : ${CXX:?"CXX must be specified"}
 
 if [ ${BUILD_SYSTEM} = 'CMAKE' ]; then
-  : ${HALIDE_SHARED_LIBRARY:?"HALIDE_SHARED_LIBRARY must be set"}
+  : ${BUILD_SHARED_LIBS:?"BUILD_SHARED_LIBS must be set"}
   mkdir -p build/ && cd build/
-  # Require a specific version of LLVM, just in case the Travis instance has
-  # an older clang/llvm version present
-  /usr/bin/cmake -DHALIDE_REQUIRE_LLVM_VERSION="${LLVM_VERSION}" \
-                 -DLLVM_DIR="/usr/local/llvm/lib/cmake/llvm/" \
+  /usr/bin/cmake -DLLVM_DIR="/usr/local/llvm/lib/cmake/llvm/" \
                  -DClang_DIR="/usr/local/llvm/lib/cmake/clang/" \
-                 -DHALIDE_SHARED_LIBRARY="${HALIDE_SHARED_LIBRARY}" \
+                 -DBUILD_SHARED_LIBS="${BUILD_SHARED_LIBS}" \
                  -DWITH_APPS=OFF \
                  -DWITH_TESTS=ON \
                  -DWITH_TEST_AUTO_SCHEDULE=OFF \
@@ -32,18 +29,18 @@ if [ ${BUILD_SYSTEM} = 'CMAKE' ]; then
                  -DWITH_DOCS=ON \
                  -DWITH_PYTHON_BINDINGS=OFF \
                  -DCMAKE_BUILD_TYPE=Release \
-                 -G "Unix Makefiles" \
+                 -G Ninja \
                  ../
 
-  make ${MAKEFLAGS}
+  /usr/bin/cmake --build . -j 4
   /usr/bin/ctest -L internal --output-on-failure
 
-  if [ ${HALIDE_SHARED_LIBRARY} = 'ON' ]; then
+  if [ ${BUILD_SHARED_LIBS} = 'ON' ]; then
     # Building with static library is slower, and can run
     # over the time limit; since we just want a reality
     # check, do the full test suite only for shared.
     /usr/bin/ctest -L travis --output-on-failure
-    make doc
+    /usr/bin/cmake --build . --target doc
   fi
 
 elif [ ${BUILD_SYSTEM} = 'MAKE' ]; then

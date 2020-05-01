@@ -9,9 +9,10 @@ addons:
       - sourceline: 'deb https://apt.kitware.com/ubuntu/ bionic main'
         key_url: 'https://apt.kitware.com/keys/kitware-archive-latest.asc'
     packages:
-      - libpng-dev # Get libpng for the tutorials and apps
-      - cmake      # For modern CMake build
-      - doxygen    # For generating docs
+      - libpng-dev   # Get libpng for the tutorials and apps
+      - cmake        # For modern CMake build
+      - doxygen      # For generating docs
+      - ninja-build  # For faster builds (maybe) and nicer build logs (definitely)
 env:
   global:
     # The Travis Ubuntu Bionic environment we run in currently promises 2 cores.
@@ -33,7 +34,7 @@ env:
     # allow a simple way to avoid this. If the built matrix ever gets more complex
     # this will definitely need improvement, but for now, it's simpler to just
     - LLVM_VERSION=10.0.0 BUILD_SYSTEM=MAKE LLVM_URL_ROOT=https://github.com/llvm/llvm-project/releases/download/llvmorg-10.0.0
-    - LLVM_VERSION=10.0.0 BUILD_SYSTEM=CMAKE HALIDE_SHARED_LIBRARY=ON LLVM_URL_ROOT=https://github.com/llvm/llvm-project/releases/download/llvmorg-10.0.0
+    - LLVM_VERSION=10.0.0 BUILD_SYSTEM=CMAKE BUILD_SHARED_LIBS=ON LLVM_URL_ROOT=https://github.com/llvm/llvm-project/releases/download/llvmorg-10.0.0
 
     # Just one version of LLVM9 should suffice.
     # (Note that there is a build of LLVM9.0.1 on the github releases site,
