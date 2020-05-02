@@ -101,8 +101,8 @@ function(add_halide_library TARGET)
                               IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/${TARGET}.runtime${CMAKE_STATIC_LIBRARY_SUFFIX}")
 
         # Remove features that should not be attached to a runtime
-        # The fact that profile being here fixes a linker error on Windows smells like a bug.
-        # It complains about a symbol being duplicated between the runtime and the object.
+        # TODO: The fact that profile being here fixes a linker error on Windows smells like a bug.
+        #       It complains about a symbol being duplicated between the runtime and the object.
         set(RT_TARGETS ${TARGETS})
         foreach (T IN ITEMS user_context no_asserts no_bounds_query no_runtime profile)
             string(REPLACE "-${T}" "" RT_TARGETS "${RT_TARGETS}")

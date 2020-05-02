@@ -2,252 +2,268 @@
 
 ## Overview
 
-The primary support for Halide in CMake is the `add_halide_library` function.
-This is provided when adding Halide to your project via either `add_subdirectory`
-or `find_package`. This function assists in creating targets for the various
-outputs of Halide generators.
+There are two main ways to use Halide in your application: as a **JIT compiler**
+for dynamic pipelines or an **ahead-of-time (AOT) compiler** for static pipelines.
 
-We also support using Halide in JIT mode by linking to `Halide::Halide`.
+CMake provides robust support for both use cases. These new features rely on recent
+developments in CMake, so a recent version is necessary. In order to build Halide,
+you would ideally have the newest version of CMake installed on your system (3.17
+at time of writing). However, everything should work with version 3.14 or newer.
 
-Halide code is produced in a two-stage build that may seem a bit unusual at
-first, so before documenting the build rules, let's recap: a *Generator* is a
-C++ class in which you define a Halide pipeline and schedule, as well as
-well-defined input and output parameters; it can be compiled into an executable
-(called the "generator executable") which manages compiling your pipeline.
-
-This generator executable can produce a library which efficiently runs your Halide
-pipeline. This library is often called a "filter".
-
-## Getting CMake
-
-Halide requires at least version 3.14 of CMake, which is easy to install. On
-Windows, Visual Studio 2019 bundles CMake 3.16. Older versions of Visual Studio
-bundle old releases of CMake, which should be updated by installing from [Kitware's
-website](https://cmake.org/download/).
-
-On macOS, a recent version of CMake is easily available from [Homebrew](https://brew.sh).
-
-On Ubuntu Linux, Kitware provides an [APT repository](https://cmake.org/download/)
-for up-to-date releases. Ubuntu 20.04 (focal) bundles 3.16. Users of other Linux
-distributions should refer to their package managers and community repositories
-(eg. the AUR).
-
-On all platforms, the latest CMake is available as a pip package. With an up-to-date
-version of Python and pip, running `pip3 install cmake` should be sufficient.
-
-## Halide Compilation Process
-
-The Halide compilation process is actually several steps:
-
-1.  Your Generator is compiled using a standard C++ compiler.
-2.  It's linked with libHalide, LLVM, and a simple command-line wrapper. This
-    results in an executable known as the *Generator Executable*.
-3.  The Generator Executable is run *as a tool, at build time*; this produces a
-    .a, .h, and a few other Halide-specific files.
-4.  The resulting .a and .h are bundled into a CMake add_library() rule.
-
-The [`halide_library`](#halide_library) rule (mostly) hides the details of this,
-with some unavoidable warts, the main one being that there are two distinct sort
-of dependencies involved:
-
-1.  Generator dependencies: dependencies that are necessary to compile and/or
-    link the Generator itself.
-2.  Filter dependencies: dependencies that are necessary to link and/or run the
-    Filter. (Generally speaking, you only need Filter dependencies if you use
-    Halide's `define_extern` directive.)
-
-## Using the Halide Build Rules
-
-The easiest way to use CMake rules for Halide is via a prebuilt Halide
-distribution that includes them. Add the root of this directory to the
-`CMAKE_MODULE_PATH` variable at the command line:
-
-    $ cmake ... -DCMAKE_MODULE_PATH="/path/to/halide;..." ...
-
-Then, using a Generator can be as simple as
-
-    find_package(Halide REQUIRED)
-
-    add_executable(coolness.gen coolness_generator.cpp)
-    target_link_libraries(coolness.gen PRIVATE Halide::Generator)
-
-    add_halide_library(coolness FROM coolness.gen)
-
-    add_executable(my_app my_app.cpp)
-    target_link_libraries(my_app PRIVATE coolness)
-
-For an example of "standalone" use of the CMake rules, see [apps/wavelet](apps/wavelet).
-
-## Build Rules
-
-### halide_library
+Previous releases bundled a `halide.cmake` module that was meant to be `include()`-ed 
+into your project. This has been removed. Now, you should load Halide with the standard 
+[`find_package`](https://cmake.org/cmake/help/latest/command/find_package.html) mechanism, 
+like so:
 
 ```
-halide_library(name, srcs, extra_outputs, filter_deps, function_name,
-generator_args, generator_deps, generator_name, halide_target,
-halide_target_features, includes)
-```
+cmake_minimum_required(VERSION 3.14)
+project(HalideExample)
 
-*   **name** *(Name; required)* The name of the library target.
+set(CMAKE_CXX_STANDARD 11)  # or newer
+set(CMAKE_CXX_STANDARD_REQUIRED YES)
+set(CMAKE_CXX_EXTENSIONS NO)
 
-*   **srcs** *(List of C++ source files; required)* source file(s) to compile
-    into the Generator Executable.
+find_package(Halide REQUIRED)
+``` 
 
-*   **extra_outputs** *(List of strings; optional)* A list of extra Halide
-    outputs to generate at build time; this is exclusively intended for
-    debugging (e.g. to examine Halide code generation) and currently supports:
-
-    *   "assembly" (generate assembly listings for the generated functions)
-    *   "bitcode" (emit the LLVM bitcode for generation functions)
-    *   "stmt" (generate Halide .stmt files for generated functions)
-    *   "stmt_html" (like "stmt", but generated with HTML-formatted wrapping)
-
-*   **filter_deps** *(List of CMake targets; optional)* optional list of
-    dependencies needed by the Filter.
-
-*   **function_name** *(String; optional)* The name of the generated C function
-    for the filter. If omitted, defaults to the CMake rule name.
-
-*   **generator_args** *(String; optional)* Arguments to pass to the Generator,
-    used to define the compile-time values of GeneratorParams defined by the
-    Generator. If any undefined GeneratorParam names (or illegal GeneratorParam
-    values) are specified, a compile error will result.
-
-*   **generator_deps** *(List of CMake targets; optional)* optional list of
-    dependencies needed by the Generator. (These dependencies are *not* included
-    in the filter produced by [`halide_library`](#halide_library), nor in any
-    executable that depends on it.)
-
-*   **generator_name** *(String; optional)* The registered name of the Halide
-    generator (i.e., the name passed as the second argument to
-    HALIDE_REGISTER_GENERATOR in the Generator source file). If omitted,
-    defaults to the CMake rule name.
-
-*   **halide_target** *(String; optional)* The Halide target-string to use when
-    generating code; if omitted, defaults to "host". If you want to target for a
-    specific architechture, or to enable certain features, you can specify
-    specific values, e.g. "x86-64-linux-sse41-avx" compiles for x86-64 on Linux,
-    also enabling SSE4.1 and AVX. You can also specify multiple values,
-    separated by commas, to generate several variants that are selected at
-    runtime; e.g. "x86-64-linux-sse41-avx,x86-64-linux-sse41,x86-64-linux" will
-    generate three versions of the code (for SSE4.1+AVX, for SSE4.1, and for
-    plain x86-64), and select the first matching variants at runtime. (See also
-    [*halide_target* vs
-    *halide_target_features*](#halide_target-vs-halide_target_features) below.)
-
-*   **halide_target_features** *(List of strings; optional)* A list of extra
-    Halide Features to enable in the code. This can be any feature listed in
-    `feature_name_map` in `src/Target.cpp`. This is typically where flags to
-    enable GPU features should go. (See also [*halide_target* vs
-    *halide_target_features*](#halide_target-vs-halide_target_features) below.)
-
-*   **includes** *(List of strings; optional)* The list of paths to search
-    include files when building the Generator.
-
-### *halide_target* vs *halide_target_features*
-
-What's the difference between these two? It's a little subtle, and their uses
-overlap a bit. The Halide target string used to generate code found by appending
-all the features in `halide_target_features` onto `halide_target`; this can be
-useful in complex builds in which you target multiple architectures, with
-additional features tacked on. For instance, say we want to generate libraries
-for x86 and ARM architectures, with OpenGL supported on all of them:
-
-    foreach(ARCH x86 arm)
-        foreach(BITS 32 64)
-            halide_library(spiffy_${ARCH}_${BITS}
-                           SRCS spiffy_generator.cpp
-                           HALIDE_TARGET ${ARCH}-${BITS}-android
-                           HALIDE_TARGET_FEATURES opengl)
-        endforeach()
-    endforeach()
-
-The distinction can also be useful if you are generating a multi-architecture
-library:
-
-    halide_library(nifty
-                   SRCS nifty_generator.cpp
-                   HALIDE_TARGET x86-64-osx-sse41-avx,x86-64-osx-sse41,x86-64-osx-sse41
-                   HALIDE_TARGET_FEATURES metal)
-
-This says "Generate the library with specializations for AVX+SSE4.1, SSE4.1, and
-plain x86-64, and select the proper one at runtime... but enable the Metal
-feature for all three."
-
-## Build Rules (Advanced)
-
-Most code can use the [`halide_library`](#halide_library) rule directly, but for
-some usage, it can be desirable to directly use two lower-level rules.
-
-### halide_generator
+You will need to add the base of the Halide installation directory to `CMAKE_MODULE_PATH` at
+the CMake command line. 
 
 ```
-halide_generator(name, srcs, deps, generator_name, includes)
+$ mkdir build
+$ cd build
+$ cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_MODULE_PATH="/path/to/Halide" ..
 ```
 
-The [`halide_generator`](#halide_generator) rule compiles Generator source code
-into an executable; it corresponds to steps 1 and 2 in the [Halide Compilation
-Process](#halide-compilation-process).
+_**Note:**_ If you are using [`vcpkg`](https://github.com/Microsoft/vcpkg), this is configured
+for you by the toolchain and you do not need to do anything special to use Halide.
 
-*   **name** *(Name; required)* The name of the executable target. Note that
-    target names for [`halide_generator`](#halide_generator) are required to end
-    in `.generator`.
+### Getting CMake
 
-*   **srcs** *(List of C++ source files; required)* source file(s) to compile
-    into the Generator Executable.
+Getting a recent version of CMake couldn't be easier, and there are multiple good
+options on any system to 
 
-*   **deps** *(List of CMake targets; optional)* optional list of dependencies
-    needed by the Generator.
+#### Cross-Platform
 
-*   **generator_name** *(String; optional)* The registered name of the Halide
-    generator (i.e., the name passed as the second argument to
-    HALIDE_REGISTER_GENERATOR in the Generator source file). If omitted,
-    defaults to the CMake rule name.
-
-*   **includes** *(List of paths; optional)* The list of paths to search include
-    files when building the Generator.
-
-### halide_library_from_generator
+The Python package manager `pip` packages the newest version of CMake at all times.
+If you already have a Python 3 installation, this should be as easy as running
 
 ```
-halide_library_from_generator(name, generator, deps, extra_outputs,
-function_name, generator_args, halide_target, halide_target_features)
+$ pip install --upgrade cmake
 ```
 
-The [`halide_library_from_generator`](#halide_library_from_generator) rule
-executes a compiled Generator to produce final object code and related files; it
-corresponds to steps 3 and 4 in the [Halide Compilation
-Process](#halide-compilation-process).
+See the [PyPI website](https://pypi.org/project/cmake) for more details.
 
-*   **name** *(Name; required)* The name of the library target.
+#### Windows
 
-*   **generator** *(CMake target; required)* The CMake target for a
-    [`halide_generator`](#halide_generator) rule.
+On Windows, you have two good options for installing CMake. First, if you have **Visual
+Studio 2019** installed, you can get CMake 3.16 through the Visual Studio installer.
+This is the recommended way of getting CMake if you are able to use Visual Studio 2019.
+See the [Visual C++ documentation](https://docs.microsoft.com/en-us/cpp/build/cmake-projects-in-visual-studio?view=vs-2019)
+for more details.
 
-*   **deps** *(List of CMake targets; optional)* optional list of dependencies
-    needed by the Filter.
+**Otherwise**, you should not install CMake through Visual Studio, but rather from
+[Kitware's website](https://cmake.org/download/).
 
-*   **extra_outputs** *(List of strings; optional)* A list of extra Halide
-    outputs to generate at build time; this is exclusively intended for
-    debugging (e.g. to examine Halide code generation) and currently supports:
+#### macOS
 
-    *   "assembly" (generate assembly listings for the generated functions)
-    *   "bitcode" (emit the LLVM bitcode for generation functions)
-    *   "stmt" (generate Halide .stmt files for generated functions)
-    *   "stmt_html" (like "stmt", but generated with HTML-formatted wrapping)
+On macOS, a [recent version of CMake](https://formulae.brew.sh/cask/cmake#default) is readily
+available from [Homebrew](https://brew.sh). Simply running 
 
-*   **function_name** *(String; optional)* The name of the generated C function
-    for the filter. If omitted, defaults to the CMake rule name.
+```
+$ brew update
+$ brew install cmake
+```
 
-*   **generator_args** *(String; optional)* Arguments to pass to the Generator,
-    used to define the compile-time values of GeneratorParams defined by the
-    Generator. If any undefined GeneratorParam names (or illegal GeneratorParam
-    values) are specified, a compile error will result.
+should install the newest version of CMake.
 
-*   **halide_target** *(String; optional)* The Halide target-string to use when
-    generating code; if omitted, defaults to "host". See
-    [`halide_library`](#halide_library) for more information.
+The [releases on Kitware's website](https://cmake.org/download/) are also viable options.
 
-*   **halide_target_features** *(List of strings; optional)* A list of extra
-    Halide Features to enable in the code. See
-    [`halide_library`](#halide_library) for more information.
+#### Linux
+
+If you're on **Ubuntu Linux 20.04** (focal), then simply running `sudo apt install cmake` is sufficient.
+
+For older versions of **Debian, Ubuntu, Mint, and derivatives**, Kitware provides an
+[APT repository](https://apt.kitware.com/) with up-to-date releases. Note that this is
+still useful for Ubuntu 20.04 because it will remain up to date.
+
+## Using Halide in JIT mode
+
+To use Halide in JIT mode (like the [tutorials](https://halide-lang.org/tutorials/tutorial_introduction.html)
+ do, for example), you can simply link to `Halide::Halide`.
+
+```
+# ... same project setup as before ...
+add_executable(my_halide_app main.cpp)
+target_link_libraries(my_halide_app PRIVATE Halide::Halide)
+```
+
+Then `Halide.h` will be available to your code and everything should just work. That's it!
+
+## Using Halide in AOT mode
+
+Using Halide in AOT mode is more complicated so we'll walk through it step by step. Note
+that this only applies to Halide generators, so it might be useful to re-read the 
+[tutorial](https://halide-lang.org/tutorials/tutorial_lesson_15_generators.html) on
+generators. Assume (like in the tutorial) that you have a source file named
+`my_generators.cpp` and that you have generator classes `MyFirstGenerator`
+and `MySecondGenerator` with registered names `my_first_generator` and
+`my_second_generator` respectively.
+
+Then the first step is to add a **Generator Executable** to your build:
+
+```
+# ... same project setup as before ...
+add_executable(my_generators my_generators.cpp)
+target_link_libraries(my_generators PRIVATE Halide::Generator)
+```
+
+Using the generator executable, we can add a Halide library corresponding to `MyFirstGenerator`.
+
+```
+# ... continuing from above
+add_halide_library(my_first_generator FROM my_generators)
+```
+
+This will create a [STATIC IMPORTED](https://cmake.org/cmake/help/latest/command/add_library.html#imported-libraries)
+library target in CMake that corresponds to the output of running your generator.
+The second generator in the file requires generator parameters to be passed to it. 
+These are also easy to handle:
+
+```
+# ... continuing from above
+add_halide_library(my_second_generator FROM my_generators
+                   PARAMS parallel=false scale=3.0 rotation=ccw output.type=uint16)
+```
+
+Adding multiple configurations is easy, too:
+
+```
+# ... continuing from above
+add_halide_library(my_second_generator_2 FROM my_generators
+                   GENERATOR my_second_generator 
+                   PARAMS scale=9.0 rotation=ccw output.type=float32)
+
+add_halide_library(my_second_generator_3 FROM my_generators
+                   GENERATOR my_second_generator 
+                   PARAMS parallel=false output.type=float64)
+```
+
+Here, we had to specify which generator to use (`my_second_generator`) since it
+uses the target name by default. The functions in these libraries will be named
+after the target names, `my_second_generator_2` and `my_second_generator_3`, by
+default, but it is possible to control this via the `FUNCTION_NAME` parameter.
+
+Each one of these targets, `<GEN>`, carries an associated `<GEN>.runtime` target,
+which is also an IMPORTED library containing the Halide runtime. It is transitively
+linked through `<GEN>` to targets that link to `<GEN>`. On an operating system like
+Linux, where weak linking is available, this is not an issue. However, on Windows,
+this will fail due to symbol redefinitions. In these cases, you must declare that
+two Halide libraries share a runtime, like so:
+
+```
+# ... updating above
+add_halide_library(my_second_generator_2 FROM my_generators
+                   GENERATOR my_second_generator 
+                   USE_RUNTIME my_first_generator
+                   PARAMS scale=9.0 rotation=ccw output.type=float32)
+
+add_halide_library(my_second_generator_3 FROM my_generators
+                   GENERATOR my_second_generator
+                   USE_RUNTIME my_first_generator
+                   PARAMS parallel=false output.type=float64)
+```   
+
+This will even work correctly when different combinations of targets are
+specified for each halide library. A "greatest common denominator" target
+will be chosen that is compatible with all 
+
+### Common pitfalls
+Because it is not possible to demote targets from global scope, the targets created by
+`add_halide_library` are not made global (like non-imported libraries are) by default.
+If you want to access `my_first_generator` from a higher or sibling directory, you must
+add the following line to your build:
+
+```
+set_target_properties(my_first_generator PROPERTIES IMPORTED_GLOBAL TRUE)
+```
+
+Be sure to look at the apps for more examples of how AOT mode in Halide is
+meant to be used.
+
+## Imported Targets
+
+Halide defines the following targets that are available to users:
+
+* `Halide::Halide` -- this is the JIT-mode library to use when using Halide from C++.
+* `Halide::Generator` -- this is the target to use when defining a generator executable.
+  It supplies a `main()` function.
+* `Halide::Python` -- this is a Python 3 module that can be referenced as `$<TARGET_FILE:Halide::Python>`
+  when setting up Python tests or the like from CMake.
+* `Halide::Runtime` -- adds include paths to the Halide runtime headers
+* `Halide::Tools` -- adds include paths to the Halide tools, including the benchmarking utility.
+* `Halide::ImageIO` -- adds include paths to the Halide image io utility and sets up dependencies
+  to PNG / JPEG if they are available.
+* `Halide::RunGenMain`  -- used with the `REGISTRATION` parameter of `add_halide_library` to create simple runners
+  and benchmarking tools for Halide libraries.
+* `Halide::Adams19` -- the Adams et.al 2019 autoscheduler (no GPU support)
+* `Halide::Li18` -- the Li et. al 2018 gradient autoscheduler (limited GPU support)
+
+## Functions
+
+Currently, only one function is defined:
+
+### `add_halide_library`
+This is the main function for managing generators in AOT compilation. The full signature follows:
+```
+add_halide_library(<target> FROM <generator-target>
+                   [GENERATOR generator-name]
+                   [FUNCTION_NAME function-name]
+                   [USE_RUNTIME hl-target]
+                   [PYTHON_EXTENSION OUTVAR]
+                   [REGISTRATION OUTVAR]
+                   [PARAMS param1 [param2 ...]]
+                   [TARGETS target1 [target2 ...]]
+                   [FEATURES feature1 [feature2 ...]]
+                   [PLUGINS plugin1 [plugin2 ...]]
+                   [SCHEDULER scheduler-name]
+                   [GRADIENT_DESCENT])
+```
+
+This function creates a STATIC IMPORTED target called `<target>` corresponding to running the
+`<generator-target>` (an executable target which links to `Halide::Generator`) one time, using
+command line arguments derived from the other parameters.
+
+The arguments `GENERATOR` and `FUNCTION_NAME` default to `<target>`. They correspond to the
+`-g` and `-f` command line flags, respectively.  
+
+If `USE_RUNTIME` is not specified, this function will create another target called `<target>.runtime`
+which corresponds to running the generator with `-r` and a compatible list of targets. This runtime
+target is an INTERFACE dependency of `<target>`. If multiple runtime targets need to be linked together,
+setting `USE_RUNTIME` to another Halide library, `<target2>` will prevent the generation of `<target>.runtime`
+and instead use `<target2>.runtime`.
+
+If `PYTHON_EXTENSION` is set, the path to the generated `.py.cpp` file will be set in `OUTVAR`.
+This corresponds to setting `-e python_extension`
+
+If `REGISTRATION` is set, the path to the generated `.registration.cpp` file will be set in `OUTVAR`.
+This can be used to generate a runner for a Halide library that is useful for benchmarking and testing.
+For example:
+```
+add_halide_library(my_lib FROM my_gen REGISTRATION REG_CPP)
+add_executable(my_gen_runner ${REG_CPP})
+target_link_libraries(my_gen_runner PRIVATE my_lib Halide::RunGenMain)
+```
+This is equivalent to setting `-e registration`.
+
+Parameters can be passed to a generator via the `PARAMS` argument. Parameters should be space-separated.
+Similarly, `TARGETS` is a space-separated list of targets for which to generate code in a single function.
+They must all share the same platform/bits/os triple (eg. `arm-32-linux`). Features that are in common among
+all targets, including device libraries (like `cuda`) should go in `FEATURES`.
+
+To use custom autoschedulers, the relevant plugin(s) must be loaded via `PLUGINS`. Here, `plugin1` etc. should
+be a target such as `Halide::Adams19`. Then the default auto scheduler may be set with `SCHEDULER`.
+
+If `GRADIENT_DESCENT` is set, then the module will be built suitably for gradient descent calculation
+in TensorFlow or PyTorch. See `Generator::build_gradient_module()` for more documentation. This corresponds
+to passing `-d 1` at the generator command line.
