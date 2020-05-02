@@ -156,7 +156,7 @@ Finally, run:
 
 You can substitute `Debug` for `Release` in the above `cmake` commands if you want a debug build.
 
-**MSBuild:** If you want to build LLVM with MSBuild instead of Ninja, use `"Visual Studio 16 2019" -Thost=x64 -A x64` or "Visual Studio 16 2019" -Thost=x64 -A Win32` in place of `-G Ninja`.
+**MSBuild:** If you want to build LLVM with MSBuild instead of Ninja, use `-G "Visual Studio 16 2019" -Thost=x64 -A x64` or `-G "Visual Studio 16 2019" -Thost=x64 -A Win32` in place of `-G Ninja`.
 
 #### PNG & JPEG on Windows
 
