@@ -21,9 +21,13 @@ define_property(TARGET PROPERTY HL_PARAMS
                 BRIEF_DOCS "On a Halide library target, lists the parameters used to configure the filter"
                 FULL_DOCS "On a Halide library target, lists the parameters used to configure the filter")
 
-define_property(TARGET PROPERTY HL_TARGET
+define_property(TARGET PROPERTY HL_TARGETS
                 BRIEF_DOCS "On a Halide library target, lists the runtime targets supported by the filter"
                 FULL_DOCS "On a Halide library target, lists the runtime targets supported by the filter")
+
+define_property(TARGET PROPERTY HLRT_TARGETS
+                BRIEF_DOCS "On a Halide runtime target, lists the targets the runtime backs"
+                FULL_DOCS "On a Halide runtime target, lists the targets the runtime backs")
 
 function(add_halide_library TARGET)
     set(options GRADIENT_DESCENT)
@@ -96,20 +100,13 @@ function(add_halide_library TARGET)
                               Threads::Threads
                               ${CMAKE_DL_LIBS}
                               ${EXTRA_RT_LIBS})
+
         set_target_properties("${TARGET}.runtime"
                               PROPERTIES
                               IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/${TARGET}.runtime${CMAKE_STATIC_LIBRARY_SUFFIX}")
 
-        # Remove features that should not be attached to a runtime
-        # TODO: The fact that profile being here fixes a linker error on Windows smells like a bug.
-        #       It complains about a symbol being duplicated between the runtime and the object.
-        set(RT_TARGETS ${TARGETS})
-        foreach (T IN ITEMS user_context no_asserts no_bounds_query no_runtime profile)
-            string(REPLACE "-${T}" "" RT_TARGETS "${RT_TARGETS}")
-        endforeach ()
-
         add_custom_command(OUTPUT "${TARGET}.runtime${CMAKE_STATIC_LIBRARY_SUFFIX}"
-                           COMMAND ${generatorCommand} -r "${TARGET}.runtime" -o . target=${RT_TARGETS}
+                           COMMAND ${generatorCommand} -r "${TARGET}.runtime" -o . target=$<JOIN:$<TARGET_PROPERTY:${TARGET}.runtime,HLRT_TARGETS>,$<COMMA>>
                            DEPENDS "${ARG_FROM}")
 
         add_custom_target("${TARGET}.runtime.update"
@@ -122,6 +119,16 @@ function(add_halide_library TARGET)
     if (NOT TARGET ${ARG_USE_RUNTIME})
         message(FATAL_ERROR "Invalid runtime target ${ARG_USE_RUNTIME}")
     endif ()
+
+    # Add in the runtime targets but first remove features that should not be attached to a runtime
+    # TODO: The fact that profile being here fixes a linker error on Windows smells like a bug.
+    #       It complains about a symbol being duplicated between the runtime and the object.
+    set(RT_TARGETS ${TARGETS})
+    foreach (T IN ITEMS user_context no_asserts no_bounds_query no_runtime profile)
+        string(REPLACE "-${T}" "" RT_TARGETS "${RT_TARGETS}")
+    endforeach ()
+
+    set_property(TARGET "${ARG_USE_RUNTIME}" APPEND PROPERTY HLRT_TARGETS "${RT_TARGETS}")
 
     ##
     # Handle extra outputs
@@ -169,7 +176,7 @@ function(add_halide_library TARGET)
                           HL_FILTER_NAME "${ARG_GENERATOR}"
                           HL_LIBNAME "${ARG_FUNCTION_NAME}"
                           HL_PARAMS "${ARG_PARAMS}"
-                          HL_TARGET "${TARGETS}")
+                          HL_TARGETS "${TARGETS}")
 
     add_custom_command(OUTPUT ${GENERATOR_OUTPUT_FILES}
                        COMMAND ${generatorCommand}
