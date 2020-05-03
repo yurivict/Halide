@@ -41,7 +41,7 @@ for you by the toolchain and you do not need to do anything special to use Halid
 ### Getting CMake
 
 Getting a recent version of CMake couldn't be easier, and there are multiple good
-options on any system to 
+options on any system to do so.
 
 #### Cross-Platform
 
@@ -86,6 +86,11 @@ If you're on **Ubuntu Linux 20.04** (focal), then simply running `sudo apt insta
 For older versions of **Debian, Ubuntu, Mint, and derivatives**, Kitware provides an
 [APT repository](https://apt.kitware.com/) with up-to-date releases. Note that this is
 still useful for Ubuntu 20.04 because it will remain up to date.
+
+For other Linux distributions, check with your distribution's package manager or use
+pip as detailed above.
+
+This applies to WSL (Windows Subsystem for Linux) installations, too.
 
 ## Using Halide in JIT mode
 
