@@ -56,7 +56,7 @@ endfunction()
 add_app_test(bgu)
 add_app_test(bilateral_grid)
 add_app_test(blur)
-#add_app_test(c_backend)  # TODO: implement support for the C backend.
+add_app_test(c_backend)
 add_app_test(camera_pipe)
 add_app_test(conv_layer)
 add_app_test(cuda_mat_mul)
