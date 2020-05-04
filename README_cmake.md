@@ -232,7 +232,8 @@ add_halide_library(<target> FROM <generator-target>
                    [FEATURES feature1 [feature2 ...]]
                    [PLUGINS plugin1 [plugin2 ...]]
                    [SCHEDULER scheduler-name]
-                   [GRADIENT_DESCENT])
+                   [GRADIENT_DESCENT]
+                   [C_BACKEND])
 ```
 
 This function creates a STATIC IMPORTED target called `<target>` corresponding to running the
@@ -272,3 +273,8 @@ be a target such as `Halide::Adams19`. Then the default auto scheduler may be se
 If `GRADIENT_DESCENT` is set, then the module will be built suitably for gradient descent calculation
 in TensorFlow or PyTorch. See `Generator::build_gradient_module()` for more documentation. This corresponds
 to passing `-d 1` at the generator command line.
+
+Lastly, if the `C_BACKEND` option is set, this command will produce a `STATIC` library target (not `IMPORTED`).
+It does this by supplying `c_source` to the `-e` flag in place of `static_library` and then calling the currently
+configured C++ compiler. Note that a `<target>.runtime` target is _not_ created in this case, and the `USE_RUNTIME`
+option is ignored.  Other options work as expected.
