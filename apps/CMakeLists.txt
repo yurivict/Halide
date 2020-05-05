@@ -23,9 +23,9 @@ set_tests_properties(create_halide_distrib PROPERTIES
                      DEPENDS delete_halide_distrib)
 
 function(add_app_test NAME)
-    unset(cmakeOpts)
+    unset(cmakeToolchainOpt)
     if (NOT "${CMAKE_TOOLCHAIN_FILE}" STREQUAL "")
-        set(cmakeOpts "-DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}")
+        set(cmakeToolchainOpt "-DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}")
     endif ()
 
     unset(cmakeGenOpts)
@@ -46,7 +46,7 @@ function(add_app_test NAME)
              "-DCMAKE_PREFIX_PATH=${HALIDE_DIR}"
              "-DCMAKE_BUILD_TYPE=$<CONFIG>"
              "-DLLVM_DIR=${LLVM_DIR}"
-             ${cmakeOpts}
+             ${cmakeToolchainOpt}
              --test-command ${CMAKE_CTEST_COMMAND} -C $<CONFIG> -V)
     set_tests_properties(${NAME} PROPERTIES FIXTURES_REQUIRED apps LABELS apps)
 endfunction()
