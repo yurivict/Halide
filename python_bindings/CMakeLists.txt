@@ -8,7 +8,7 @@ find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
 # See: https://pybind11.readthedocs.io/en/stable/compiling.html
 
 include(FetchContent)
-FetchContent_Declare(pybind11 GIT_REPOSITORY https://github.com/pybind/pybind11.git GIT_TAG v2.4.3)
+FetchContent_Declare(pybind11 GIT_REPOSITORY https://github.com/pybind/pybind11.git GIT_TAG v2.5.0)
 
 # Configure pybind11 to use the same interpreter version as was detected above.
 set(PYBIND11_PYTHON_VERSION ${Python3_VERSION})
