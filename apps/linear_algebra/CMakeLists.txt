@@ -22,23 +22,13 @@ foreach (BLA_VENDOR IN LISTS BLAS_VENDORS)
     if (NOT BLAS_FOUND)
         message(STATUS "${BLA_VENDOR}: Missing")
     else ()
-        find_path(CBLAS_PATH cblas.h)
-        if (NOT CBLAS_PATH)
-            message(FATAL_ERROR "Could not find cblas.h in the include path and FindBLAS doesn't report it.")
-        endif ()
-
         message(STATUS "${BLA_VENDOR}: Found")
         add_library(BLAS_${BLA_VENDOR} INTERFACE)
         add_library(${BLA_VENDOR}::${BLA_VENDOR} ALIAS BLAS_${BLA_VENDOR})
 
         target_link_libraries(BLAS_${BLA_VENDOR} INTERFACE ${BLAS_LIBRARIES})
         target_link_options(BLAS_${BLA_VENDOR} INTERFACE ${BLAS_LINKER_FLAGS})
-        target_include_directories(BLAS_${BLA_VENDOR} INTERFACE ${CBLAS_PATH})
-
-        # Work around packaging issue in vcpkg on x64-windows
-        if (WIN32 AND CMAKE_SIZEOF_VOID_P EQUAL 8 AND "${BLA_VENDOR}" STREQUAL "OpenBLAS")
-            target_compile_definitions(BLAS_${BLA_VENDOR} INTERFACE OS_WINNT __64BIT__)
-        endif ()
+        target_include_directories(BLAS_${BLA_VENDOR} SYSTEM INTERFACE include) # Use CBlas header in our own tree.
 
         if (NOT DEFAULT_BLAS)
             set(DEFAULT_BLAS ${BLA_VENDOR}::${BLA_VENDOR})
