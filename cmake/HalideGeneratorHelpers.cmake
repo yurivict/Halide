@@ -180,6 +180,7 @@ function(add_halide_library TARGET)
         add_library("${TARGET}" STATIC "${TARGET}.halide_generated.cpp")
     else ()
         add_library("${TARGET}" STATIC IMPORTED)
+        set_target_properties("${TARGET}" PROPERTIES POSITION_INDEPENDENT_CODE ON)
     endif ()
 
     # load the plugins and setup dependencies
