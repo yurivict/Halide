@@ -98,6 +98,18 @@ function(add_halide_library TARGET)
         message(WARNING "Warning: the C backend does not use a runtime.")
     endif ()
 
+    # The output file name might not match the host when cross compiling.
+    if ("${TARGETS}" MATCHES "host")
+        # Since all OSes must match across target triples, if "host" appears at all, then it must match CMake
+        set(HL_STATIC_LIBRARY_SUFFIX "${CMAKE_STATIC_LIBRARY_SUFFIX}")
+    elseif ("${TARGETS}" MATCHES "windows")
+        # Otherwise, all targets are windows, so Halide emits a .lib
+        set(HL_STATIC_LIBRARY_SUFFIX ".lib")
+    else ()
+        # All other targets use .a
+        set(HL_STATIC_LIBRARY_SUFFIX ".a")
+    endif ()
+
     if (NOT ARG_C_BACKEND)
         if (NOT ARG_USE_RUNTIME)
             add_library("${TARGET}.runtime" STATIC IMPORTED)
@@ -109,14 +121,14 @@ function(add_halide_library TARGET)
 
             set_target_properties("${TARGET}.runtime"
                                   PROPERTIES
-                                  IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/${TARGET}.runtime${CMAKE_STATIC_LIBRARY_SUFFIX}")
+                                  IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/${TARGET}.runtime${HL_STATIC_LIBRARY_SUFFIX}")
 
-            add_custom_command(OUTPUT "${TARGET}.runtime${CMAKE_STATIC_LIBRARY_SUFFIX}"
+            add_custom_command(OUTPUT "${TARGET}.runtime${HL_STATIC_LIBRARY_SUFFIX}"
                                COMMAND ${generatorCommand} -r "${TARGET}.runtime" -o . target=$<JOIN:$<TARGET_PROPERTY:${TARGET}.runtime,HLRT_TARGETS>,$<COMMA>>
                                DEPENDS "${ARG_FROM}")
 
             add_custom_target("${TARGET}.runtime.update"
-                              DEPENDS "${TARGET}.runtime${CMAKE_STATIC_LIBRARY_SUFFIX}")
+                              DEPENDS "${TARGET}.runtime${HL_STATIC_LIBRARY_SUFFIX}")
 
             add_dependencies("${TARGET}.runtime" "${TARGET}.runtime.update")
             set(ARG_USE_RUNTIME "${TARGET}.runtime")
@@ -152,7 +164,7 @@ function(add_halide_library TARGET)
         list(APPEND GENERATOR_OUTPUT_FILES "${TARGET}.halide_generated.cpp")
     else ()
         list(APPEND GENERATOR_OUTPUTS static_library)
-        list(APPEND GENERATOR_OUTPUT_FILES "${TARGET}${CMAKE_STATIC_LIBRARY_SUFFIX}")
+        list(APPEND GENERATOR_OUTPUT_FILES "${TARGET}${HL_STATIC_LIBRARY_SUFFIX}")
     endif ()
 
     if (ARG_PYTHON_EXTENSION)
@@ -218,7 +230,7 @@ function(add_halide_library TARGET)
     add_custom_target("${TARGET}.update" DEPENDS ${GENERATOR_OUTPUT_FILES})
 
     if (NOT ARG_C_BACKEND)
-        set_target_properties("${TARGET}" PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/${TARGET}${CMAKE_STATIC_LIBRARY_SUFFIX}")
+        set_target_properties("${TARGET}" PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/${TARGET}${HL_STATIC_LIBRARY_SUFFIX}")
     endif ()
 
     add_dependencies("${TARGET}" "${TARGET}.update")
