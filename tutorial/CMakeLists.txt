@@ -78,3 +78,13 @@ if (BUILD_AOT_TUTORIAL)
                           Threads::Threads)
     target_include_directories(lesson_10_aot_compilation_run PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
 endif ()
+
+# TODO: lesson 15
+# TODO: lesson 16
+
+add_tutorial(lesson_17_predicated_rdom.cpp)
+add_tutorial(lesson_18_parallel_associative_reductions.cpp)
+add_tutorial(lesson_19_wrapper_funcs.cpp)
+add_tutorial(lesson_20_cloning_funcs.cpp)
+
+# TODO: lesson 21
