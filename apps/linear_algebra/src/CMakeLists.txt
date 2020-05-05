@@ -10,11 +10,11 @@ target_link_libraries(blas.generator PRIVATE Halide::Generator)
 function(add_halide_blas_library)
     set(options)
     set(oneValueArgs TARGET NAME)
-    set(multiValueArgs GENERATOR_ARGS)
+    set(multiValueArgs GENERATOR_ARGS FEATURES)
     cmake_parse_arguments(args "" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
     add_halide_library(${args_TARGET} FROM blas.generator
                        GENERATOR ${args_NAME}
-                       FEATURES no_bounds_query
+                       FEATURES no_bounds_query ${args_FEATURES}
                        PARAMS ${args_GENERATOR_ARGS})
     target_link_libraries(halide_blas PUBLIC ${args_TARGET})
 endfunction()
@@ -23,22 +23,26 @@ endfunction()
 add_halide_blas_library(
         TARGET halide_scopy_impl
         NAME saxpy
-        GENERATOR_ARGS vectorize=true scale_x=false add_to_y=false)
+        GENERATOR_ARGS vectorize=true scale_x=false add_to_y=false
+        FEATURES no_asserts) # needed for efficiency
 
 add_halide_blas_library(
         TARGET halide_dcopy_impl
         NAME daxpy
-        GENERATOR_ARGS vectorize=true scale_x=false add_to_y=false)
+        GENERATOR_ARGS vectorize=true scale_x=false add_to_y=false
+        FEATURES no_asserts) # needed for efficiency
 
 add_halide_blas_library(
         TARGET halide_sscal_impl
         NAME saxpy
-        GENERATOR_ARGS vectorize=true scale_x=true add_to_y=false)
+        GENERATOR_ARGS vectorize=true scale_x=true add_to_y=false
+        FEATURES no_asserts) # needed for efficiency
 
 add_halide_blas_library(
         TARGET halide_dscal_impl
         NAME daxpy
-        GENERATOR_ARGS vectorize=true scale_x=true add_to_y=false)
+        GENERATOR_ARGS vectorize=true scale_x=true add_to_y=false
+        FEATURES no_asserts) # needed for efficiency
 
 add_halide_blas_library(
         TARGET halide_saxpy_impl
@@ -53,22 +57,26 @@ add_halide_blas_library(
 add_halide_blas_library(
         TARGET halide_sdot
         NAME sdot
-        GENERATOR_ARGS vectorize=true)
+        GENERATOR_ARGS vectorize=true
+        FEATURES no_asserts) # needed to run correctly
 
 add_halide_blas_library(
         TARGET halide_ddot
         NAME ddot
-        GENERATOR_ARGS vectorize=true)
+        GENERATOR_ARGS vectorize=true
+        FEATURES no_asserts) # needed to run correctly
 
 add_halide_blas_library(
         TARGET halide_sasum
         NAME sasum
-        GENERATOR_ARGS vectorize=true)
+        GENERATOR_ARGS vectorize=true
+        FEATURES no_asserts) # needed to run correctly
 
 add_halide_blas_library(
         TARGET halide_dasum
         NAME dasum
-        GENERATOR_ARGS vectorize=true)
+        GENERATOR_ARGS vectorize=true
+        FEATURES no_asserts) # needed to run correctly
 
 add_halide_blas_library(
         TARGET halide_sgemv_notrans

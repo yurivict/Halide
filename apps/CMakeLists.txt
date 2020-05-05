@@ -66,7 +66,7 @@ add_app_test(hist)
 add_app_test(iir_blur)
 add_app_test(interpolate)
 add_app_test(lens_blur)
-#add_app_test(linear_algebra)  # TODO: halide blas has issues; see #4631
+add_app_test(linear_algebra)
 #add_app_test(linear_blur)  # TODO: uses stubs, for which we're dropping CMake support
 add_app_test(local_laplacian)
 add_app_test(max_filter)

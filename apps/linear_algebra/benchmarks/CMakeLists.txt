@@ -6,7 +6,7 @@ set(BENCHMARK_TARGETS halide_benchmarks)
 find_package(Eigen3 QUIET)
 set(Eigen3 Eigen3::Eigen)
 
-if (NOT TARGET Eigen3)
+if (NOT TARGET ${Eigen3})
     find_package(PkgConfig QUIET)
     if (COMMAND pkg_check_modules)
         pkg_check_modules(Eigen3 QUIET IMPORTED_TARGET eigen3)
