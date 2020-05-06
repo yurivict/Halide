@@ -109,7 +109,7 @@ Then create a separate build folder for Halide and run CMake, pointing it to you
 
     % mkdir Halide-build
     % cd Halide-build
-    % cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=YES -DLLVM_DIR=/path/to/llvm-install/lib/cmake/llvm /path/to/Halide
+    % cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DLLVM_DIR=/path/to/llvm-install/lib/cmake/llvm /path/to/Halide
     % cmake --build .
 
 `LLVM_DIR` should be the folder in the LLVM installation or build tree that contains `LLVMConfig.cmake`.
@@ -204,13 +204,13 @@ For a 64-bit build, run:
 
     D:\> md Halide-build
     D:\> cd Halide-build
-    D:\Halide-build> cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=YES -DCMAKE_TOOLCHAIN_FILE=D:/vcpkg/scripts/buildsystems/vcpkg.cmake -DLLVM_DIR=D:/llvm-install/lib/cmake/llvm ..\Halide
+    D:\Halide-build> cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=D:/vcpkg/scripts/buildsystems/vcpkg.cmake -DLLVM_DIR=D:/llvm-install/lib/cmake/llvm ..\Halide
     
 For a 32-bit build, run:
 
     D:\> md Halide32-build
     D:\> cd Halide32-build
-    D:\Halide32-build> cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=YES -DCMAKE_TOOLCHAIN_FILE=D:/vcpkg/scripts/buildsystems/vcpkg.cmake -DLLVM_DIR=D:/llvm32-install/lib/cmake/llvm ..\Halide
+    D:\Halide32-build> cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=D:/vcpkg/scripts/buildsystems/vcpkg.cmake -DLLVM_DIR=D:/llvm32-install/lib/cmake/llvm ..\Halide
 
 **Note:** If building with Python bindings on 32-bit (the default), be sure to point CMake to the installation path of a 32-bit Python3.
 You can do this by specifying, for example: `"-DPython3_ROOT_DIR=C:\Program Files (x86)\Python38-32"`.
