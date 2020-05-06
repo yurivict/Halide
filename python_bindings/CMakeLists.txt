@@ -11,11 +11,8 @@ include(FetchContent)
 FetchContent_Declare(pybind11 GIT_REPOSITORY https://github.com/pybind/pybind11.git GIT_TAG v2.5.0)
 
 # Configure pybind11 to use the same interpreter version as was detected above.
-set(PYBIND11_PYTHON_VERSION ${Python3_VERSION})
-if (Python3_ROOT_DIR)
-    message(STATUS "Python3_ROOT_DIR set. Forcing pybind11 to use Python installed at ${Python3_ROOT_DIR}. This prepends to CMAKE_PREFIX_PATH.")
-    set(CMAKE_PREFIX_PATH "${Python3_ROOT_DIR};${CMAKE_PREFIX_PATH}")
-endif ()
+message(STATUS "Directing pybind11 to Python3 executable ${Python3_EXECUTABLE}")
+set(PYTHON_EXECUTABLE ${Python3_EXECUTABLE})
 
 # Import PyBind11
 FetchContent_MakeAvailable(pybind11)

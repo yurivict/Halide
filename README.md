@@ -142,13 +142,33 @@ For a 64-bit build, run:
 
     D:\> md llvm-build
     D:\> cd llvm-build
-    D:\llvm-build>   cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../llvm-install   -DLLVM_ENABLE_PROJECTS="clang;lld;clang-tools-extra" -DLLVM_ENABLE_TERMINFO=OFF -DLLVM_TARGETS_TO_BUILD=X86;ARM;NVPTX;AArch64;Mips;Hexagon -DLLVM_ENABLE_ASSERTIONS=ON -DLLVM_ENABLE_EH=ON -DLLVM_ENABLE_RTTI=ON -DLLVM_BUILD_32_BITS=OFF ..\llvm-project\llvm
+    D:\llvm-build> cmake -G Ninja ^
+                         -DCMAKE_BUILD_TYPE=Release ^
+                         -DCMAKE_INSTALL_PREFIX=../llvm-install ^
+                         -DLLVM_ENABLE_PROJECTS=clang;lld;clang-tools-extra ^
+                         -DLLVM_ENABLE_TERMINFO=OFF ^
+                         -DLLVM_TARGETS_TO_BUILD=X86;ARM;NVPTX;AArch64;Mips;Hexagon ^
+                         -DLLVM_ENABLE_ASSERTIONS=ON ^
+                         -DLLVM_ENABLE_EH=ON ^
+                         -DLLVM_ENABLE_RTTI=ON ^
+                         -DLLVM_BUILD_32_BITS=OFF ^
+                         ..\llvm-project\llvm
 
 For a 32-bit build, run:
     
     D:\> md llvm32-build
     D:\> cd llvm32-build
-    D:\llvm32-build> cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../llvm32-install -DLLVM_ENABLE_PROJECTS="clang;lld;clang-tools-extra" -DLLVM_ENABLE_TERMINFO=OFF -DLLVM_TARGETS_TO_BUILD=X86;ARM;NVPTX;AArch64;Mips;Hexagon -DLLVM_ENABLE_ASSERTIONS=ON -DLLVM_ENABLE_EH=ON -DLLVM_ENABLE_RTTI=ON -DLLVM_BUILD_32_BITS=ON  ..\llvm-project\llvm
+    D:\llvm32-build> cmake -G Ninja ^
+                           -DCMAKE_BUILD_TYPE=Release ^
+                           -DCMAKE_INSTALL_PREFIX=../llvm32-install ^
+                           -DLLVM_ENABLE_PROJECTS=clang;lld;clang-tools-extra ^
+                           -DLLVM_ENABLE_TERMINFO=OFF ^
+                           -DLLVM_TARGETS_TO_BUILD=X86;ARM;NVPTX;AArch64;Mips;Hexagon ^ 
+                           -DLLVM_ENABLE_ASSERTIONS=ON ^ 
+                           -DLLVM_ENABLE_EH=ON ^
+                           -DLLVM_ENABLE_RTTI=ON ^
+                           -DLLVM_BUILD_32_BITS=ON ^
+                           ..\llvm-project\llvm
 
 Finally, run:
 

@@ -64,7 +64,7 @@ set_tests_properties(gradient_autoscheduler_test_cpp PROPERTIES LABELS Li2018)
 
 if (WITH_PYTHON_BINDINGS)
     # TODO: rework this as an app under python_bindings.
-    # Disabled due to issue #4876
+    # TODO: Disabled due to issue #4876
     if (FALSE)
         find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
 
