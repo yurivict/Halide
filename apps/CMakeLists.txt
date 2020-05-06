@@ -48,7 +48,10 @@ function(add_app_test NAME)
              "-DLLVM_DIR=${LLVM_DIR}"
              ${cmakeToolchainOpt}
              --test-command ${CMAKE_CTEST_COMMAND} -C $<CONFIG> -V)
-    set_tests_properties(${NAME} PROPERTIES FIXTURES_REQUIRED apps LABELS apps)
+    set_tests_properties(${NAME} PROPERTIES
+                         FIXTURES_REQUIRED apps
+                         LABELS apps
+                         SKIP_REGULAR_EXPRESSION "\\[SKIP\\]")
 endfunction()
 
 # Actually add the apps
