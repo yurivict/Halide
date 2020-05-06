@@ -124,10 +124,9 @@ function(add_halide_library TARGET)
         endforeach ()
         list(APPEND TARGETS "${T}-no_runtime")
     endforeach ()
-    string(REPLACE ";" "," TARGETS "${TARGETS}")
 
     if (ARG_C_BACKEND AND ARG_USE_RUNTIME)
-        message(WARNING "Warning: the C backend does not use a runtime.")
+        message(AUTHOR_WARNING "Warning: the C backend does not use a runtime.")
     endif ()
 
     # The output file name might not match the host when cross compiling.
@@ -156,7 +155,8 @@ function(add_halide_library TARGET)
                                   IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/${TARGET}.runtime${HL_STATIC_LIBRARY_SUFFIX}")
 
             add_custom_command(OUTPUT "${TARGET}.runtime${HL_STATIC_LIBRARY_SUFFIX}"
-                               COMMAND ${generatorCommand} -r "${TARGET}.runtime" -o . target=$<JOIN:$<TARGET_PROPERTY:${TARGET}.runtime,HLRT_TARGETS>,$<COMMA>>
+                               COMMAND ${generatorCommand} -r "${TARGET}.runtime" -o .
+                               target=$<JOIN:$<TARGET_PROPERTY:${TARGET}.runtime,HLRT_TARGETS>,$<COMMA>>
                                DEPENDS "${ARG_FROM}")
 
             add_custom_target("${TARGET}.runtime.update"
@@ -261,7 +261,7 @@ function(add_halide_library TARGET)
                        ${GEN_PLUGINS}
                        ${GEN_AUTOSCHEDULER}
                        -o .
-                       "target=${TARGETS}"
+                       "target=$<JOIN:${TARGETS},$<COMMA>>"
                        ${ARG_PARAMS}
                        DEPENDS "${ARG_FROM}")
 
