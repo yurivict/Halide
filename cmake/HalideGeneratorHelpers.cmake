@@ -30,8 +30,40 @@ define_property(TARGET PROPERTY HLRT_TARGETS
                 FULL_DOCS "On a Halide runtime target, lists the targets the runtime backs")
 
 function(add_halide_library TARGET)
+    set(EXTRA_OUTPUT_NAMES
+        # See Module.cpp for list of extra outputs.
+        # c_header is always generated
+        # c_source is handled by C_BACKEND
+        # static_library is the default
+        # object is not available
+        ASSEMBLY
+        BITCODE
+        COMPILER_LOG
+        CPP_STUB
+        FEATURIZATION
+        LLVM_ASSEMBLY
+        PYTHON_EXTENSION
+        PYTORCH_WRAPPER
+        REGISTRATION
+        SCHEDULE
+        STMT
+        STMT_HTML)
+
+    set(ASSEMBLY_extension ".s")
+    set(BITCODE_extension ".bc")
+    set(COMPILER_LOG_extension ".halide_compiler_log")
+    set(CPP_STUB_extension ".stub.h")
+    set(FEATURIZATION_extension ".featurization")
+    set(LLVM_ASSEMBLY_extension ".ll")
+    set(PYTHON_EXTENSION_extension ".py.cpp")
+    set(PYTORCH_WRAPPER_extension ".pytorch.h")
+    set(REGISTRATION_extension ".registration.cpp")
+    set(SCHEDULE_extension ".schedule.h")
+    set(STMT_extension ".stmt")
+    set(STMT_HTML_extension ".stmt.html")
+
     set(options GRADIENT_DESCENT C_BACKEND)
-    set(oneValueArgs FROM GENERATOR FUNCTION_NAME USE_RUNTIME PYTHON_EXTENSION SCHEDULER REGISTRATION)
+    set(oneValueArgs FROM GENERATOR FUNCTION_NAME USE_RUNTIME AUTOSCHEDULER ${EXTRA_OUTPUT_NAMES})
     set(multiValueArgs PARAMS TARGETS FEATURES PLUGINS)
     cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
@@ -167,21 +199,18 @@ function(add_halide_library TARGET)
         list(APPEND GENERATOR_OUTPUT_FILES "${TARGET}${HL_STATIC_LIBRARY_SUFFIX}")
     endif ()
 
-    if (ARG_PYTHON_EXTENSION)
-        set(${ARG_PYTHON_EXTENSION} "${TARGET}.py.cpp" PARENT_SCOPE)
-        list(APPEND GENERATOR_OUTPUT_FILES "${TARGET}.py.cpp")
-        list(APPEND GENERATOR_OUTPUTS python_extension)
-    endif ()
+    foreach (OUT IN LISTS EXTRA_OUTPUT_NAMES)
+        if (ARG_${OUT})
+            set(${ARG_${OUT}} "${TARGET}${${OUT}_extension}" PARENT_SCOPE)
+            list(APPEND GENERATOR_OUTPUT_FILES "${TARGET}${${OUT}_extension}")
+            string(TOLOWER "${OUT}" OUT)
+            list(APPEND GENERATOR_OUTPUTS ${OUT})
+        endif ()
+    endforeach ()
 
-    if (ARG_REGISTRATION)
-        set(${ARG_REGISTRATION} "${TARGET}.registration.cpp" PARENT_SCOPE)
-        list(APPEND GENERATOR_OUTPUT_FILES "${TARGET}.registration.cpp")
-        list(APPEND GENERATOR_OUTPUTS registration)
-    endif ()
-
-    unset(GEN_SCHEDULER)
-    if (ARG_SCHEDULER)
-        set(GEN_SCHEDULER -s ${ARG_SCHEDULER})
+    unset(GEN_AUTOSCHEDULER)
+    if (ARG_AUTOSCHEDULER)
+        set(GEN_AUTOSCHEDULER -s ${ARG_AUTOSCHEDULER})
     endif ()
 
     ##
@@ -220,7 +249,7 @@ function(add_halide_library TARGET)
                        -f "${ARG_FUNCTION_NAME}"
                        -e "$<JOIN:${GENERATOR_OUTPUTS},$<COMMA>>"
                        ${GEN_PLUGINS}
-                       ${GEN_SCHEDULER}
+                       ${GEN_AUTOSCHEDULER}
                        -o .
                        "target=${TARGETS}"
                        ${ARG_PARAMS}

@@ -38,7 +38,7 @@ add_halide_library(demo_gradient FROM demo_gradient.generator
                    FUNCTION_NAME demo
                    PARAMS auto_schedule=true
                    PLUGINS gradient_autoscheduler
-                   SCHEDULER Li2018
+                   AUTOSCHEDULER Li2018
                    REGISTRATION DEMO_REGISTRATION_FILE)
 
 add_executable(demo_gradient_autoscheduler ${DEMO_REGISTRATION_FILE})

@@ -225,15 +225,19 @@ add_halide_library(<target> FROM <generator-target>
                    [GENERATOR generator-name]
                    [FUNCTION_NAME function-name]
                    [USE_RUNTIME hl-target]
-                   [PYTHON_EXTENSION OUTVAR]
-                   [REGISTRATION OUTVAR]
                    [PARAMS param1 [param2 ...]]
                    [TARGETS target1 [target2 ...]]
                    [FEATURES feature1 [feature2 ...]]
                    [PLUGINS plugin1 [plugin2 ...]]
-                   [SCHEDULER scheduler-name]
+                   [AUTOSCHEDULER scheduler-name]
                    [GRADIENT_DESCENT]
-                   [C_BACKEND])
+                   [C_BACKEND]
+                   [REGISTRATION OUTVAR]
+                   [<extra-output> OUTVAR])
+
+extra-output = ASSEMBLY | BITCODE | COMPILER_LOG | CPP_STUB
+             | FEATURIZATION | LLVM_ASSEMBLY | PYTHON_EXTENSION
+             | PYTORCH_WRAPPER | SCHEDULE | STMT | STMT_HTML
 ```
 
 This function creates a STATIC IMPORTED target called `<target>` corresponding to running the
@@ -249,8 +253,22 @@ target is an INTERFACE dependency of `<target>`. If multiple runtime targets nee
 setting `USE_RUNTIME` to another Halide library, `<target2>` will prevent the generation of `<target>.runtime`
 and instead use `<target2>.runtime`.
 
-If `PYTHON_EXTENSION` is set, the path to the generated `.py.cpp` file will be set in `OUTVAR`.
-This corresponds to setting `-e python_extension`
+Parameters can be passed to a generator via the `PARAMS` argument. Parameters should be space-separated.
+Similarly, `TARGETS` is a space-separated list of targets for which to generate code in a single function.
+They must all share the same platform/bits/os triple (eg. `arm-32-linux`). Features that are in common among
+all targets, including device libraries (like `cuda`) should go in `FEATURES`.
+
+To use custom autoschedulers, the relevant plugin(s) must be loaded via `PLUGINS`. Here, `plugin1` etc. should
+be a target such as `Halide::Adams19`. Then the default auto scheduler may be set with `AUTOSCHEDULER`.
+
+If `GRADIENT_DESCENT` is set, then the module will be built suitably for gradient descent calculation
+in TensorFlow or PyTorch. See `Generator::build_gradient_module()` for more documentation. This corresponds
+to passing `-d 1` at the generator command line.
+
+If the `C_BACKEND` option is set, this command will produce a `STATIC` library target (not `IMPORTED`).
+It does this by supplying `c_source` to the `-e` flag in place of `static_library` and then calling the currently
+configured C++ compiler. Note that a `<target>.runtime` target is _not_ created in this case, and the `USE_RUNTIME`
+option is ignored.  Other options work as expected.
 
 If `REGISTRATION` is set, the path to the generated `.registration.cpp` file will be set in `OUTVAR`.
 This can be used to generate a runner for a Halide library that is useful for benchmarking and testing.
@@ -262,19 +280,6 @@ target_link_libraries(my_gen_runner PRIVATE my_lib Halide::RunGenMain)
 ```
 This is equivalent to setting `-e registration`.
 
-Parameters can be passed to a generator via the `PARAMS` argument. Parameters should be space-separated.
-Similarly, `TARGETS` is a space-separated list of targets for which to generate code in a single function.
-They must all share the same platform/bits/os triple (eg. `arm-32-linux`). Features that are in common among
-all targets, including device libraries (like `cuda`) should go in `FEATURES`.
-
-To use custom autoschedulers, the relevant plugin(s) must be loaded via `PLUGINS`. Here, `plugin1` etc. should
-be a target such as `Halide::Adams19`. Then the default auto scheduler may be set with `SCHEDULER`.
-
-If `GRADIENT_DESCENT` is set, then the module will be built suitably for gradient descent calculation
-in TensorFlow or PyTorch. See `Generator::build_gradient_module()` for more documentation. This corresponds
-to passing `-d 1` at the generator command line.
-
-Lastly, if the `C_BACKEND` option is set, this command will produce a `STATIC` library target (not `IMPORTED`).
-It does this by supplying `c_source` to the `-e` flag in place of `static_library` and then calling the currently
-configured C++ compiler. Note that a `<target>.runtime` target is _not_ created in this case, and the `USE_RUNTIME`
-option is ignored.  Other options work as expected.
+Lastly, each of the `extra-output` arguments directly correspond to an extra output (via `-e`) from the generator.
+The value `OUTVAR` names a variable into which a path (relative to `CMAKE_CURRENT_BINARY_DIR`) to the extra file will
+be written.

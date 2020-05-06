@@ -74,7 +74,7 @@ target_link_libraries(demo.generator PRIVATE Halide::Generator)
 add_halide_library(demo FROM demo.generator
                    PARAMS auto_schedule=true
                    PLUGINS auto_schedule
-                   SCHEDULER Adams2019
+                   AUTOSCHEDULER Adams2019
                    REGISTRATION DEMO_REGISTRATION_FILE)
 
 add_executable(demo_apps_autoscheduler ${DEMO_REGISTRATION_FILE})
@@ -94,7 +94,7 @@ target_link_libraries(included_schedule_file.generator PRIVATE Halide::Generator
 add_halide_library(included_schedule_file FROM included_schedule_file.generator
                    PARAMS auto_schedule=true
                    PLUGINS auto_schedule
-                   SCHEDULER Adams2019
+                   AUTOSCHEDULER Adams2019
                    REGISTRATION INCLUDED_SCHEDULE_FILE_REGISTRATION_FILE)
 
 add_executable(demo_included_schedule_file ${INCLUDED_SCHEDULE_FILE_REGISTRATION_FILE})
