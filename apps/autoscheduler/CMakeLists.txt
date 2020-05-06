@@ -125,10 +125,11 @@ target_link_libraries(test_apps_autoscheduler PRIVATE Halide::Halide Halide::Too
 
 add_test(NAME test_apps_autoscheduler
          COMMAND test_apps_autoscheduler
-         # Test expects to find module in the library path. Same directory is sufficient across all platforms.
          WORKING_DIRECTORY $<TARGET_FILE_DIR:auto_schedule>)
 
-set_tests_properties(test_apps_autoscheduler PROPERTIES LABELS Adams2019)
+set_tests_properties(test_apps_autoscheduler PROPERTIES
+                     LABELS Adams2019
+                     ENVIRONMENT "LD_LIBRARY_PATH=$<TARGET_FILE_DIR:auto_schedule>")
 
 ##
 
