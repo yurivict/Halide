@@ -29,7 +29,7 @@ target_link_libraries(retrain_cost_model PRIVATE cost_model train_cost_model Hal
 # libauto_schedule
 # Note: must use MODULE here (not SHARED) to get .so (instead of .dylib) on OSX.
 # This means that this can only be opened dynamically (not linked directly), but that's ok.
-add_library(auto_schedule
+add_library(Halide_Adams2019
             MODULE
             ASLog.cpp
             AutoSchedule.cpp
@@ -38,18 +38,22 @@ add_library(auto_schedule
             LoopNest.cpp
             Weights.cpp
             ${WF_CPP})
+add_library(Halide::Adams2019 ALIAS Halide_Adams2019)
+set_target_properties(Halide_Adams2019 PROPERTIES
+                      EXPORT_NAME Adams2019
+                      OUTPUT_NAME auto_schedule)
 
-target_link_libraries(auto_schedule PRIVATE cost_model train_cost_model Halide::Halide)
+target_link_libraries(Halide_Adams2019 PRIVATE cost_model train_cost_model Halide::Halide)
 
 if (NOT HALIDE_ENABLE_RTTI)
-    target_compile_options(auto_schedule PRIVATE
+    target_compile_options(Halide_Adams2019 PRIVATE
                            $<$<COMPILE_LANG_AND_ID:CXX,MSVC>:/GR->
                            $<$<AND:$<COMPILE_LANGUAGE:CXX>,$<NOT:$<CXX_COMPILER_ID:MSVC>>>:-fno-rtti>)
 endif ()
 
 # TODO: move to /packaging
 include(GNUInstallDirs)
-install(TARGETS auto_schedule
+install(TARGETS Halide_Adams2019
         EXPORT Halide_Targets
 
         RUNTIME
@@ -73,8 +77,7 @@ target_link_libraries(demo.generator PRIVATE Halide::Generator)
 
 add_halide_library(demo FROM demo.generator
                    PARAMS auto_schedule=true
-                   PLUGINS auto_schedule
-                   AUTOSCHEDULER Adams2019
+                   AUTOSCHEDULER Halide::Adams2019
                    REGISTRATION DEMO_REGISTRATION_FILE)
 
 add_executable(demo_apps_autoscheduler ${DEMO_REGISTRATION_FILE})
@@ -93,8 +96,7 @@ target_link_libraries(included_schedule_file.generator PRIVATE Halide::Generator
 
 add_halide_library(included_schedule_file FROM included_schedule_file.generator
                    PARAMS auto_schedule=true
-                   PLUGINS auto_schedule
-                   AUTOSCHEDULER Adams2019
+                   AUTOSCHEDULER Halide::Adams2019
                    REGISTRATION INCLUDED_SCHEDULE_FILE_REGISTRATION_FILE)
 
 add_executable(demo_included_schedule_file ${INCLUDED_SCHEDULE_FILE_REGISTRATION_FILE})
@@ -125,11 +127,11 @@ target_link_libraries(test_apps_autoscheduler PRIVATE Halide::Halide Halide::Too
 
 add_test(NAME test_apps_autoscheduler
          COMMAND test_apps_autoscheduler
-         WORKING_DIRECTORY $<TARGET_FILE_DIR:auto_schedule>)
+         WORKING_DIRECTORY $<TARGET_FILE_DIR:Halide_Adams2019>)
 
 set_tests_properties(test_apps_autoscheduler PROPERTIES
                      LABELS Adams2019
-                     ENVIRONMENT "LD_LIBRARY_PATH=$<TARGET_FILE_DIR:auto_schedule>")
+                     ENVIRONMENT "LD_LIBRARY_PATH=$<TARGET_FILE_DIR:Halide_Adams2019>")
 
 ##
 

@@ -258,8 +258,11 @@ Similarly, `TARGETS` is a space-separated list of targets for which to generate 
 They must all share the same platform/bits/os triple (eg. `arm-32-linux`). Features that are in common among
 all targets, including device libraries (like `cuda`) should go in `FEATURES`.
 
-To use custom autoschedulers, the relevant plugin(s) must be loaded via `PLUGINS`. Here, `plugin1` etc. should
-be a target such as `Halide::Adams19`. Then the default auto scheduler may be set with `AUTOSCHEDULER`.
+To set the default autoscheduler, set the `AUTOSCHEDULER` argument to a target named like `Namespace::Scheduler`,
+for example `Halide::Adams19`. This will set the `-s` flag on the generator command line to `Scheduler` and add
+the target to the list of plugins. Additional plugins can be loaded by setting the `PLUGINS` argument. If the
+argument to `AUTOSCHEDULER` does not contain `::` or it does not name a target, it will be passed to the `-s`
+flag verbatim.
 
 If `GRADIENT_DESCENT` is set, then the module will be built suitably for gradient descent calculation
 in TensorFlow or PyTorch. See `Generator::build_gradient_module()` for more documentation. This corresponds

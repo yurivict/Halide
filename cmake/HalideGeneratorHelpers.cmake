@@ -210,7 +210,17 @@ function(add_halide_library TARGET)
 
     unset(GEN_AUTOSCHEDULER)
     if (ARG_AUTOSCHEDULER)
-        set(GEN_AUTOSCHEDULER -s ${ARG_AUTOSCHEDULER})
+        if ("${ARG_AUTOSCHEDULER}" MATCHES "::" AND TARGET "${ARG_AUTOSCHEDULER}")
+            # Convention: if the argument names a target like "Namespace::Scheduler" then
+            # it is assumed to be a plugin providing a scheduler named "Scheduler".
+            list(APPEND ARG_PLUGINS "${ARG_AUTOSCHEDULER}")
+            string(REGEX REPLACE ".*::(.*)" "\\1" ARG_AUTOSCHEDULER "${ARG_AUTOSCHEDULER}")
+        else ()
+            if (NOT ARG_PLUGINS)
+                message(AUTHOR_WARNING "AUTOSCHEDULER set to a scheduler name but no plugins were loaded")
+            endif ()
+        endif ()
+        set(GEN_AUTOSCHEDULER -s "${ARG_AUTOSCHEDULER}")
     endif ()
 
     ##
@@ -231,7 +241,7 @@ function(add_halide_library TARGET)
         foreach (P IN LISTS ARG_PLUGINS)
             list(APPEND GEN_PLUGINS "$<TARGET_FILE:${P}>")
         endforeach ()
-        set(GEN_PLUGINS -p ${GEN_PLUGINS})
+        set(GEN_PLUGINS -p "$<JOIN:${GEN_PLUGINS},$<COMMA>>")
     endif ()
 
     set_target_properties("${TARGET}" PROPERTIES

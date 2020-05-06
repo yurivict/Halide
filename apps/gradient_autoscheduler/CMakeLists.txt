@@ -1,17 +1,22 @@
 # TODO: rename gradient_autoscheduler target to Li2018 or something similar.
 
-add_library(gradient_autoscheduler MODULE GradientAutoscheduler.cpp ASLog.cpp)
-target_link_libraries(gradient_autoscheduler PRIVATE Halide::Halide)
+add_library(Halide_Li2018 MODULE GradientAutoscheduler.cpp ASLog.cpp)
+add_library(Halide::Li2018 ALIAS Halide_Li2018)
+set_target_properties(Halide_Li2018 PROPERTIES
+                      EXPORT_NAME Li2018
+                      OUTPUT_NAME gradient_autoscheduler)
+
+target_link_libraries(Halide_Li2018 PRIVATE Halide::Halide)
 
 if (NOT HALIDE_ENABLE_RTTI)
-    target_compile_options(gradient_autoscheduler PRIVATE
+    target_compile_options(Halide_Li2018 PRIVATE
                            $<$<COMPILE_LANG_AND_ID:CXX,MSVC>:/GR->
                            $<$<AND:$<COMPILE_LANGUAGE:CXX>,$<NOT:$<CXX_COMPILER_ID:MSVC>>>:-fno-rtti>)
 endif ()
 
 # TODO: move to /packaging
 include(GNUInstallDirs)
-install(TARGETS gradient_autoscheduler
+install(TARGETS Halide_Li2018
         EXPORT Halide_Targets
 
         RUNTIME
@@ -37,8 +42,7 @@ add_halide_library(demo_gradient FROM demo_gradient.generator
                    GENERATOR demo
                    FUNCTION_NAME demo
                    PARAMS auto_schedule=true
-                   PLUGINS gradient_autoscheduler
-                   AUTOSCHEDULER Li2018
+                   AUTOSCHEDULER Halide::Li2018
                    REGISTRATION DEMO_REGISTRATION_FILE)
 
 add_executable(demo_gradient_autoscheduler ${DEMO_REGISTRATION_FILE})
@@ -56,11 +60,11 @@ target_link_libraries(gradient_autoscheduler_test_cpp PRIVATE Halide::Halide)
 
 add_test(NAME gradient_autoscheduler_test_cpp
          COMMAND gradient_autoscheduler_test_cpp
-         WORKING_DIRECTORY $<TARGET_FILE_DIR:gradient_autoscheduler>)
+         WORKING_DIRECTORY $<TARGET_FILE_DIR:Halide_Li2018>)
 
 set_tests_properties(gradient_autoscheduler_test_cpp PROPERTIES
                      LABELS Li2018
-                     ENVIRONMENT "LD_LIBRARY_PATH=$<TARGET_FILE_DIR:gradient_autoscheduler>")
+                     ENVIRONMENT "LD_LIBRARY_PATH=$<TARGET_FILE_DIR:Halide_Li2018>")
 
 ##
 
@@ -81,7 +85,7 @@ if (WITH_PYTHON_BINDINGS)
             set(SEP ":")
         endif ()
 
-        set(_PATH "$<SHELL_PATH:$<TARGET_FILE_DIR:gradient_autoscheduler>>;$<SHELL_PATH:$<TARGET_FILE_DIR:Halide::Halide>>;$ENV{PATH}")
+        set(_PATH "$<SHELL_PATH:$<TARGET_FILE_DIR:Halide_Li2018>>;$<SHELL_PATH:$<TARGET_FILE_DIR:Halide::Halide>>;$ENV{PATH}")
         string(REPLACE ";" "${SEP}" _PATH "${_PATH}")
         set_tests_properties(gradient_autoscheduler_test_py PROPERTIES
                              LABELS Li2018
