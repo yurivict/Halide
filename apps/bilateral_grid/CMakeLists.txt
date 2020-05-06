@@ -30,7 +30,6 @@ target_link_libraries(bilateral_grid_process
                       PRIVATE
                       Halide::ImageIO # For halide_image_io.h
                       Halide::Tools # For halide_benchmark.h
-                      Halide::Runtime # For HalideBuffer.h  -- TODO: This should probably be part of ::Tools
                       bilateral_grid
                       bilateral_grid_auto_schedule)
 

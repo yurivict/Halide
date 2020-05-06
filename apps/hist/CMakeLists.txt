@@ -25,7 +25,6 @@ add_halide_library(hist_auto_schedule FROM hist.generator
 add_executable(hist_filter filter.cpp)
 target_link_libraries(hist_filter
                       PRIVATE
-                      Halide::Runtime
                       Halide::ImageIO
                       Halide::Tools
                       hist

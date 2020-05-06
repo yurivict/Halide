@@ -27,7 +27,6 @@ add_halide_library(conv_layer_auto_schedule FROM conv_layer.generator
 add_executable(conv_layer_process process.cpp)
 target_link_libraries(conv_layer_process
                       PRIVATE
-                      Halide::Runtime
                       Halide::ImageIO
                       conv_layer
                       conv_layer_auto_schedule)

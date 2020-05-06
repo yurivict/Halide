@@ -25,7 +25,6 @@ add_halide_library(lens_blur_auto_schedule FROM lens_blur.generator
 add_executable(lens_blur_filter process.cpp)
 target_link_libraries(lens_blur_filter
                       PRIVATE
-                      Halide::Runtime
                       Halide::ImageIO
                       lens_blur
                       lens_blur_auto_schedule)

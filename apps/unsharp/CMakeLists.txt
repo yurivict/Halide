@@ -25,7 +25,6 @@ add_halide_library(unsharp_auto_schedule FROM unsharp.generator
 add_executable(unsharp_filter filter.cpp)
 target_link_libraries(unsharp_filter
                       PRIVATE
-                      Halide::Runtime
                       Halide::ImageIO
                       unsharp
                       unsharp_auto_schedule)

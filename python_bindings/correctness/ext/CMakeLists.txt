@@ -17,6 +17,6 @@ foreach (GEN IN ITEMS addconstant bit user_context)
 
     # Create the module from the generated library and .py.cpp
     Python3_add_library(py_${GEN} MODULE ${${GEN}_py_cpp})
-    target_link_libraries(py_${GEN} PRIVATE ext_${GEN} Halide::Runtime)
+    target_link_libraries(py_${GEN} PRIVATE ext_${GEN})
     set_target_properties(py_${GEN} PROPERTIES OUTPUT_NAME ${GEN}) # Python3_add_library adds target info to name.
 endforeach ()

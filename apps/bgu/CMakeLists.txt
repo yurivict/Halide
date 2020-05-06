@@ -25,7 +25,6 @@ add_halide_library(bgu_auto_schedule FROM bgu.generator
 add_executable(bgu_filter filter.cpp)
 target_link_libraries(bgu_filter
                       PRIVATE
-                      Halide::Runtime
                       Halide::ImageIO
                       bgu
                       bgu_auto_schedule)

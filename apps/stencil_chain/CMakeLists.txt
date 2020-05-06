@@ -25,7 +25,6 @@ add_halide_library(stencil_chain_auto_schedule FROM stencil_chain.generator
 add_executable(stencil_chain_process process.cpp)
 target_link_libraries(stencil_chain_process
                       PRIVATE
-                      Halide::Runtime
                       Halide::ImageIO
                       stencil_chain
                       stencil_chain_auto_schedule)

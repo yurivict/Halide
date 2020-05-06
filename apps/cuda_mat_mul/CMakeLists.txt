@@ -36,7 +36,6 @@ target_link_libraries(runner
                       PRIVATE
                       ${CUDA_LIBRARIES}
                       ${CUDA_CUBLAS_LIBRARIES}
-                      Halide::Runtime
                       Halide::Tools
                       mat_mul)
 

@@ -25,7 +25,6 @@ add_halide_library(nl_means_auto_schedule FROM nl_means.generator
 add_executable(nl_means_process process.cpp)
 target_link_libraries(nl_means_process
                       PRIVATE
-                      Halide::Runtime
                       Halide::ImageIO
                       nl_means
                       nl_means_auto_schedule)

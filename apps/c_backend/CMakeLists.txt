@@ -36,14 +36,12 @@ add_halide_library(pipeline_cpp_native FROM pipeline_cpp.generator
 add_executable(run_c_backend_and_native run.cpp)
 target_link_libraries(run_c_backend_and_native
                       PRIVATE
-                      Halide::Runtime
                       pipeline_native
                       pipeline_c)
 
 add_executable(run_c_backend_and_native_cpp run_cpp.cpp)
 target_link_libraries(run_c_backend_and_native_cpp
                       PRIVATE
-                      Halide::Runtime
                       pipeline_cpp_native
                       pipeline_cpp_cpp)
 

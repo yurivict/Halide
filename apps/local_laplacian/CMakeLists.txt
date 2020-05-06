@@ -25,7 +25,6 @@ add_halide_library(local_laplacian_auto_schedule FROM local_laplacian.generator
 add_executable(local_laplacian_process process.cpp)
 target_link_libraries(local_laplacian_process
                       PRIVATE
-                      Halide::Runtime
                       Halide::ImageIO
                       local_laplacian
                       local_laplacian_auto_schedule)

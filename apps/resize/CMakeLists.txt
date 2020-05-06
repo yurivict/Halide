@@ -59,7 +59,6 @@ add_executable(resize resize.cpp)
 list(TRANSFORM VARIANTS PREPEND "resize_" OUTPUT_VARIABLE FILTERS)
 target_link_libraries(resize
                       PRIVATE
-                      Halide::Runtime
                       Halide::ImageIO
                       ${FILTERS})
 

@@ -25,7 +25,6 @@ add_halide_library(interpolate_auto_schedule FROM interpolate.generator
 add_executable(interpolate_filter filter.cpp)
 target_link_libraries(interpolate_filter
                       PRIVATE
-                      Halide::Runtime
                       Halide::ImageIO
                       interpolate
                       interpolate_auto_schedule)

@@ -25,7 +25,6 @@ add_halide_library(max_filter_auto_schedule FROM max_filter.generator
 add_executable(max_filter_filter filter.cpp)
 target_link_libraries(max_filter_filter
                       PRIVATE
-                      Halide::Runtime
                       Halide::ImageIO
                       max_filter
                       max_filter_auto_schedule)

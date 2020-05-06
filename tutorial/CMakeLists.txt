@@ -46,10 +46,6 @@ add_tutorial(lesson_06_realizing_over_shifted_domains.cpp)
 add_tutorial(lesson_07_multi_stage_pipelines.cpp WITH_IMAGE_IO)
 add_tutorial(lesson_08_scheduling_2.cpp WITH_IMAGE_IO WITH_OPENMP)
 add_tutorial(lesson_09_update_definitions.cpp WITH_IMAGE_IO WITH_OPENMP)
-add_tutorial(lesson_11_cross_compilation.cpp)
-add_tutorial(lesson_12_using_the_gpu.cpp WITH_IMAGE_IO)
-add_tutorial(lesson_13_tuples.cpp)
-add_tutorial(lesson_14_types.cpp)
 
 option(BUILD_AOT_TUTORIAL "Build the ahead-of-time compilation tutorial" ON)
 if (BUILD_AOT_TUTORIAL)
@@ -78,6 +74,11 @@ if (BUILD_AOT_TUTORIAL)
                           Threads::Threads)
     target_include_directories(lesson_10_aot_compilation_run PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
 endif ()
+
+add_tutorial(lesson_11_cross_compilation.cpp)
+add_tutorial(lesson_12_using_the_gpu.cpp WITH_IMAGE_IO)
+add_tutorial(lesson_13_tuples.cpp)
+add_tutorial(lesson_14_types.cpp)
 
 # TODO: lesson 15
 # TODO: lesson 16

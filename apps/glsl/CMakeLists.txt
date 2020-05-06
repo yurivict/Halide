@@ -34,7 +34,6 @@ if (TARGET OpenGL::GL)
     add_executable(opengl_test opengl_test.cpp)
     target_link_libraries(opengl_test
                           PRIVATE
-                          Halide::Runtime
                           halide_blur_glsl
                           halide_ycc_glsl)
 

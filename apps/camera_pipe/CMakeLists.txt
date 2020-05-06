@@ -28,7 +28,6 @@ add_halide_library(camera_pipe_auto_schedule FROM camera_pipe.generator
 add_executable(camera_pipe_process process.cpp)
 target_link_libraries(camera_pipe_process
                       PRIVATE
-                      Halide::Runtime
                       Halide::ImageIO
                       camera_pipe
                       camera_pipe_auto_schedule)

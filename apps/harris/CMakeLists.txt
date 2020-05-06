@@ -25,7 +25,6 @@ add_halide_library(harris_auto_schedule FROM harris.generator
 add_executable(harris_filter filter.cpp)
 target_link_libraries(harris_filter
                       PRIVATE
-                      Halide::Runtime
                       Halide::ImageIO
                       harris
                       harris_auto_schedule)

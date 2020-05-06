@@ -24,7 +24,6 @@ add_executable(blur_test test.cpp)
 target_compile_options(blur_test PRIVATE $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-O2>)
 target_link_libraries(blur_test
                       PRIVATE
-                      Halide::Runtime
                       Halide::Tools
                       halide_blur
                       $<TARGET_NAME_IF_EXISTS:OpenMP::OpenMP_CXX>)

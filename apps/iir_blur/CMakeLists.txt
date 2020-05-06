@@ -24,7 +24,6 @@ add_halide_library(iir_blur_auto_schedule FROM iir_blur.generator
 # Main executable
 add_executable(iir_blur_filter filter.cpp)
 target_link_libraries(iir_blur_filter PRIVATE
-                      Halide::Runtime
                       Halide::Tools
                       Halide::ImageIO
                       iir_blur
