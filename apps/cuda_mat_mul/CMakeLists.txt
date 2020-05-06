@@ -2,10 +2,10 @@ cmake_minimum_required(VERSION 3.14)
 project(cuda_mat_mul)
 
 # TODO: do we need to add automatic cuda propagation to dependent targets of add_halide_library?
-find_package(CUDA) # not REQUIRED because we want to skip this when it's run as a test if CUDA is not available.
+find_package(CUDA)
 if (NOT CUDA_FOUND)
-    message(STATUS "Couldn't find CUDA. Not building anything.")
-    return()
+    # This message hints to CTest ("[SKIP]") that this test should be marked as skipped rather than failed
+    message(FATAL_ERROR "[SKIP] Could NOT find CUDA")
 endif ()
 
 enable_testing()
