@@ -83,7 +83,65 @@ add_tutorial(lesson_12_using_the_gpu.cpp WITH_IMAGE_IO)
 add_tutorial(lesson_13_tuples.cpp)
 add_tutorial(lesson_14_types.cpp)
 
-# TODO: lesson 15
+# Lesson 15
+add_executable(lesson_15_generate lesson_15_generators.cpp)
+target_link_libraries(lesson_15_generate PRIVATE Halide::Generator)
+
+## Hack to build the libraries
+
+add_custom_target(lesson_15_targets)
+unset(LESSON_15_EXPECTED_FILES)
+
+##
+add_halide_library(my_first_generator_win32 FROM lesson_15_generate
+                   GENERATOR my_first_generator
+                   TARGET x86-32-windows)
+
+list(APPEND LESSON_15_EXPECTED_FILES my_first_generator_win32.lib my_first_generator_win32.h)
+add_dependencies(lesson_15_targets my_first_generator_win32)
+
+##
+add_halide_library(my_first_generator FROM lesson_15_generate
+                   STMT my_first_generator_STMT)
+
+list(APPEND LESSON_15_EXPECTED_FILES my_first_generator.stmt)
+add_dependencies(lesson_15_targets my_first_generator)
+
+##
+add_halide_library(my_second_generator_1 FROM lesson_15_generate
+                   GENERATOR my_second_generator
+                   PARAMS parallel=false scale=3.0 rotation=ccw output.type=uint16)
+add_halide_library(my_second_generator_2 FROM lesson_15_generate
+                   GENERATOR my_second_generator
+                   PARAMS scale=9.0 rotation=ccw output.type=float32)
+add_halide_library(my_second_generator_3 FROM lesson_15_generate
+                   GENERATOR my_second_generator
+                   PARAMS parallel=false output.type=float64)
+
+list(APPEND LESSON_15_EXPECTED_FILES
+     my_second_generator_1${CMAKE_STATIC_LIBRARY_SUFFIX} my_second_generator_1.h
+     my_second_generator_2${CMAKE_STATIC_LIBRARY_SUFFIX} my_second_generator_2.h
+     my_second_generator_3${CMAKE_STATIC_LIBRARY_SUFFIX} my_second_generator_3.h)
+
+add_dependencies(lesson_15_targets
+                 my_second_generator_1
+                 my_second_generator_2
+                 my_second_generator_3)
+
+##
+add_test(NAME tutorial_lesson_15_build_gens
+         COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target lesson_15_targets)
+set_tests_properties(tutorial_lesson_15_build_gens PROPERTIES
+                     LABELS tutorial
+                     FIXTURES_SETUP tutorial_lesson_15)
+
+add_test(NAME tutorial_lesson_15_check_files
+         COMMAND ${CMAKE_COMMAND}
+         "-DFILES_TO_CHECK=$<JOIN:${LESSON_15_EXPECTED_FILES},$<SEMICOLON>>"
+         -P "${Halide_SOURCE_DIR}/cmake/CheckFilesExist.cmake")
+set_tests_properties(tutorial_lesson_15_check_files PROPERTIES
+                     LABELS tutorial
+                     FIXTURES_REQUIRED tutorial_lesson_15)
 
 # Lesson 16
 add_executable(lesson_16_rgb_generate lesson_16_rgb_generate.cpp)
