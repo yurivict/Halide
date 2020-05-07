@@ -51,24 +51,6 @@ if (NOT HALIDE_ENABLE_RTTI)
                            $<$<AND:$<COMPILE_LANGUAGE:CXX>,$<NOT:$<CXX_COMPILER_ID:MSVC>>>:-fno-rtti>)
 endif ()
 
-# TODO: move to /packaging
-include(GNUInstallDirs)
-install(TARGETS Halide_Adams2019
-        EXPORT Halide_Targets
-
-        RUNTIME
-        DESTINATION ${CMAKE_INSTALL_BINDIR}
-        COMPONENT Halide_Runtime
-
-        LIBRARY
-        DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        COMPONENT Halide_Runtime
-        NAMELINK_COMPONENT Halide_Development
-
-        ARCHIVE
-        DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        COMPONENT Halide_Development)
-
 # ==========================================================
 # TODO: move this to a separate folder since it's a demo/app
 

@@ -14,7 +14,7 @@ set(HALIDE_INSTALL_CMAKEDIR
 ##
 
 # Define destinations for all the targets
-install(TARGETS Halide Halide_Runtime
+install(TARGETS Halide Halide_Runtime Halide_Adams2019 Halide_Li2018
         EXPORT Halide_Targets
 
         RUNTIME
