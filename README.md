@@ -104,7 +104,7 @@ Building Halide with CMake
 
 ### MacOS and Linux
 
-Follow the above instructions to build LLVM or aquire a suitable binary release.
+Follow the above instructions to build LLVM or acquire a suitable binary release.
 Then create a separate build folder for Halide and run CMake, pointing it to your LLVM installation.
 
     % mkdir Halide-build
@@ -117,24 +117,67 @@ Omit `-G Ninja` if you do not have Ninja build installed.
 
 ### Windows
 
-We recommend building with MSVC 2019, but MSVC 2015 Update 3 and newer are supported (earlier versions
+We recommend building with MSVC 2019, but MSVC 2017 is also supported (earlier versions
 might work, but are not part of our tests).
 Be sure to install the CMake Individual Component in the Visual Studio 2019 installer.
 For older versions of Visual Studio, acquire CMake and Ninja from their respective project websites.
 
-These instructions run from the `D:` drive. We assume this git repo is cloned to `D:\Halide`.
-
-#### Building LLVM
-
-For a 64-bit build, run:
-
+These instructions start from the `D:` drive.
+We assume this git repo is cloned to `D:\Halide`.
+We also assume that your shell environment is set up correctly. For a 64-bit build, run:
+                                                                
     D:\> "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" x64
 
 For a 32-bit build, run:
 
-    D:\> "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" x86
+    D:\> "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" x86 
 
-Then download LLVM's sources (these instructions use the latest 10.0 release)
+#### Managing dependencies with vcpkg
+
+The best way to get compatible dependencies on Windows is to use [vcpkg](https://github.com/Microsoft/vcpkg).
+Install it like so:
+
+    D:\> git clone https://github.com/Microsoft/vcpkg.git
+    D:\> cd vcpkg
+    D:\vcpkg> .\vcpkg integrate install
+    ...
+    CMake projects should use: "-DCMAKE_TOOLCHAIN_FILE=D:/vcpkg/scripts/buildsystems/vcpkg.cmake"
+    
+Then install the libraries. For a 64-bit build, run:
+
+    D:\vcpkg> .\vcpkg install libpng:x64-windows libjpeg-turbo:x64-windows llvm[target-all,clang-tools-extra]:x64-windows
+
+To support 32-bit builds, also run:
+
+    D:\vcpkg> .\vcpkg install libpng:x86-windows libjpeg-turbo:x86-windows llvm[target-all,clang-tools-extra]:x86-windows
+
+#### Building Halide
+
+Create a separate build tree and call CMake with vcpkg's toolchain.
+This will build in either 32-bit or 64-bit depending on the environment script (`vcvars`) that was run earlier. 
+
+    D:\> md Halide-build
+    D:\> cd Halide-build
+    D:\Halide-build> cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=D:/vcpkg/scripts/buildsystems/vcpkg.cmake ..\Halide
+
+**Note:** If building with Python bindings on 32-bit (enabled by default), be sure to point CMake to the installation 
+path of a 32-bit Python3.
+You can do this by specifying, for example: `"-DPython3_ROOT_DIR=C:\Program Files (x86)\Python38-32"`.
+
+Then run the build with:
+
+    D:\Halide-build> cmake --build . --config Release -j %NUMBER_OF_PROCESSORS%
+
+To run all the tests:
+
+    D:\Halide-build> ctest -C Release
+
+Subsets of the tests can be selected with `-L` and include `correctness`, `python`, `error`, and the other directory names under `/tests`.
+
+#### Building LLVM (optional)
+
+Follow these steps if you want to build LLVM yourself.
+First, download LLVM's sources (these instructions use the latest 10.0 release)
 
     D:\> git clone https://github.com/llvm/llvm-project.git --depth 1 -b release/10.x
 
@@ -175,55 +218,10 @@ Finally, run:
     D:\llvm-build> cmake --build . --config Release --target install -j %NUMBER_OF_PROCESSORS%
 
 You can substitute `Debug` for `Release` in the above `cmake` commands if you want a debug build.
+Make sure to add `-DLLVM_DIR=D:/llvm-install/lib/cmake/llvm` to the Halide CMake command to override
+`vcpkg`'s LLVM.
 
 **MSBuild:** If you want to build LLVM with MSBuild instead of Ninja, use `-G "Visual Studio 16 2019" -Thost=x64 -A x64` or `-G "Visual Studio 16 2019" -Thost=x64 -A Win32` in place of `-G Ninja`.
-
-#### PNG & JPEG on Windows
-
-The best way to get compatible libpng ang libjpeg builds on Windows is to use [vcpkg](https://github.com/Microsoft/vcpkg).
-
-Install it like so:
-
-    D:\> git clone https://github.com/Microsoft/vcpkg.git
-    D:\> cd vcpkg
-    D:\vcpkg> .\vcpkg integrate install
-    ...
-    CMake projects should use: "-DCMAKE_TOOLCHAIN_FILE=D:/vcpkg/scripts/buildsystems/vcpkg.cmake"
-    
-Then install the libraries. For a 64-bit build, run:
-
-    D:\vcpkg> .\vcpkg install libpng:x64-windows libjpeg-turbo:x64-windows
-
-For a 32-bit build, run:
-
-    D:\vcpkg> .\vcpkg install libpng:x86-windows libjpeg-turbo:x86-windows
-
-#### Building Halide
-
-For a 64-bit build, run:
-
-    D:\> md Halide-build
-    D:\> cd Halide-build
-    D:\Halide-build> cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=D:/vcpkg/scripts/buildsystems/vcpkg.cmake -DLLVM_DIR=D:/llvm-install/lib/cmake/llvm ..\Halide
-    
-For a 32-bit build, run:
-
-    D:\> md Halide32-build
-    D:\> cd Halide32-build
-    D:\Halide32-build> cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=D:/vcpkg/scripts/buildsystems/vcpkg.cmake -DLLVM_DIR=D:/llvm32-install/lib/cmake/llvm ..\Halide
-
-**Note:** If building with Python bindings on 32-bit (the default), be sure to point CMake to the installation path of a 32-bit Python3.
-You can do this by specifying, for example: `"-DPython3_ROOT_DIR=C:\Program Files (x86)\Python38-32"`.
-
-Then run the build with:
-
-    D:\Halide-build> cmake --build . --config Release -j %NUMBER_OF_PROCESSORS%
-
-To run all the tests:
-
-    D:\Halide-build> ctest -C Release
-
-Subsets of the tests can be selected with `-L` and include `correctness`, `python`, `error`, and the other directory names under `/tests`.
 
 #### If all else fails...
 
