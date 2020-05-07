@@ -67,6 +67,10 @@ function(add_halide_library TARGET)
     set(multiValueArgs PARAMS TARGETS FEATURES PLUGINS)
     cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
+    if (NOT "${ARG_UNPARSED_ARGUMENTS}" STREQUAL "")
+        message(AUTHOR_WARNING "arguments to add_halide_library were not recognized. ${ARG_UNPARSED_ARGUMENTS}")
+    endif ()
+
     if (NOT ARG_FROM)
         message(FATAL_ERROR "Missing FROM argument specifying a Halide generator target")
     endif ()
