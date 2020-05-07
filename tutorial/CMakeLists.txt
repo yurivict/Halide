@@ -95,7 +95,7 @@ unset(LESSON_15_EXPECTED_FILES)
 ##
 add_halide_library(my_first_generator_win32 FROM lesson_15_generate
                    GENERATOR my_first_generator
-                   TARGET x86-32-windows)
+                   TARGETS x86-32-windows)
 
 list(APPEND LESSON_15_EXPECTED_FILES my_first_generator_win32.lib my_first_generator_win32.h)
 add_dependencies(lesson_15_targets my_first_generator_win32)
@@ -104,7 +104,7 @@ add_dependencies(lesson_15_targets my_first_generator_win32)
 add_halide_library(my_first_generator FROM lesson_15_generate
                    STMT my_first_generator_STMT)
 
-list(APPEND LESSON_15_EXPECTED_FILES my_first_generator.stmt)
+list(APPEND LESSON_15_EXPECTED_FILES ${my_first_generator_STMT})
 add_dependencies(lesson_15_targets my_first_generator)
 
 ##
