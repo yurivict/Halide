@@ -69,10 +69,11 @@ if (BUILD_AOT_TUTORIAL)
     add_dependencies(lesson_10_aot_compilation_run exec_lesson_10_aot_compilation_generate)
     target_link_libraries(lesson_10_aot_compilation_run PRIVATE
                           "${CMAKE_CURRENT_BINARY_DIR}/${FILTER_LIB}"
-                          Halide::Runtime # TODO: including this here makes too much available. The generated headers should be self-contained.
-                          ${CMAKE_DL_LIBS}
-                          Threads::Threads)
+                          Halide::Runtime)
     target_include_directories(lesson_10_aot_compilation_run PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
+
+    add_test(NAME tutorial_lesson_10_aot_compilation_run COMMAND lesson_10_aot_compilation_run)
+    set_tests_properties(tutorial_lesson_10_aot_compilation_run PROPERTIES LABELS tutorial)
 endif ()
 
 add_tutorial(lesson_11_cross_compilation.cpp)
