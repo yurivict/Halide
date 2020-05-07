@@ -172,7 +172,6 @@ foreach (i IN LISTS RUNTIME_CPP)
         set(RUNTIME_DEFINES -DDEBUG_RUNTIME -DCOMPILING_HALIDE_RUNTIME -DLLVM_VERSION=${LLVM_VERSION} -DBITS_${j})
 
         set(SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/${i}.cpp")
-        file(TO_NATIVE_PATH "${SOURCE}" SOURCE)
 
         set(LL_D "initmod.${i}_${j}_debug.ll")
         set(LL "initmod.${i}_${j}.ll")
@@ -184,40 +183,34 @@ foreach (i IN LISTS RUNTIME_CPP)
         set(INITMOD "_initmod_${i}_${j}.cpp")
 
         add_custom_command(OUTPUT "${LL_D}"
-                           # COMMENT "${SOURCE} -> ${LL_D}"
                            DEPENDS "${SOURCE}"
                            VERBATIM
-                           COMMAND clang ${RUNTIME_CXX_FLAGS} ${RUNTIME_DEFINES} -m${j} -target ${TARGET} -emit-llvm -S ${SOURCE} -o ${LL_D}
+                           COMMAND clang ${RUNTIME_CXX_FLAGS} ${RUNTIME_DEFINES} -m${j} -target ${TARGET} -emit-llvm -S "$<SHELL_PATH:${SOURCE}>" -o ${LL_D}
                            # Make sure that the output of this command also depends
                            # on the header files that ${SOURCE} uses
                            # FIXME: Only works for makefile generator
                            IMPLICIT_DEPENDS CXX "${SOURCE}"
                            )
         add_custom_command(OUTPUT "${BC_D}"
-                           # COMMENT "${LL_D} -> ${BC_D}"
                            DEPENDS "${LL_D}"
                            COMMAND llvm-as "${LL_D}" -o "${BC_D}"
                            )
         add_custom_command(OUTPUT "${INITMOD_D}"
-                           # COMMENT "${BC_D} -> ${INITMOD_D}"
                            DEPENDS "${BC_D}" binary2cpp
                            COMMAND binary2cpp "halide_internal_initmod_${i}_${j}_debug" < "${BC_D}" > "${INITMOD_D}"
                            )
         target_sources(Halide_initmod PRIVATE ${INITMOD_D})
 
         add_custom_command(OUTPUT "${LL}"
-                           # COMMENT "${SOURCE} -> ${LL}"
                            DEPENDS "${SOURCE}"
                            VERBATIM
-                           COMMAND clang ${RUNTIME_CXX_FLAGS} -m${j} -target ${TARGET} -DCOMPILING_HALIDE_RUNTIME -DLLVM_VERSION=${LLVM_VERSION} -DBITS_${j} -emit-llvm -S ${SOURCE} -o ${LL}
+                           COMMAND clang ${RUNTIME_CXX_FLAGS} -m${j} -target ${TARGET} -DCOMPILING_HALIDE_RUNTIME -DLLVM_VERSION=${LLVM_VERSION} -DBITS_${j} -emit-llvm -S "$<SHELL_PATH:${SOURCE}>" -o ${LL}
                            )
         add_custom_command(OUTPUT "${BC}"
-                           # COMMENT "${LL} -> ${BC}"
                            DEPENDS "${LL}"
                            COMMAND llvm-as "${LL}" -o "${BC}"
                            )
         add_custom_command(OUTPUT "${INITMOD}"
-                           # COMMENT "${BC} -> ${INITMOD}"
                            DEPENDS "${BC}" binary2cpp
                            COMMAND binary2cpp "halide_internal_initmod_${i}_${j}" < "${BC}" > "${INITMOD}"
                            )
@@ -228,19 +221,17 @@ endforeach ()
 
 foreach (i IN LISTS RUNTIME_LL)
     set(LL "${CMAKE_CURRENT_SOURCE_DIR}/${i}.ll")
-    file(TO_NATIVE_PATH "${LL}" LL)
 
     set(BC "initmod.${i}.bc")
 
     set(INITMOD "_initmod_${i}.cpp")
 
     add_custom_command(OUTPUT "${BC}"
-                       # COMMENT "${LL} -> ${BC}"
                        DEPENDS "${LL}"
-                       COMMAND llvm-as "${LL}" -o "${BC}"
+                       VERBATIM
+                       COMMAND llvm-as "$<SHELL_PATH:${LL}>" -o "${BC}"
                        )
     add_custom_command(OUTPUT "${INITMOD}"
-                       # COMMENT "${BC} -> ${INITMOD}"
                        DEPENDS "${BC}" binary2cpp
                        COMMAND binary2cpp "halide_internal_initmod_${i}_ll" < "${BC}" > "${INITMOD}"
                        )
@@ -250,18 +241,15 @@ endforeach ()
 foreach (i IN LISTS RUNTIME_BC)
     set(INITMOD "_initmod_ptx_${i}.cpp")
     set(RT_BC "${CMAKE_CURRENT_SOURCE_DIR}/nvidia_libdevice_bitcode/libdevice.${i}.10.bc")
-    file(TO_NATIVE_PATH "${RT_BC}" RT_BC)
 
     add_custom_command(OUTPUT "${INITMOD}"
-                       # COMMENT "Building initial module ptx_${i}..."
-                       DEPENDS binary2cpp
-                       COMMAND binary2cpp "halide_internal_initmod_ptx_${i}_ll" < "${RT_BC}" > "${INITMOD}"
+                       DEPENDS binary2cpp "${RT_BC}"
+                       COMMAND binary2cpp "halide_internal_initmod_ptx_${i}_ll" < "$<SHELL_PATH:${RT_BC}>" > "${INITMOD}"
                        VERBATIM)
     target_sources(Halide_initmod PRIVATE ${INITMOD})
 endforeach ()
 
 add_custom_command(OUTPUT "_initmod_inlined_c.cpp"
-                   # COMMENT "halide_buffer_t.cpp -> _initmod_inlined_c.cpp"
                    DEPENDS "halide_buffer_t.cpp" binary2cpp
                    COMMAND binary2cpp "halide_internal_initmod_inlined_c" < "${CMAKE_CURRENT_SOURCE_DIR}/halide_buffer_t.cpp" > "_initmod_inlined_c.cpp"
                    )
@@ -270,7 +258,6 @@ target_sources(Halide_initmod PRIVATE "_initmod_inlined_c.cpp")
 foreach (i IN LISTS RUNTIME_HEADER_FILES)
     string(REPLACE "." "_" SYM_NAME "${i}")
     add_custom_command(OUTPUT "_initmod_${SYM_NAME}.cpp"
-                       # COMMENT "${i} -> _initmod_${SYM_NAME}.cpp"
                        DEPENDS "${i}" binary2cpp
                        COMMAND binary2cpp "halide_internal_runtime_header_${SYM_NAME}" < "${CMAKE_CURRENT_SOURCE_DIR}/${i}" > "_initmod_${SYM_NAME}.cpp"
                        )
@@ -287,3 +274,4 @@ add_library(Halide_Runtime INTERFACE)
 add_library(Halide::Runtime ALIAS Halide_Runtime)
 target_include_directories(Halide_Runtime INTERFACE $<BUILD_INTERFACE:${Halide_BINARY_DIR}/include>)
 set_target_properties(Halide_Runtime PROPERTIES EXPORT_NAME Runtime)
+

@@ -351,12 +351,14 @@ add_subdirectory(runtime)
 # Build the Halide mono-header.
 ##
 
-file(TO_NATIVE_PATH "${Halide_BINARY_DIR}/include/Halide.h" NATIVE_HALIDE_H)
-file(TO_NATIVE_PATH "${Halide_SOURCE_DIR}/LICENSE.txt" NATIVE_LICENSE_PATH)
+set(HALIDE_H "${Halide_BINARY_DIR}/include/Halide.h")
+set(LICENSE_PATH "${Halide_SOURCE_DIR}/LICENSE.txt")
 add_custom_command(OUTPUT "${Halide_BINARY_DIR}/include/Halide.h"
-                   COMMAND build_halide_h "${NATIVE_LICENSE_PATH}" ${HEADER_FILES} > "${NATIVE_HALIDE_H}"
+                   VERBATIM
+                   COMMAND ${CMAKE_COMMAND} -E make_directory "$<SHELL_PATH:${Halide_BINARY_DIR}/include>"
+                   COMMAND build_halide_h "$<SHELL_PATH:${LICENSE_PATH}>" ${HEADER_FILES} > "$<SHELL_PATH:${HALIDE_H}>"
                    WORKING_DIRECTORY "${CMAKE_CURRENT_LIST_DIR}"
-                   DEPENDS build_halide_h "${Halide_SOURCE_DIR}/LICENSE.txt" ${HEADER_FILES})
+                   DEPENDS build_halide_h "${LICENSE_PATH}" ${HEADER_FILES})
 add_custom_target(
         HalideIncludes
         ALL

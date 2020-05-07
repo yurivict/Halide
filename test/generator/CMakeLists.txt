@@ -151,28 +151,31 @@ target_link_libraries(external_code.generator PRIVATE external_code_generator_de
 # Define a nontrivial dependency for external_code.generator
 ##
 
-file(TO_NATIVE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/external_code_extern.cpp" EXTERNAL_CPP)
+set(EXTERNAL_CPP "${CMAKE_CURRENT_SOURCE_DIR}/external_code_extern.cpp")
 
 set(EC32 "external_code_extern_bitcode_32")
 add_custom_command(OUTPUT "${EC32}.bc"
-                   DEPENDS external_code_extern.cpp
-                   COMMAND clang -O3 -c -m32 -target le32-unknown-nacl-unknown -emit-llvm "${EXTERNAL_CPP}" -o "${EC32}.bc")
+                   DEPENDS "${EXTERNAL_CPP}"
+                   VERBATIM
+                   COMMAND clang -O3 -c -m32 -target le32-unknown-nacl-unknown -emit-llvm "$<SHELL_PATH:${EXTERNAL_CPP}>" -o "${EC32}.bc")
 add_custom_command(OUTPUT "${EC32}.cpp"
                    DEPENDS "${EC32}.bc"
                    COMMAND binary2cpp external_code_extern_bitcode_32 < "${EC32}.bc" > "${EC32}.cpp")
 
 set(EC64 "external_code_extern_bitcode_64")
 add_custom_command(OUTPUT "${EC64}.bc"
-                   DEPENDS external_code_extern.cpp
-                   COMMAND clang -O3 -c -m64 -target le64-unknown-unknown-unknown -emit-llvm "${EXTERNAL_CPP}" -o "${EC64}.bc")
+                   DEPENDS "${EXTERNAL_CPP}"
+                   VERBATIM
+                   COMMAND clang -O3 -c -m64 -target le64-unknown-unknown-unknown -emit-llvm "$<SHELL_PATH:${EXTERNAL_CPP}>" -o "${EC64}.bc")
 add_custom_command(OUTPUT "${EC64}.cpp"
                    DEPENDS "${EC64}.bc"
                    COMMAND binary2cpp external_code_extern_bitcode_64 < "${EC64}.bc" > "${EC64}.cpp")
 
 set(ECCPP "external_code_extern_cpp_source")
 add_custom_command(OUTPUT "${ECCPP}.cpp"
-                   DEPENDS external_code_extern.cpp
-                   COMMAND binary2cpp external_code_extern_cpp_source < "${EXTERNAL_CPP}" > "${ECCPP}.cpp")
+                   DEPENDS "${EXTERNAL_CPP}"
+                   VERBATIM
+                   COMMAND binary2cpp external_code_extern_cpp_source < "$<SHELL_PATH:${EXTERNAL_CPP}>" > "${ECCPP}.cpp")
 
 add_library(external_code_generator_deps OBJECT "${EC32}.cpp" "${EC64}.cpp" "${ECCPP}.cpp")
 
