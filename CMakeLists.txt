@@ -46,7 +46,12 @@ add_subdirectory(dependencies)
 add_subdirectory(src)
 add_subdirectory(tools)
 
+##
+# Add helper functions to the build
+##
+
 include(HalideGeneratorHelpers)
+include(MakeShellPath)
 
 ##
 # Add tests, apps, tutorials, etc. if we're not being imported into another CMake project.

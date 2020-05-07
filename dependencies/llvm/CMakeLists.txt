@@ -2,19 +2,12 @@
 # Find LLVM and check the version.
 ##
 
-if ("${HALIDE_REQUIRE_LLVM_VERSION}" STREQUAL "")
-    # Find any version present.
-    find_package(LLVM REQUIRED)
-else ()
-    message(STATUS "Looking for LLVM version ${HALIDE_REQUIRE_LLVM_VERSION}")
-    find_package(LLVM "${HALIDE_REQUIRE_LLVM_VERSION}" REQUIRED)
-endif ()
-
+find_package(LLVM ${HALIDE_REQUIRE_LLVM_VERSION} REQUIRED)
 message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 
-if ("${LLVM_PACKAGE_VERSION}" VERSION_LESS 8.0)
-    message(FATAL_ERROR "LLVM version must be 8.0 or newer")
+if ("${LLVM_PACKAGE_VERSION}" VERSION_LESS 9.0)
+    message(FATAL_ERROR "LLVM version must be 9.0 or newer")
 endif ()
 
 if ("${LLVM_PACKAGE_VERSION}" VERSION_GREATER 11.0)
@@ -68,16 +61,14 @@ check_llvm_target(Mips WITH_MIPS)
 check_llvm_target(PowerPC WITH_POWERPC)
 check_llvm_target(NVPTX WITH_NVPTX)
 check_llvm_target(RISCV WITH_RISCV)
-check_llvm_target(AMDGPU WITH_AMDGPU)  # AMDGPU target is WIP
+check_llvm_target(AMDGPU WITH_AMDGPU)
 
 ##
 # Create options that are initialized based on LLVM's config
 ##
 
-set(LLVM_COMPONENTS mcjit;bitwriter;linker;passes)
+set(LLVM_COMPONENTS mcjit bitwriter linker passes)
 
-# TODO: For targets we can link against even fewer libraries by specifying only the components we REALLY need.
-# (e.g. x86asmprinter;x86codegen rather than x86)
 option(TARGET_X86 "Include x86 target" ${WITH_X86})
 if (TARGET_X86)
     target_compile_definitions(Halide_LLVM INTERFACE WITH_X86)
@@ -141,13 +132,6 @@ endif ()
 # Finish setting up llvm library
 ##
 
-# When building a shared library the LLVM libraries will either be
-# embedded or linked into the Halide library. When building a static library
-# LLVM is not embedded/linked but CMake knows that when building an executable
-# against Halide static library that it needs to link LLVM too, IFF the
-# halide is being built as a subproject. (Which means, statically-built Halide
-# doesn't work out-of-installation directory.)
-# FIXME: migrate to proper cmake config magic.
 if (LLVM_USE_SHARED_LLVM_LIBRARY)
     set(LLVM_USE_SHARED "USE_SHARED")
 endif ()

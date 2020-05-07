@@ -36,10 +36,10 @@ function(add_halide_library TARGET)
         # c_source is handled by C_BACKEND
         # static_library is the default
         # object is not available
+        # cpp_stub is not available
         ASSEMBLY
         BITCODE
         COMPILER_LOG
-        CPP_STUB
         FEATURIZATION
         LLVM_ASSEMBLY
         PYTHON_EXTENSION
@@ -52,7 +52,6 @@ function(add_halide_library TARGET)
     set(ASSEMBLY_extension ".s")
     set(BITCODE_extension ".bc")
     set(COMPILER_LOG_extension ".halide_compiler_log")
-    set(CPP_STUB_extension ".stub.h")
     set(FEATURIZATION_extension ".featurization")
     set(LLVM_ASSEMBLY_extension ".ll")
     set(PYTHON_EXTENSION_extension ".py.cpp")
@@ -253,6 +252,7 @@ function(add_halide_library TARGET)
                           HL_FILTER_NAME "${ARG_GENERATOR}"
                           HL_LIBNAME "${ARG_FUNCTION_NAME}"
                           HL_PARAMS "${ARG_PARAMS}"
+                          HL_RUNTIME "${ARG_USE_RUNTIME}"
                           HL_TARGETS "${TARGETS}")
 
     add_custom_command(OUTPUT ${GENERATOR_OUTPUT_FILES}
