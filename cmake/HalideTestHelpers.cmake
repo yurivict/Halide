@@ -2,11 +2,20 @@
 # Remove the NDEBUG flag for the directory scope.
 ##
 
+get_property(IS_MULTI_CONFIG GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
+if (IS_MULTI_CONFIG)
+    set(CONFIGS_TO_EDIT ${CMAKE_CONFIGURATION_TYPES})
+else ()
+    set(CONFIGS_TO_EDIT ${CMAKE_BUILD_TYPE})
+endif ()
+
 get_property(ENABLED_LANGUAGES GLOBAL PROPERTY ENABLED_LANGUAGES)
-foreach (L IN LISTS ENABLED_LANGUAGES)
-    string(TOUPPER ${CMAKE_BUILD_TYPE} CMAKE_BUILD_TYPE_UPPER)
-    set(VAR CMAKE_${L}_FLAGS_${CMAKE_BUILD_TYPE_UPPER})
-    string(REGEX REPLACE "(^| )[/-]D *NDEBUG($| )" " " ${VAR} "${${VAR}}")
+foreach (CFG IN LISTS CONFIGS_TO_EDIT)
+    string(TOUPPER ${CFG} CFG_UPPER)
+    foreach (L IN LISTS ENABLED_LANGUAGES)
+        set(VAR CMAKE_${L}_FLAGS_${CFG_UPPER})
+        string(REGEX REPLACE "(^| )[/-]D *NDEBUG($| )" " " ${VAR} "${${VAR}}")
+    endforeach ()
 endforeach ()
 
 ##
@@ -47,8 +56,6 @@ endif ()
 # Convenience methods for defining tests.
 ##
 
-# TODO(srj): add valgrind variant
-# TODO(srj): add avx512 variant
 function(add_halide_test TARGET)
     set(options EXPECT_FAILURE)
     set(oneValueArgs WORKING_DIRECTORY)

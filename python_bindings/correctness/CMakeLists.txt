@@ -39,12 +39,17 @@ set(TESTS
     var.py
     )
 
+# Use generator expressions to get the true output paths of these files
+# CMAKE_CURRENT_BINARY_DIR is incorrect.
+make_shell_path(PYTHONPATH
+                "$<TARGET_FILE_DIR:py_addconstant>"
+                "$<TARGET_FILE_DIR:simplestub>"
+                "$<TARGET_FILE_DIR:Halide::Python>")
+
 foreach (TEST IN LISTS TESTS)
     get_filename_component(TEST_NAME ${TEST} NAME_WE)
     add_test(NAME python_correctness_${TEST_NAME}
              COMMAND Python3::Interpreter "$<SHELL_PATH:${CMAKE_CURRENT_SOURCE_DIR}/${TEST}>")
-
-    make_shell_path(PYTHONPATH "${CMAKE_CURRENT_BINARY_DIR}/ext" "${CMAKE_CURRENT_BINARY_DIR}" "$<TARGET_FILE_DIR:Halide::Python>")
     set_tests_properties(python_correctness_${TEST_NAME} PROPERTIES
                          LABELS "python;python-correctness"
                          ENVIRONMENT "PYTHONPATH=${PYTHONPATH};HL_TARGET=host")

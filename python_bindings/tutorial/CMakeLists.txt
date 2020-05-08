@@ -16,12 +16,13 @@ set(TESTS
     lesson_14_types.py
     )
 
+make_shell_path(PYTHONPATH "$<TARGET_FILE_DIR:lesson_10_halide>" "$<TARGET_FILE_DIR:Halide::Python>")
+
 foreach (TEST IN LISTS TESTS)
     get_filename_component(TEST_NAME ${TEST} NAME_WE)
     add_test(NAME python_tutorial_${TEST_NAME}
              COMMAND Python3::Interpreter "$<SHELL_PATH:${CMAKE_CURRENT_SOURCE_DIR}/${TEST}>")
 
-    make_shell_path(PYTHONPATH "${CMAKE_CURRENT_BINARY_DIR}" "$<TARGET_FILE_DIR:Halide::Python>")
     set_tests_properties(python_tutorial_${TEST_NAME} PROPERTIES
                          LABELS python
                          ENVIRONMENT "PYTHONPATH=${PYTHONPATH};HL_TARGET=host")
@@ -48,7 +49,7 @@ target_link_libraries(lesson_10_halide PRIVATE Halide::Runtime)
 # library, and finally runs python_tutorial_lesson_10_aot_compilation_run. The ..._compile test invokes CMake on
 # the current build for the above library.
 add_test(NAME python_tutorial_lesson_10_compile
-         COMMAND "${CMAKE_COMMAND}" --build "${CMAKE_BINARY_DIR}" --target lesson_10_halide)
+         COMMAND "${CMAKE_COMMAND}" --build "${CMAKE_BINARY_DIR}" --config $<CONFIG> --target lesson_10_halide)
 
 set_tests_properties(python_tutorial_lesson_10_aot_compilation_generate PROPERTIES
                      FIXTURES_SETUP py_lesson_10)
