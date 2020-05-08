@@ -14,7 +14,8 @@ find_package(Halide REQUIRED COMPONENTS Halide)
 # Find BLAS-es
 unset(DEFAULT_BLAS)
 unset(BLAS_TARGETS)
-set(BLAS_VENDORS OpenBLAS)  # TODO: add ATLAS and its weird extra linking requirements
+set(BLA_PREFER_PKGCONFIG YES)
+set(BLAS_VENDORS OpenBLAS Apple)  # TODO: add ATLAS and its weird extra linking requirements
 
 message(STATUS "Checking for available CBLAS implementations")
 foreach (BLA_VENDOR IN LISTS BLAS_VENDORS)
