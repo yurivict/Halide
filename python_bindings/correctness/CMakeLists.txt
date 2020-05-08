@@ -51,6 +51,6 @@ foreach (TEST IN LISTS TESTS)
     add_test(NAME python_correctness_${TEST_NAME}
              COMMAND Python3::Interpreter "$<SHELL_PATH:${CMAKE_CURRENT_SOURCE_DIR}/${TEST}>")
     set_tests_properties(python_correctness_${TEST_NAME} PROPERTIES
-                         LABELS "python;python-correctness"
+                         LABELS "python"
                          ENVIRONMENT "PYTHONPATH=${PYTHONPATH};HL_TARGET=host")
 endforeach ()
