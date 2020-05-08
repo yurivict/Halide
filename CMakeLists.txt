@@ -15,6 +15,12 @@ if (NOT DEFINED BUILD_SHARED_LIBS)
     set(BUILD_SHARED_LIBS YES)
 endif ()
 
+# Warn if the user did not set a build type and is using a single-configuration generator.
+get_property(IS_MULTI_CONFIG GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
+if (NOT IS_MULTI_CONFIG AND NOT CMAKE_BUILD_TYPE)
+    message(WARNING "Single-configuration generators require CMAKE_BUILD_TYPE to be set.")
+endif ()
+
 # Windows has file name length restrictions and lacks an RPATH mechanism.
 # We work around this by setting a path max and putting all exes / dlls in
 # the same output directory.
