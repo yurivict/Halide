@@ -16,7 +16,8 @@ fi
 if [ ${BUILD_SYSTEM} = 'CMAKE' ]; then
   : ${BUILD_SHARED_LIBS:?"BUILD_SHARED_LIBS must be set"}
   mkdir -p build/ && cd build/
-  /usr/bin/cmake -DLLVM_DIR="/usr/local/llvm/lib/cmake/llvm/" \
+  /usr/bin/cmake -G Ninja \
+                 -DLLVM_DIR="/usr/local/llvm/lib/cmake/llvm/" \
                  -DClang_DIR="/usr/local/llvm/lib/cmake/clang/" \
                  -DBUILD_SHARED_LIBS="${BUILD_SHARED_LIBS}" \
                  -DWITH_APPS=OFF \
@@ -29,7 +30,6 @@ if [ ${BUILD_SYSTEM} = 'CMAKE' ]; then
                  -DWITH_DOCS=ON \
                  -DWITH_PYTHON_BINDINGS=OFF \
                  -DCMAKE_BUILD_TYPE=Release \
-                 -G Ninja \
                  ../
 
   /usr/bin/cmake --build . -j 4

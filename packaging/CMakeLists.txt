@@ -13,8 +13,16 @@ set(HALIDE_INSTALL_CMAKEDIR
 # Main library exports
 ##
 
+# TODO: fix when autoschedulers are refactored
+unset(EXTRA_TARGETS)
+foreach (T IN ITEMS Halide_Adams2019 Halide_Li2018 Halide_Python)
+    if (TARGET ${T})
+        list(APPEND EXTRA_TARGETS ${T})
+    endif ()
+endforeach ()
+
 # Define destinations for all the targets
-install(TARGETS Halide Halide_Runtime Halide_Adams2019 Halide_Li2018
+install(TARGETS Halide Halide_Runtime ${EXTRA_TARGETS}
         EXPORT Halide_Targets
 
         RUNTIME

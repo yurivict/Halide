@@ -36,7 +36,7 @@ target_link_libraries(Halide_Python PRIVATE Halide::Halide)
 
 if (WIN32 AND BUILD_SHARED_LIBS)
     # There's precious little information about why Python only sometimes prevents DLLs from loading from the PATH on Windows.
-    # But for "security reasons", This workaround places a copy of Halide.dll next to our Python module.
+    # This workaround places a copy of Halide.dll next to our Python module.
     # Ref: https://stackoverflow.com/questions/59860465/pybind11-importerror-dll-not-found-when-trying-to-import-pyd-in-python-int
     # Ref: https://bugs.python.org/issue36085
     # Ref: https://docs.python.org/3/whatsnew/3.8.html#bpo-36085-whatsnew
