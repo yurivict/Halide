@@ -1,4 +1,17 @@
-# TODO: rename auto_schedule target to Adams2019 or something similar.
+# ================================================================================
+# Halide autoscheduler plugins rely on weak linking to work with static libraries.
+# This is not standard C++ and only works on Linux / macOS. Nothing special needs
+# to be done when linking to a shared version of Halide, however.
+
+if (NOT BUILD_SHARED_LIBS)
+    if (MSVC)
+        message(FATAL_ERROR "Autoscheduler plugins cannot be built against static Halide on Windows")
+    endif()
+
+    # Need to enable exports for the plugins to find Halide's symbols.
+    set(CMAKE_ENABLE_EXPORTS ON)
+endif ()
+
 
 # weights
 set(WF_CPP baseline.cpp)
@@ -43,7 +56,7 @@ set_target_properties(Halide_Adams2019 PROPERTIES
                       EXPORT_NAME Adams2019
                       OUTPUT_NAME auto_schedule)
 
-target_link_libraries(Halide_Adams2019 PRIVATE cost_model train_cost_model Halide::Halide)
+target_link_libraries(Halide_Adams2019 PRIVATE cost_model train_cost_model Halide::Plugin)
 
 if (NOT HALIDE_ENABLE_RTTI)
     target_compile_options(Halide_Adams2019 PRIVATE

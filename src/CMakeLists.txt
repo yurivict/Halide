@@ -385,7 +385,27 @@ add_dependencies(Halide HalideIncludes)
 # Include paths for libHalide
 ##
 
-target_include_directories(Halide INTERFACE $<BUILD_INTERFACE:${Halide_BINARY_DIR}/include>)
+set(HL_INCLUDE_PATH "$<BUILD_INTERFACE:${Halide_BINARY_DIR}/include>")
+target_include_directories(Halide INTERFACE ${HL_INCLUDE_PATH})
+
+##
+# Plugin interface for Halide on weak systems
+##
+
+add_library(Halide_Plugin INTERFACE)
+if (NOT BUILD_SHARED_LIBS)
+    if (MSVC)
+        message(STATUS "Notice: Halide plugins are not available when building statically with MSVC")
+    else ()
+        target_link_options(Halide_Plugin INTERFACE
+                            $<$<CXX_COMPILER_ID:GNU>:-rdynamic>
+                            $<$<CXX_COMPILER_ID:Clang,AppleClang>:-undefined dynamic_lookup>)
+        target_include_directories(Halide_Plugin INTERFACE ${HL_INCLUDE_PATH})
+    endif ()
+else ()
+    target_link_libraries(Halide_Plugin INTERFACE Halide::Halide)
+endif ()
+add_library(Halide::Plugin ALIAS Halide_Plugin)
 
 ##
 # Set compiler options for libHalide

@@ -22,7 +22,7 @@ foreach (T IN ITEMS Halide_Adams2019 Halide_Li2018 Halide_Python)
 endforeach ()
 
 # Define destinations for all the targets
-install(TARGETS Halide Halide_Runtime ${EXTRA_TARGETS}
+install(TARGETS Halide Halide_Plugin Halide_Runtime ${EXTRA_TARGETS}
         EXPORT Halide_Targets
 
         RUNTIME
