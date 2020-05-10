@@ -401,6 +401,7 @@ if (NOT BUILD_SHARED_LIBS)
                             $<$<CXX_COMPILER_ID:GNU>:-rdynamic>
                             $<$<CXX_COMPILER_ID:Clang,AppleClang>:-undefined dynamic_lookup>)
         target_include_directories(Halide_Plugin INTERFACE ${HL_INCLUDE_PATH})
+        add_dependencies(Halide_Plugin Halide)
     endif ()
 else ()
     target_link_libraries(Halide_Plugin INTERFACE Halide::Halide)
