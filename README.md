@@ -32,47 +32,54 @@ Build Status
 [1]: https://travis-ci.org/halide/Halide.svg?branch=master
 [2]: https://travis-ci.org/halide/Halide
 
-Building Halide
-===============
+Building Halide with Make
+=========================
 
-#### TL;DR
+### TL;DR
 
-Have llvm-8.0 (or greater) installed and run `make` in the root
+Have llvm-9.0 (or greater) installed and run `make` in the root
 directory of the repository (where this README is).
 
-#### Acquiring LLVM
+### Acquiring LLVM
 
-Building Halide requires at least LLVM 8.0, along with the matching
+Building Halide requires at least LLVM 9.0, along with the matching
 version of Clang; we recommend using the most recent stable version of LLVM for
-most users (LLVM 9.0 at the time of this writing). `llvm-config` and `clang`
-must be somewhere in the path. If your OS does not have packages for llvm-8.0
+most users (LLVM 10.0 at the time of this writing). `llvm-config` and `clang`
+must be somewhere in the path. If your OS does not have packages for llvm-9.0
 (or newer), you can find binaries for it at http://llvm.org/releases/download.html.
 Download an appropriate package and then either install it, or at least put the
 `bin` subdirectory in your path. (This works well on OS X and Ubuntu.)
 
 If you want to build it yourself, first check it out from GitHub:
 
-    % git clone https://github.com/llvm/llvm-project.git
-    % git checkout release/9.x  # to build LLVM 9.x
+    % git clone https://github.com/llvm/llvm-project.git --depth 1 -b release/10.x
 
-(If you want to build LLVM 9.x, use `git checkout release/9.x`; for LLVM 8.0, use `release 8.x`; for current trunk, use `git checkout master`)
+(If you want to build LLVM 9.x, use `git checkout release/9.x`; for current trunk, use `git checkout master`)
 
 Then build it like so:
 
-    % cd llvm-project
-    % mkdir build
-    % mkdir install
-    % cd build
-    % cmake -DLLVM_ENABLE_PROJECTS="clang;lld;clang-tools-extra" -DLLVM_ENABLE_RTTI=ON -DLLVM_ENABLE_TERMINFO=OFF -DLLVM_TARGETS_TO_BUILD="X86;ARM;NVPTX;AArch64;Mips;PowerPC;Hexagon" -DLLVM_ENABLE_ASSERTIONS=ON -DCMAKE_BUILD_TYPE=Release -DLLVM_BUILD_32_BITS=OFF -DCMAKE_INSTALL_PREFIX=../install ../llvm
-    % make install -j8
+    % mkdir llvm-build
+    % cd llvm-build
+    % cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../llvm-install \
+            -DLLVM_ENABLE_PROJECTS="clang;lld;clang-tools-extra" \
+            -DLLVM_TARGETS_TO_BUILD="X86;ARM;NVPTX;AArch64;Mips;Hexagon" \
+            -DLLVM_ENABLE_TERMINFO=OFF -DLLVM_ENABLE_ASSERTIONS=ON \
+            -DLLVM_ENABLE_EH=ON -DLLVM_ENABLE_RTTI=ON -DLLVM_BUILD_32_BITS=OFF \
+            ../llvm-project/llvm
+    % cmake --build . --target install
 
 then to point Halide to it:
 
     export LLVM_CONFIG=<path to llvm>/install/bin/llvm-config
 
-(Note that you *must* add `clang` to `LLVM_ENABLE_PROJECTS`; adding `lld` to `LLVM_ENABLE_PROJECTS` is only required when using WebAssembly, and adding `clang-tools-extra` is only necessary if you plan to contribute code to Halide (so that you can run clang-tidy on your pull requests). We recommend enabling both in all cases, to simplify builds.)
+Note that you *must* add `clang` to `LLVM_ENABLE_PROJECTS`; adding `lld` to
+`LLVM_ENABLE_PROJECTS` is only required when using WebAssembly, and adding
+`clang-tools-extra` is only necessary if you plan to contribute code to Halide
+(so that you can run clang-tidy on your pull requests).
+We recommend enabling both in all cases, to simplify builds.
+You can disable exception handling (EH) and RTTI if you don't want the Python bindings.
 
-#### Building Halide with make
+### Building Halide with make
 
 With `LLVM_CONFIG` set (or `llvm-config` in your path), you should be
 able to just run `make` in the root directory of the Halide source tree.
@@ -82,7 +89,7 @@ make sure all the apps compile and run (but won't check their output).
 There is no `make install` yet. If you want to make an install
 package, run `make distrib`.
 
-#### Building Halide out-of-tree with make
+### Building Halide out-of-tree with make
 
 If you wish to build Halide in a separate directory, you can do that
 like so:
@@ -92,45 +99,129 @@ like so:
     % cd halide_build
     % make -f ../Halide/Makefile
 
-#### Building Halide with cmake
+Building Halide with CMake
+==========================
 
-If you wish to use cmake to build Halide, the build procedure is:
+### MacOS and Linux
 
-    % mkdir cmake_build
-    % cd cmake_build
-    % cmake -DLLVM_DIR=/path-to-llvm-build/lib/cmake/llvm -DCMAKE_BUILD_TYPE=Release /path/to/halide
-    % make -j8
+Follow the above instructions to build LLVM or acquire a suitable binary release.
+Then create a separate build folder for Halide and run CMake, pointing it to your LLVM installation.
+
+    % mkdir Halide-build
+    % cd Halide-build
+    % cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DLLVM_DIR=/path/to/llvm-install/lib/cmake/llvm /path/to/Halide
+    % cmake --build .
 
 `LLVM_DIR` should be the folder in the LLVM installation or build tree that contains `LLVMConfig.cmake`.
+Omit `-G Ninja` if you do not have Ninja build installed.
 
-#### Building Halide and LLVM on Windows
+### Windows
 
-Acquire MSVC 2015 Update 3 or newer. Earlier versions may work but are
-not part of our tests. MSBuild and cmake should also be in your
-path. The instructions below assume Halide is checked out under
-`C:\Code\Halide`, and LLVM and Clang are checked out under
-`C:\Code\llvm`.
+We recommend building with MSVC 2019, but MSVC 2017 is also supported (earlier versions
+might work, but are not part of our tests).
+Be sure to install the CMake Individual Component in the Visual Studio 2019 installer.
+For older versions of Visual Studio, acquire CMake and Ninja from their respective project websites.
 
-    % mkdir C:\Code\llvm-build
-    % cd C:\Code\llvm-build
-    % cmake -DLLVM_ENABLE_PROJECTS="clang;lld;clang-tools-extra" -DCMAKE_INSTALL_PREFIX=../llvm-install -DLLVM_ENABLE_TERMINFO=OFF -DLLVM_TARGETS_TO_BUILD=X86;ARM;NVPTX;AArch64;Mips;Hexagon -DLLVM_ENABLE_ASSERTIONS=ON -DLLVM_BUILD_32_BITS=OFF -DCMAKE_BUILD_TYPE=Release ../llvm/llvm -G "Visual Studio 14" -A x64
+These instructions start from the `D:` drive.
+We assume this git repo is cloned to `D:\Halide`.
+We also assume that your shell environment is set up correctly. For a 64-bit build, run:
+                                                                
+    D:\> "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" x64
 
-For a 32-bit build use:
+For a 32-bit build, run:
 
-    % cmake -DLLVM_ENABLE_PROJECTS="clang;lld;clang-tools-extra" -DCMAKE_INSTALL_PREFIX=../llvm-install -DLLVM_ENABLE_TERMINFO=OFF -DLLVM_TARGETS_TO_BUILD=X86;ARM;NVPTX;AArch64;Mips;Hexagon -DLLVM_ENABLE_ASSERTIONS=ON -DLLVM_BUILD_32_BITS=ON -DCMAKE_BUILD_TYPE=Release ../llvm/llvm -G "Visual Studio 14" -A Win32
+    D:\> "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" x86 
 
-Then build it like so:
+#### Managing dependencies with vcpkg
 
-    % MSBuild.exe /m /t:Build /p:Configuration=Release .\INSTALL.vcxproj
+The best way to get compatible dependencies on Windows is to use [vcpkg](https://github.com/Microsoft/vcpkg).
+Install it like so:
 
-You can substitute `Debug` for `Release` in both commands if you want a debug build.
+    D:\> git clone https://github.com/Microsoft/vcpkg.git
+    D:\> cd vcpkg
+    D:\vcpkg> .\vcpkg integrate install
+    ...
+    CMake projects should use: "-DCMAKE_TOOLCHAIN_FILE=D:/vcpkg/scripts/buildsystems/vcpkg.cmake"
+    
+Then install the libraries. For a 64-bit build, run:
 
-To configure and build Halide:
+    D:\vcpkg> .\vcpkg install libpng:x64-windows libjpeg-turbo:x64-windows llvm[target-all,clang-tools-extra]:x64-windows
 
-    % mkdir C:\Code\halide-build
-    % cd C:\Code\halide-build
-    % cmake -DLLVM_DIR=../llvm-install/lib/cmake/llvm -DCMAKE_BUILD_TYPE=Release -G "Visual Studio 14 Win64" ../halide
-    % MSBuild.exe /m /t:Build /p:Configuration=Release .\ALL_BUILD.vcxproj
+To support 32-bit builds, also run:
+
+    D:\vcpkg> .\vcpkg install libpng:x86-windows libjpeg-turbo:x86-windows llvm[target-all,clang-tools-extra]:x86-windows
+
+#### Building Halide
+
+Create a separate build tree and call CMake with vcpkg's toolchain.
+This will build in either 32-bit or 64-bit depending on the environment script (`vcvars`) that was run earlier. 
+
+    D:\> md Halide-build
+    D:\> cd Halide-build
+    D:\Halide-build> cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=D:/vcpkg/scripts/buildsystems/vcpkg.cmake ..\Halide
+
+**Note:** If building with Python bindings on 32-bit (enabled by default), be sure to point CMake to the installation 
+path of a 32-bit Python3.
+You can do this by specifying, for example: `"-DPython3_ROOT_DIR=C:\Program Files (x86)\Python38-32"`.
+
+Then run the build with:
+
+    D:\Halide-build> cmake --build . --config Release -j %NUMBER_OF_PROCESSORS%
+
+To run all the tests:
+
+    D:\Halide-build> ctest -C Release
+
+Subsets of the tests can be selected with `-L` and include `correctness`, `python`, `error`, and the other directory names under `/tests`.
+
+#### Building LLVM (optional)
+
+Follow these steps if you want to build LLVM yourself.
+First, download LLVM's sources (these instructions use the latest 10.0 release)
+
+    D:\> git clone https://github.com/llvm/llvm-project.git --depth 1 -b release/10.x
+
+For a 64-bit build, run:
+
+    D:\> md llvm-build
+    D:\> cd llvm-build
+    D:\llvm-build> cmake -G Ninja ^
+                         -DCMAKE_BUILD_TYPE=Release ^
+                         -DCMAKE_INSTALL_PREFIX=../llvm-install ^
+                         -DLLVM_ENABLE_PROJECTS=clang;lld;clang-tools-extra ^
+                         -DLLVM_ENABLE_TERMINFO=OFF ^
+                         -DLLVM_TARGETS_TO_BUILD=X86;ARM;NVPTX;AArch64;Mips;Hexagon ^
+                         -DLLVM_ENABLE_ASSERTIONS=ON ^
+                         -DLLVM_ENABLE_EH=ON ^
+                         -DLLVM_ENABLE_RTTI=ON ^
+                         -DLLVM_BUILD_32_BITS=OFF ^
+                         ..\llvm-project\llvm
+
+For a 32-bit build, run:
+    
+    D:\> md llvm32-build
+    D:\> cd llvm32-build
+    D:\llvm32-build> cmake -G Ninja ^
+                           -DCMAKE_BUILD_TYPE=Release ^
+                           -DCMAKE_INSTALL_PREFIX=../llvm32-install ^
+                           -DLLVM_ENABLE_PROJECTS=clang;lld;clang-tools-extra ^
+                           -DLLVM_ENABLE_TERMINFO=OFF ^
+                           -DLLVM_TARGETS_TO_BUILD=X86;ARM;NVPTX;AArch64;Mips;Hexagon ^ 
+                           -DLLVM_ENABLE_ASSERTIONS=ON ^ 
+                           -DLLVM_ENABLE_EH=ON ^
+                           -DLLVM_ENABLE_RTTI=ON ^
+                           -DLLVM_BUILD_32_BITS=ON ^
+                           ..\llvm-project\llvm
+
+Finally, run:
+
+    D:\llvm-build> cmake --build . --config Release --target install -j %NUMBER_OF_PROCESSORS%
+
+You can substitute `Debug` for `Release` in the above `cmake` commands if you want a debug build.
+Make sure to add `-DLLVM_DIR=D:/llvm-install/lib/cmake/llvm` to the Halide CMake command to override
+`vcpkg`'s LLVM.
+
+**MSBuild:** If you want to build LLVM with MSBuild instead of Ninja, use `-G "Visual Studio 16 2019" -Thost=x64 -A x64` or `-G "Visual Studio 16 2019" -Thost=x64 -A Win32` in place of `-G Ninja`.
 
 #### If all else fails...
 
@@ -336,11 +427,11 @@ To build and run an example app using the Hexagon target,
   2. Download and install the Hexagon SDK and version 8.0 Hexagon Tools
   3. Build and run an example for Hexagon HVX
 
-#### 1. Obtain and build trunk LLVM and Clang
+### 1. Obtain and build trunk LLVM and Clang
 
 (Instructions given previous, just be sure to check out the `master` branch.)
 
-#### 2. Download and install the Hexagon SDK and version 8.0 Hexagon Tools
+### 2. Download and install the Hexagon SDK and version 8.0 Hexagon Tools
 Go to https://developer.qualcomm.com/software/hexagon-dsp-sdk/tools
   1. Select the Hexagon Series 600 Software and download the 3.0 version for Linux.
   2. untar the installer
@@ -350,7 +441,7 @@ Go to https://developer.qualcomm.com/software/hexagon-dsp-sdk/tools
 
     export SDK_LOC=/location/of/SDK
 
-#### 3. Build and run an example for Hexagon HVX
+### 3. Build and run an example for Hexagon HVX
 In addition to running Hexagon code on device, Halide also supports running Hexagon
 code on the simulator from the Hexagon tools.
 
@@ -361,7 +452,7 @@ To build and run the blur example in Halide/apps/blur on the simulator:
     export HL_HEXAGON_TOOLS=$SDK_LOC/Hexagon_Tools/8.0/Tools/
     LD_LIBRARY_PATH=../../src/runtime/hexagon_remote/bin/host/:$HL_HEXAGON_TOOLS/lib/iss/:. HL_TARGET=host-hvx_128 make test
 
-#### To build and run the blur example in Halide/apps/blur on Android:
+### To build and run the blur example in Halide/apps/blur on Android:
 
 To build the example for Android, first ensure that you have a standalone toolchain
 created from the NDK using the make-standalone-toolchain.sh script:

@@ -1,27 +1,41 @@
-# Generators
 if (WIN32)
-    # TODO: Provide a version of halide_opengl_create_context for Windows
+    # Halide OpenGL is broken on Windows.
     return()
-endif()
-# Use vendor libraries even when legacy libs are also available
-# see: https://cmake.org/cmake/help/git-stage/policy/CMP0072.html
-set(OpenGL_GL_PREFERENCE GLVND)
+endif ()
+
+cmake_minimum_required(VERSION 3.16)
+project(glsl)
+
+enable_testing()
+
+# Set up language settings
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED YES)
+set(CMAKE_CXX_EXTENSIONS NO)
+
+# Find Halide
+find_package(Halide REQUIRED)
+
 find_package(OpenGL)
-if (OpenGL_FOUND)
+if (TARGET OpenGL::GL)
 
     # Generators
-    halide_library(halide_blur_glsl
-                   SRCS halide_blur_glsl_generator.cpp
-                   HALIDE_TARGET_FEATURES opengl debug)
+    add_executable(blur.generator halide_blur_glsl_generator.cpp)
+    target_link_libraries(blur.generator PRIVATE Halide::Generator)
 
-    halide_library(halide_ycc_glsl
-                   SRCS halide_ycc_glsl_generator.cpp
-                   HALIDE_TARGET_FEATURES opengl debug)
+    add_executable(ycc.generator halide_ycc_glsl_generator.cpp)
+    target_link_libraries(ycc.generator PRIVATE Halide::Generator)
+
+    # Libraries
+    add_halide_library(halide_blur_glsl FROM blur.generator FEATURES opengl debug)
+    add_halide_library(halide_ycc_glsl FROM ycc.generator FEATURES opengl debug)
 
     # Final executable
     add_executable(opengl_test opengl_test.cpp)
-    target_link_libraries(opengl_test PUBLIC halide_blur_glsl)
-    target_link_libraries(opengl_test PUBLIC halide_ycc_glsl)
+    target_link_libraries(opengl_test
+                          PRIVATE
+                          halide_blur_glsl
+                          halide_ycc_glsl)
 
-endif()
-
+    add_test(NAME opengl_test COMMAND opengl_test)
+endif ()

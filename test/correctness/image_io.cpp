@@ -1,8 +1,8 @@
-#include <fstream>
-
 #include "Halide.h"
 #include "halide_image_io.h"
-#include "test/common/halide_test_dirs.h"
+#include "halide_test_dirs.h"
+
+#include <fstream>
 
 using namespace Halide;
 

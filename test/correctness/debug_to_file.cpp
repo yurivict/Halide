@@ -3,9 +3,9 @@
 #define HALIDE_NO_JPEG
 #define HALIDE_NO_PNG
 #include "halide_image_io.h"
-#include <stdio.h>
+#include "halide_test_dirs.h"
 
-#include "test/common/halide_test_dirs.h"
+#include <cstdio>
 
 using namespace Halide;
 

@@ -1,5 +1,9 @@
 #include "Halide.h"
-#include <stdio.h>
+#include <cstdio>
+
+#ifdef NDEBUG
+#error "buffer_larger_than_two_gigs requires assertions"
+#endif
 
 using namespace Halide;
 int main(int argc, char **argv) {

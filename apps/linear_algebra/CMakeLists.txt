@@ -1,54 +1,49 @@
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+cmake_minimum_required(VERSION 3.16)
+project(linear_algebra)
 
-# This could be made to use any number of blas header files
-#  or we could supply our own cblas.h
-# Another option is to use a more robust FindBLAS.cmake than the one
-#  distributed with cmake
-set(CBLAS_HEADER_NAME "cblas.h")
-find_path(CBLAS_INCLUDE_DIR
-  ${CBLAS_HEADER_NAME}
-  PATHS
-    /usr/include
-    /usr/local/include
-    /usr/include/atlas
-    /usr/local/include/atlas
-    /usr/local/opt/openblas/include # enables openblas-via-homebrew-on-mac
-)
-set(CBLAS_FOUND false)
-if (NOT CBLAS_INCLUDE_DIR MATCHES "-NOTFOUND")
-  set(CBLAS_FOUND true)
-endif()
+enable_testing()
 
-if (CBLAS_FOUND)
-  message(STATUS "Found CBLAS header: ${CBLAS_INCLUDE_DIR}/${CBLAS_HEADER_NAME}")
-  # XXX
-  #  OpenBLAS seems to provide cblas symbols
-  #  Atlas requires also linking against its provided libcblas for cblas symbols
-  set(ATLAS_EXTRA_LIBS cblas) # XXX fragile
-  set(OpenBLAS_EXTRA_LIBS)
-  set(BLAS_VENDORS OpenBLAS ATLAS)
+# Set up language settings
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED YES)
+set(CMAKE_CXX_EXTENSIONS NO)
 
-  # TODO
-  # there are more vendors we could add here that support the cblas interface
-  # there seem to be better FindBLAS.cmake scripts floating around that also find
-  #  *_INCLUDE_DIR
-  message(STATUS "Checking for available CBLAS implementations")
-  foreach(BLAS_VENDOR ${BLAS_VENDORS})
-    set(BLA_VENDOR ${BLAS_VENDOR})
-    set(BLAS_FIND_QUIETLY true)
-    find_package(BLAS)
+# Find Halide
+find_package(Halide REQUIRED COMPONENTS Halide)
+
+# Find BLAS-es
+unset(DEFAULT_BLAS)
+unset(BLAS_TARGETS)
+set(BLA_PREFER_PKGCONFIG YES)
+set(BLAS_VENDORS OpenBLAS Apple)  # TODO: add ATLAS and its weird extra linking requirements
+
+message(STATUS "Checking for available CBLAS implementations")
+foreach (BLA_VENDOR IN LISTS BLAS_VENDORS)
+    find_package(BLAS QUIET)
     if (NOT BLAS_FOUND)
-      message(STATUS " ${BLAS_VENDOR}: Missing")
-    else()
-      message(STATUS " ${BLAS_VENDOR}: Found")
-      list(APPEND BLAS_VENDORS ${NAME})
-    endif()
-  endforeach()
-endif()
+        message(STATUS "${BLA_VENDOR}: Missing")
+    else ()
+        message(STATUS "${BLA_VENDOR}: Found")
+        add_library(BLAS_${BLA_VENDOR} INTERFACE)
+        add_library(${BLA_VENDOR}::${BLA_VENDOR} ALIAS BLAS_${BLA_VENDOR})
 
+        target_link_libraries(BLAS_${BLA_VENDOR} INTERFACE ${BLAS_LIBRARIES})
+        target_link_options(BLAS_${BLA_VENDOR} INTERFACE ${BLAS_LINKER_FLAGS})
+        target_include_directories(BLAS_${BLA_VENDOR} SYSTEM INTERFACE include) # Use CBlas header in our own tree.
+
+        if (NOT DEFAULT_BLAS)
+            set(DEFAULT_BLAS ${BLA_VENDOR}::${BLA_VENDOR})
+        endif ()
+
+        list(APPEND BLAS_TARGETS ${BLA_VENDOR})
+    endif ()
+endforeach ()
+
+if (NOT BLAS_TARGETS)
+    message(FATAL_ERROR "Could not find any BLAS libraries! Searched among ${BLAS_VENDORS}")
+endif ()
+
+# Load in the rest of the project.
 add_subdirectory(src)
-
-if (WITH_TESTS)
-  add_subdirectory(tests)
-endif()
+add_subdirectory(tests)
 add_subdirectory(benchmarks)

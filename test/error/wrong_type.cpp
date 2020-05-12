@@ -1,7 +1,9 @@
 #include "Halide.h"
-#include <stdio.h>
-
 using namespace Halide;
+
+#ifdef NDEBUG
+#error "wrong_type requires assertions"
+#endif
 
 int main(int argc, char **argv) {
     Func f;

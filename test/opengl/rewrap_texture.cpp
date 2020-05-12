@@ -7,22 +7,19 @@ int main() {
 }
 #else
 
-#include <stddef.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-
 #include "Halide.h"
-#include "HalideRuntimeOpenGL.h"
 
-#include "runtime/mini_opengl.h"
+#include <cstdio>
+
+#if __APPLE__
+// TODO: why are these deprecated? Can we update this test?
+#define GL_SILENCE_DEPRECATION
+#include <OpenGL/gl3.h>
+#else
+#include <GL/gl.h>
+#endif
 
 using namespace Halide;
-
-extern "C" void glGenTextures(GLsizei, GLuint *);
-extern "C" void glTexParameteri(GLenum, GLenum, GLint);
-extern "C" void glBindTexture(GLenum, GLuint);
-extern "C" void glTexImage2D(GLenum, GLint, GLint, GLsizei, GLsizei, GLint, GLenum, GLenum, const GLvoid *);
 
 int main() {
 
