@@ -186,7 +186,7 @@ add_library(external_code_generator_deps OBJECT "${EC32}.cpp" "${EC64}.cpp" "${E
 halide_define_aot_test(acquire_release)
 halide_define_aot_test(argvcall)
 halide_define_aot_test(can_use_target)
-#halide_define_aot_test(cleanup_on_error)  # requires access to internal header runtime/device_interface.h
+#halide_define_aot_test(cleanup_on_error)  # TODO: requires access to internal header runtime/device_interface.h
 halide_define_aot_test(configure)
 halide_define_aot_test(define_extern_opencl)
 halide_define_aot_test(embed_image)
