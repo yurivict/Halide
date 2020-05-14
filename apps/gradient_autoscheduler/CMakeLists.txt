@@ -30,7 +30,7 @@ if (NOT HALIDE_ENABLE_RTTI)
 endif ()
 
 # ==========================================================
-# TODO: move these to a separate folder since they're tests.
+# TODO(#4053): move these to a separate folder since they're tests.
 
 add_executable(demo_gradient.generator demo_generator.cpp)
 target_link_libraries(demo_gradient.generator PRIVATE Halide::Generator)
@@ -75,8 +75,8 @@ set_tests_properties(gradient_autoscheduler_test_cpp PROPERTIES
 ##
 
 if (WITH_PYTHON_BINDINGS)
-    # TODO: rework this as an app under python_bindings.
-    # TODO: Disabled due to issue #4876
+    # TODO(#4053): rework this as an app under python_bindings.
+    # TODO(#4876): Disabled due to issue #4876
     if (FALSE)
         find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
 

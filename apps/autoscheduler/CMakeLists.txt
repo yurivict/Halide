@@ -36,7 +36,7 @@ add_executable(retrain_cost_model
                Weights.cpp
                retrain_cost_model.cpp
                ${WF_CPP})
-target_include_directories(retrain_cost_model PRIVATE ${PROJECT_SOURCE_DIR}/apps/support) # TODO: relocate. just for cmdline.h
+target_include_directories(retrain_cost_model PRIVATE ${PROJECT_SOURCE_DIR}/apps/support) # TODO(#4053): relocate. just for cmdline.h
 target_link_libraries(retrain_cost_model PRIVATE cost_model train_cost_model Halide::Halide)
 
 # libauto_schedule
@@ -64,8 +64,8 @@ if (NOT HALIDE_ENABLE_RTTI)
                            $<$<AND:$<COMPILE_LANGUAGE:CXX>,$<NOT:$<CXX_COMPILER_ID:MSVC>>>:-fno-rtti>)
 endif ()
 
-# ==========================================================
-# TODO: move this to a separate folder since it's a demo/app
+# =================================================================
+# TODO(#4053): move this to a separate folder since it's a demo/app
 
 add_executable(demo.generator demo_generator.cpp)
 target_link_libraries(demo.generator PRIVATE Halide::Generator)
@@ -83,8 +83,8 @@ add_test(NAME demo_apps_autoscheduler
 
 set_tests_properties(demo_apps_autoscheduler PROPERTIES LABELS Adams2019)
 
-# ==========================================================
-# TODO: move this to a separate folder since it's a demo/app
+# =================================================================
+# TODO(#4053): move this to a separate folder since it's a demo/app
 
 add_executable(included_schedule_file.generator included_schedule_file_generator.cpp)
 target_link_libraries(included_schedule_file.generator PRIVATE Halide::Generator)
@@ -102,9 +102,9 @@ add_test(NAME demo_included_schedule_file
 
 set_tests_properties(demo_included_schedule_file PROPERTIES LABELS Adams2019)
 
-# =============================================
+# ====================================================
 # Auto-tuning support utilities.
-# TODO: implement auto-tuning support in CMake?
+# TODO(#4053): implement auto-tuning support in CMake?
 
 add_executable(featurization_to_sample featurization_to_sample.cpp)
 
@@ -114,8 +114,8 @@ target_link_libraries(get_host_target PRIVATE Halide::Halide)
 add_executable(weightsdir_to_weightsfile weightsdir_to_weightsfile.cpp Weights.cpp)
 target_link_libraries(weightsdir_to_weightsfile PRIVATE Halide::Runtime)
 
-# ==========================================================
-# TODO: move these to a separate folder since they're tests.
+# =================================================================
+# TODO(#4053): move these to a separate folder since they're tests.
 
 add_executable(test_apps_autoscheduler test.cpp)
 target_link_libraries(test_apps_autoscheduler PRIVATE Halide::Halide Halide::Tools ${CMAKE_DL_LIBS})

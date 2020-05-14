@@ -13,7 +13,7 @@ set(HALIDE_INSTALL_CMAKEDIR
 # Main library exports
 ##
 
-# TODO: fix when autoschedulers are refactored
+# TODO(#4053): fix when autoschedulers are refactored
 unset(EXTRA_TARGETS)
 foreach (T IN ITEMS Halide_Adams2019 Halide_Li2018 Halide_Python)
     if (TARGET ${T})

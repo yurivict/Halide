@@ -34,7 +34,7 @@ endforeach ()
 
 # This dummy command "generates" the files that the TEST python_tutorial_lesson_10_aot_compilation_generate will
 # actually generate as part of the fixture below.
-add_custom_command(OUTPUT lesson_10_halide.py.cpp lesson_10_halide.o #TODO: Python output should honor platform naming and use ${CMAKE_CXX_OUTPUT_EXTENSION}
+add_custom_command(OUTPUT lesson_10_halide.py.cpp lesson_10_halide.o
                    COMMAND "${CMAKE_COMMAND}" -E echo Dummy command for lesson 10 sources.)
 
 # This target allows CMake to build lesson_10_halide.so (or whatever the correct extension is) as part of the tests

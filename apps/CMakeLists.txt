@@ -6,16 +6,14 @@
 
 set(HALIDE_DIR "${CMAKE_CURRENT_BINARY_DIR}/_Halide_install")
 
-# TODO: "remove_directory" deprecated and replaced by "rm -rf" as of CMake 3.17.
 add_test(NAME delete_halide_distrib
          COMMAND ${CMAKE_COMMAND} -E remove_directory "${HALIDE_DIR}")
 
 set_tests_properties(delete_halide_distrib PROPERTIES
                      FIXTURES_SETUP apps)
 
-# TODO: if we can support CMake 3.15+, we can use ${CMAKE_COMMAND} --install ...
 add_test(NAME create_halide_distrib
-         COMMAND ${CMAKE_COMMAND} "-DCMAKE_INSTALL_PREFIX=${HALIDE_DIR}" -P cmake_install.cmake
+         COMMAND ${CMAKE_COMMAND} --install . --config $<CONFIG> --prefix "${HALIDE_DIR}"
          WORKING_DIRECTORY ${Halide_BINARY_DIR})
 
 set_tests_properties(create_halide_distrib PROPERTIES
@@ -70,7 +68,6 @@ add_app_test(iir_blur)
 add_app_test(interpolate)
 add_app_test(lens_blur)
 add_app_test(linear_algebra)
-#add_app_test(linear_blur)  # TODO: uses stubs, for which we're dropping CMake support
 add_app_test(local_laplacian)
 add_app_test(max_filter)
 add_app_test(nl_means)
@@ -79,6 +76,7 @@ add_app_test(stencil_chain)
 add_app_test(unsharp)
 add_app_test(wavelet)
 
-# Add the autoschedulers. TODO: refactor into separate modules
+# Add the autoschedulers.
+# TODO(#4053): refactor into separate modules
 add_subdirectory(autoscheduler)
 add_subdirectory(gradient_autoscheduler)

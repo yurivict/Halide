@@ -188,8 +188,7 @@ foreach (i IN LISTS RUNTIME_CPP)
                            COMMAND clang ${RUNTIME_CXX_FLAGS} ${RUNTIME_DEFINES} -m${j} -target ${TARGET} -emit-llvm -S "$<SHELL_PATH:${SOURCE}>" -o ${LL_D}
                            # Make sure that the output of this command also depends
                            # on the header files that ${SOURCE} uses
-                           # FIXME: Only works for makefile generator
-                           IMPLICIT_DEPENDS CXX "${SOURCE}"
+                           IMPLICIT_DEPENDS CXX "${SOURCE}" # Note: Only works for makefile generator
                            )
         add_custom_command(OUTPUT "${BC_D}"
                            DEPENDS "${LL_D}"
