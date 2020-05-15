@@ -94,7 +94,6 @@ public:
     // rates that rarely exceed 5% in the cases I've seen (vs > 50% previously).
     GVN()
         : number(0), cache(12) {
-            cache.verbose=1;
     }
 
     Stmt mutate(const Stmt &s) override {
