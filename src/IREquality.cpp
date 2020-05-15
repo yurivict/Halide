@@ -697,5 +697,80 @@ void ir_equality_test() {
     debug(0) << "ir_equality_test passed\n";
 }
 
+namespace {
+
+#if defined(_MSC_VER)
+
+#define ROTL32(x, y) _rotl(x, y)
+
+#else
+
+HALIDE_ALWAYS_INLINE uint32_t rotl32(uint32_t x, int8_t r) {
+    return (x << r) | (x >> (32 - r));
+}
+
+#define ROTL32(x, y) rotl32(x, y)
+
+#endif
+
+HALIDE_ALWAYS_INLINE uint32_t body_32(uint32_t k1, uint32_t h1) {
+    k1 *= 0xcc9e2d51;
+    k1 = ROTL32(k1, 15);
+    k1 *= 0x1b873593;
+
+    h1 ^= k1;
+    h1 = ROTL32(h1, 13);
+    h1 = h1 * 5 + 0xe6546b64;
+
+    return h1;
+}
+
+}  // namespace
+
+uint32_t IRCompareCache::hash(const Expr &a, const Expr &b) const {
+    // This is basically an adaptation of MurmurHash3, specialized
+    // for the case of exactly two 64-bit pointers.
+
+    // We're hashing two dynamically-allocated pointers;
+    // assume that the pointers are (at least) pointer-size-aligned,
+    // in which case the lower bits will always be zero and thus useless
+    // to contribute to the hash.
+    constexpr int ptr_bits = (sizeof(void *) == 8 ? 3 : 2);
+
+    uint64_t pa = (uint64_t)(a.get()) >> ptr_bits;
+    uint64_t pb = (uint64_t)(b.get()) >> ptr_bits;
+
+    // Note this hash is symmetric in a and b, so that a
+    // comparison in a and b hashes to the same bucket as
+    // a comparison on b and a. The simplest way to accomplish this:
+    // Sort so that that pa <= pb.
+    if (pa > pb) {
+        using std::swap;
+        swap(pa, pb);
+    }
+
+    uint32_t h1 = 0;
+
+    const uint32_t a_lo = (uint32_t)(pa & 0xffffffff);
+    const uint32_t a_hi = (uint32_t)(pa >> 32);
+    const uint32_t b_lo = (uint32_t)(pb & 0xffffffff);
+    const uint32_t b_hi = (uint32_t)(pb >> 32);
+
+    h1 = body_32(a_lo, h1);
+    h1 = body_32(a_hi, h1);
+    h1 = body_32(b_lo, h1);
+    h1 = body_32(b_hi, h1);
+
+    h1 ^= 16;
+
+    h1 ^= h1 >> 16;
+    h1 *= 0x85ebca6b;
+    h1 ^= h1 >> 13;
+    h1 *= 0xc2b2ae35;
+    h1 ^= h1 >> 16;
+
+    return h1 & ((1 << bits) - 1);
+}
+
 }  // namespace Internal
 }  // namespace Halide

@@ -17,6 +17,8 @@ struct IRDeepCompare {
     bool operator()(const Stmt &a, const Stmt &b) const;
 };
 
+#define HALIDE_IR_COMPARE_CACHE_DEBUG 0
+
 /** Lossily track known equal exprs with a cache. On collision, the
  * old pair is evicted. Used below by ExprWithCompareCache. */
 class IRCompareCache {
@@ -25,28 +27,34 @@ private:
         Expr a, b;
     };
 
-    int bits;
+    const int bits = 0;
 
-    uint32_t hash(const Expr &a, const Expr &b) const {
-        // Note this hash is symmetric in a and b, so that a
-        // comparison in a and b hashes to the same bucket as
-        // a comparison on b and a.
-        uint64_t pa = (uint64_t)(a.get());
-        uint64_t pb = (uint64_t)(b.get());
-        uint64_t mix = (pa + pb) + (pa ^ pb);
-        mix ^= (mix >> bits);
-        mix ^= (mix >> (bits * 2));
-        uint32_t bottom = mix & ((1 << bits) - 1);
-        return bottom;
-    }
+    uint32_t hash(const Expr &a, const Expr &b) const;
 
     std::vector<Entry> entries;
 
 public:
+#if HALIDE_IR_COMPARE_CACHE_DEBUG
+    int insertions = 0;
+    int collisions = 0;
+    int verbose = 0;
+#endif
+
     void insert(const Expr &a, const Expr &b) {
         uint32_t h = hash(a, b);
-        entries[h].a = a;
-        entries[h].b = b;
+        Entry &e = entries[h];
+#if HALIDE_IR_COMPARE_CACHE_DEBUG
+        insertions++;
+        if ((e.a.defined() && e.a.get() != a.get()) || (e.b.defined() && e.b.get() != b.get())) {
+            if (verbose >= 2) {
+              debug(0) << "  hash(" << (void*)a.get() << "," << (void*)b.get() << ") -> " << h << "\n";
+              debug(0) << "  existing(" << (void*)e.a.get() << "," << (void*)e.b.get() << ") -> " << hash(e.a, e.b) << "\n";
+            }
+            collisions++;
+        }
+#endif
+        e.a = a;
+        e.b = b;
     }
 
     bool contains(const Expr &a, const Expr &b) const {
@@ -67,6 +75,20 @@ public:
     IRCompareCache(int b)
         : bits(b), entries(static_cast<size_t>(1) << bits) {
     }
+
+#if HALIDE_IR_COMPARE_CACHE_DEBUG
+    ~IRCompareCache() {
+        if (insertions > 0) {
+          if (verbose >= 1) {
+            debug(0) << "IRCompareCache bits=" << bits
+                     << " insertions=" << insertions
+                     << " collisions=" << collisions
+                     << " evict%=" << 100.0 * collisions / insertions
+                     << "\n";
+          }
+        }
+    }
+#endif
 };
 
 /** A wrapper about Exprs so that they can be deeply compared with a
