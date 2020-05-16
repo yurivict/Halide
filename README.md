@@ -1,15 +1,16 @@
 # Halide
 
 Halide is a programming language designed to make it easier to write
-high-performance image and array processing code on modern machines. Halide 
+high-performance image and array processing code on modern machines. Halide
 currently targets:
-  * CPU architectures: X86, ARM, MIPS, Hexagon, PowerPC
-  * Operating systems: Linux, Windows, Mac OS X, Android, iOS, Qualcomm QuRT
-  * GPU Compute APIs: CUDA, OpenCL, OpenGL, OpenGL Compute Shaders, Apple Metal,
-    Microsoft Direct X 12
 
-Rather than being a standalone programming language, Halide is embedded in C++. 
-This means you write C++ code that builds an in-memory representation of a 
+- CPU architectures: X86, ARM, MIPS, Hexagon, PowerPC
+- Operating systems: Linux, Windows, Mac OS X, Android, iOS, Qualcomm QuRT
+- GPU Compute APIs: CUDA, OpenCL, OpenGL, OpenGL Compute Shaders, Apple Metal,
+  Microsoft Direct X 12
+
+Rather than being a standalone programming language, Halide is embedded in C++.
+This means you write C++ code that builds an in-memory representation of a
 Halide pipeline using Halide's C++ API. You can then compile this representation
 to an object file, or JIT-compile it and run it in the same process. Halide also
 provides a Python binding that provides full support for writing Halide embedded
@@ -24,18 +25,16 @@ To see some example code, look in the tutorials directory.
 If you've acquired a full source distribution and want to build Halide, see the
 notes below.
 
-Build Status
-============
+# Build Status
 
-| Linux                        |
-|------------------------------|
-| [![linux build status][1]][2]|
+| Linux                         |
+| ----------------------------- |
+| [![linux build status][1]][2] |
 
 [1]: https://travis-ci.org/halide/Halide.svg?branch=master
 [2]: https://travis-ci.org/halide/Halide
 
-Building Halide with Make
-=========================
+# Building Halide with Make
 
 ### TL;DR
 
@@ -60,8 +59,8 @@ If you want to build it yourself, first check it out from GitHub:
 % git clone https://github.com/llvm/llvm-project.git --depth 1 -b release/10.x
 ```
 
-(If you want to build LLVM 9.x, use branch `release/9.x`; for current trunk,
-use `master`)
+(If you want to build LLVM 9.x, use branch `release/9.x`; for current trunk, use
+`master`)
 
 Then build it like so:
 
@@ -83,7 +82,7 @@ then to point Halide to it:
 export LLVM_CONFIG=<path to llvm>/llvm-install/bin/llvm-config
 ```
 
-Note that you *must* add `clang` to `LLVM_ENABLE_PROJECTS`; adding `lld` to
+Note that you _must_ add `clang` to `LLVM_ENABLE_PROJECTS`; adding `lld` to
 `LLVM_ENABLE_PROJECTS` is only required when using WebAssembly, and adding
 `clang-tools-extra` is only necessary if you plan to contribute code to Halide
 (so that you can run clang-tidy on your pull requests). We recommend enabling
@@ -93,7 +92,7 @@ and RTTI if you don't want the Python bindings.
 ### Building Halide with make
 
 With `LLVM_CONFIG` set (or `llvm-config` in your path), you should be able to
-just run `make` in the root directory of the Halide source tree. 
+just run `make` in the root directory of the Halide source tree.
 `make run_tests` will run the JIT test suite, and `make test_apps` will make
 sure all the apps compile and run (but won't check their output).
 
@@ -109,8 +108,7 @@ If you wish to build Halide in a separate directory, you can do that like so:
     % cd halide_build
     % make -f ../Halide/Makefile
 
-Building Halide with CMake
-==========================
+# Building Halide with CMake
 
 ### MacOS and Linux
 
@@ -125,8 +123,8 @@ it to your LLVM installation.
 % cmake --build .
 ```
 
-`LLVM_DIR` should be the folder in the LLVM installation or build tree that 
-contains `LLVMConfig.cmake`. It is not required if you have a suitable 
+`LLVM_DIR` should be the folder in the LLVM installation or build tree that
+contains `LLVMConfig.cmake`. It is not required if you have a suitable
 system-wide version installed. If you have multiple system-wide versions
 installed, you can specify the version with `HALIDE_REQUIRE_LLVM_VERSION`. Add
 `-G Ninja` if you prefer to build with the Ninja generator.
@@ -142,14 +140,14 @@ These instructions start from the `D:` drive. We assume this git repo is cloned
 to `D:\Halide`. We also assume that your shell environment is set up correctly.
 For a 64-bit build, run:
 
-```                                                                
+```
 D:\> "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" x64
 ```
 
 For a 32-bit build, run:
 
 ```
-D:\> "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" x86 
+D:\> "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" x86
 ```
 
 #### Managing dependencies with vcpkg
@@ -164,7 +162,7 @@ D:\vcpkg> .\vcpkg integrate install
 ...
 CMake projects should use: "-DCMAKE_TOOLCHAIN_FILE=D:/vcpkg/scripts/buildsystems/vcpkg.cmake"
 ```
- 
+
 Then install the libraries. For a 64-bit build, run:
 
 ```
@@ -181,7 +179,7 @@ D:\vcpkg> .\vcpkg install libpng:x86-windows libjpeg-turbo:x86-windows llvm[targ
 
 Create a separate build tree and call CMake with vcpkg's toolchain. This will
 build in either 32-bit or 64-bit depending on the environment script (`vcvars`)
-that was run earlier. 
+that was run earlier.
 
 ```
 D:\> md Halide-build
@@ -194,7 +192,7 @@ D:\Halide-build> cmake -G Ninja ^
 
 **Note:** If building with Python bindings on 32-bit (enabled by default), be
 sure to point CMake to the installation path of a 32-bit Python 3. You can do
-this by specifying, for example: 
+this by specifying, for example:
 `"-DPython3_ROOT_DIR=C:\Program Files (x86)\Python38-32"`.
 
 Then run the build with:
@@ -249,8 +247,8 @@ D:\llvm32-build> cmake -G Ninja ^
                        -DCMAKE_INSTALL_PREFIX=../llvm32-install ^
                        -DLLVM_ENABLE_PROJECTS=clang;lld;clang-tools-extra ^
                        -DLLVM_ENABLE_TERMINFO=OFF ^
-                       -DLLVM_TARGETS_TO_BUILD=X86;ARM;NVPTX;AArch64;Mips;Hexagon ^ 
-                       -DLLVM_ENABLE_ASSERTIONS=ON ^ 
+                       -DLLVM_TARGETS_TO_BUILD=X86;ARM;NVPTX;AArch64;Mips;Hexagon ^
+                       -DLLVM_ENABLE_ASSERTIONS=ON ^
                        -DLLVM_ENABLE_EH=ON ^
                        -DLLVM_ENABLE_RTTI=ON ^
                        -DLLVM_BUILD_32_BITS=ON ^
@@ -279,8 +277,7 @@ If the column that best matches your system is red, then maybe things aren't
 just broken for you. If it's green, then you can click the "stdio" links in the
 latest build to see what commands the build bots run, and what the output was.
 
-Some useful environment variables
-=================================
+# Some useful environment variables
 
 `HL_TARGET=...` will set Halide's AOT compilation target.
 
@@ -299,18 +296,14 @@ default, the number of cores on the host is used.)
 `HL_JIT_TARGET`). The output can be parsed programmatically by starting from the
 code in `utils/HalideTraceViz.cpp`.
 
-
-Using Halide on OSX
-===================
+# Using Halide on OSX
 
 Precompiled Halide distributions are built using XCode's command-line tools with
 Apple clang 500.2.76. This means that we link against libc++ instead of
 libstdc++. You may need to adjust compiler options accordingly if you're using
 an older XCode which does not default to libc++.
 
-
-Halide OpenGL/GLSL backend
-==========================
+# Halide OpenGL/GLSL backend
 
 Halide's OpenGL backend offloads image processing operations to the GPU by
 generating GLSL-based fragment shaders.
@@ -327,7 +320,6 @@ output pixel can be expressed as a simple function of the input pixels. This
 covers a wide range of interesting operations like point-wise filters and
 convolutions; but a few common image processing operations such as histograms or
 recursive filters are notoriously hard to express in GLSL.
-
 
 #### Writing OpenGL-Based Filters
 
@@ -350,7 +342,7 @@ scheduling calls.
 
 GLSL fragment shaders implicitly iterate over two spatial dimensions x,y and the
 color channel. Due to the way color channels handled in GLSL, only filters for
-which the color index is a compile-time constant can be scheduled.  The main
+which the color index is a compile-time constant can be scheduled. The main
 consequence is that the range of color variables must be explicitly specified
 for both input and output buffers before scheduling:
 
@@ -372,7 +364,6 @@ creates a new context to use for each module. Windows is not yet supported.
 
 Examples for JIT execution of OpenGL-based filters can be found in test/opengl.
 
-
 #### AOT Compilation
 
 When AOT (ahead-of-time) compilation is used, Halide generates OpenGL-enabled
@@ -380,7 +371,7 @@ object files that can be linked to and called from a host application. In
 general, this is fairly straightforward, but a few things must be taken care of.
 
 On Linux, OS X, and Android, Halide creates its own OpenGL context unless the
-current thread already has an active context.  On other platforms you have to
+current thread already has an active context. On other platforms you have to
 link implementations of the following two functions with your Halide code:
 
 ```
@@ -393,7 +384,7 @@ extern "C" void *halide_opengl_get_proc_addr(void *, const char *name) {
 }
 ```
 
-Halide allocates and deletes textures as necessary.  Applications may manage the
+Halide allocates and deletes textures as necessary. Applications may manage the
 textures by hand by setting the `halide_buffer_t::device` field; this is most
 useful for reusing image data that is already stored in textures. Some
 rudimentary checks are performed to ensure that externally allocated textures
@@ -402,7 +393,7 @@ application.
 
 It is possible to let render directly to the current framebuffer; to do this,
 set the `dev` field of the output buffer to the value returned by
-`halide_opengl_output_client_bound`.  The example in apps/HelloAndroidGL
+`halide_opengl_output_client_bound`. The example in apps/HelloAndroidGL
 demonstrates this technique.
 
 Some operating systems can delete the OpenGL context of suspended applications.
@@ -410,32 +401,30 @@ If this happens, Halide needs to re-initialize itself with the new context after
 the application resumes. Call `halide_opengl_context_lost` to reset Halide's
 OpenGL state after this has happened.
 
-
 #### Limitations
 
 The current implementation of the OpenGL backend targets the common subset of
 OpenGL 2.0 and OpenGL ES 2.0 which is widely available on both mobile devices
-and traditional computers.  As a consequence, only a subset of the Halide
+and traditional computers. As a consequence, only a subset of the Halide
 language can be scheduled to run using OpenGL. Some important limitations are:
 
-  * Reductions cannot be implemented in GLSL and must be run on the CPU.
+- Reductions cannot be implemented in GLSL and must be run on the CPU.
 
-  * OpenGL ES 2.0 only supports uint8 buffers.
+- OpenGL ES 2.0 only supports uint8 buffers.
 
-    Support for floating point texture is available, but requires OpenGL (ES)
-    3.0 or the texture_float extension, which may not work on all mobile
-    devices.
+  Support for floating point texture is available, but requires OpenGL (ES) 3.0
+  or the texture_float extension, which may not work on all mobile devices.
 
-  * OpenGL ES 2.0 has very limited support for integer arithmetic. For maximum
-    compatibility, consider doing all computations using floating point, even
-    when using integer textures.
+- OpenGL ES 2.0 has very limited support for integer arithmetic. For maximum
+  compatibility, consider doing all computations using floating point, even when
+  using integer textures.
 
-  * Only 2D images with 3 or 4 color channels can be scheduled. Images with one
-    or two channels require OpenGL (ES) 3.0 or the texture_rg extension.
+- Only 2D images with 3 or 4 color channels can be scheduled. Images with one or
+  two channels require OpenGL (ES) 3.0 or the texture_rg extension.
 
-  * Not all builtin functions provided by Halide are currently supported, for
-    example `fast_log`, `fast_exp`, `fast_pow`, `reinterpret`, bit operations,
-    `random_float`, `random_int` cannot be used in GLSL code.
+- Not all builtin functions provided by Halide are currently supported, for
+  example `fast_log`, `fast_exp`, `fast_pow`, `reinterpret`, bit operations,
+  `random_float`, `random_int` cannot be used in GLSL code.
 
 The maximum texture size in OpenGL is `GL_MAX_TEXTURE_SIZE`, which is often
 smaller than the image of interest; on mobile devices, for example,
@@ -444,15 +433,15 @@ images.
 
 Planned features:
 
-  * Support for half-float textures and arithmetic
+- Support for half-float textures and arithmetic
 
-  * Support for integer textures and arithmetic
+- Support for integer textures and arithmetic
 
 (Note that OpenGL Compute Shaders are supported with a separate OpenGLCompute
 backend.)
 
-Halide for Hexagon HVX
-======================
+# Halide for Hexagon HVX
+
 Halide supports offloading work to Qualcomm Hexagon DSP on Qualcomm Snapdragon
 820 devices or newer. The Hexagon DSP provides a set of 64 and 128 byte vector
 instructions - the Hexagon Vector eXtensions (HVX). HVX is well suited to image
@@ -471,30 +460,33 @@ DSP hardware). For examples of using the `hexagon` scheduling directive on both
 the simulator and a Hexagon DSP, see the blur example app.
 
 To build and run an example app using the Hexagon target,
-  1. Obtain and build trunk LLVM and Clang. (Earlier versions of LLVM may work
-     but are not actively tested and thus not recommended.)
-  2. Download and install the Hexagon SDK and version 8.0 Hexagon Tools
-  3. Build and run an example for Hexagon HVX
+
+1. Obtain and build trunk LLVM and Clang. (Earlier versions of LLVM may work but
+   are not actively tested and thus not recommended.)
+2. Download and install the Hexagon SDK and version 8.0 Hexagon Tools
+3. Build and run an example for Hexagon HVX
 
 ### 1. Obtain and build trunk LLVM and Clang
 
 (Instructions given previous, just be sure to check out the `master` branch.)
 
 ### 2. Download and install the Hexagon SDK and version 8.0 Hexagon Tools
+
 Go to https://developer.qualcomm.com/software/hexagon-dsp-sdk/tools
-  1. Select the Hexagon Series 600 Software and download the 3.0 version for
-     Linux.
-  2. untar the installer
-  3. Run the extracted installer to install the Hexagon SDK and Hexagon Tools,
-     selecting Installation of Hexagon SDK into
-     `/location/of/SDK/Hexagon_SDK/3.0` and the Hexagon tools into
-     `/location/of/SDK/Hexagon_Tools/8.0`
-  4. Set an environment variable to point to the SDK installation location
-     ```
-     export SDK_LOC=/location/of/SDK
-     ```
+
+1. Select the Hexagon Series 600 Software and download the 3.0 version for
+   Linux.
+2. untar the installer
+3. Run the extracted installer to install the Hexagon SDK and Hexagon Tools,
+   selecting Installation of Hexagon SDK into `/location/of/SDK/Hexagon_SDK/3.0`
+   and the Hexagon tools into `/location/of/SDK/Hexagon_Tools/8.0`
+4. Set an environment variable to point to the SDK installation location
+   ```
+   export SDK_LOC=/location/of/SDK
+   ```
 
 ### 3. Build and run an example for Hexagon HVX
+
 In addition to running Hexagon code on device, Halide also supports running
 Hexagon code on the simulator from the Hexagon tools.
 
@@ -509,8 +501,8 @@ LD_LIBRARY_PATH=../../src/runtime/hexagon_remote/bin/host/:$HL_HEXAGON_TOOLS/lib
 
 ### To build and run the blur example in Halide/apps/blur on Android:
 
-To build the example for Android, first ensure that you have a standalone toolchain
-created from the NDK using the make-standalone-toolchain.sh script:
+To build the example for Android, first ensure that you have a standalone
+toolchain created from the NDK using the make-standalone-toolchain.sh script:
 
 ```
 export ANDROID_NDK_HOME=$SDK_LOC/Hexagon_SDK/3.0/tools/android-ndk-r10d/
