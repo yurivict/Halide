@@ -44,6 +44,8 @@ inline void set_math_flags() {
                  : "ri"(fpsr));
 #endif
 
+#endif  // defined(__arm__) || defined(__aarch64__)
+
 #endif  // ENABLE_FTZ_DAZ
 }
 
