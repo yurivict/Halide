@@ -252,8 +252,8 @@ void CodeGen_PyTorch::test() {
         std::ostringstream src;
         CodeGen_PyTorch(src).compile(m);
 
-    std::string correct_src =
-        R"GOLDEN_CODE(#include "HalideBuffer.h"
+        std::string correct_src =
+            R"GOLDEN_CODE(#include "HalideBuffer.h"
 #include "HalidePyTorchHelpers.h"
 #include "torch/extension.h"
 
@@ -318,8 +318,8 @@ inline int test1_th_(at::Tensor &_buf, float _alpha, int32_t _beta) {
         std::ostringstream src;
         CodeGen_PyTorch(src).compile(m);
 
-    std::string correct_src =
-        R"GOLDEN_CODE(#include "ATen/cuda/CUDAContext.h"
+        std::string correct_src =
+            R"GOLDEN_CODE(#include "ATen/cuda/CUDAContext.h"
 #include "HalideBuffer.h"
 #include "HalidePyTorchCudaHelpers.h"
 #include "HalidePyTorchHelpers.h"

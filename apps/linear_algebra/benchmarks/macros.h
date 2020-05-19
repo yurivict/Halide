@@ -22,9 +22,11 @@ inline void set_math_flags() {
 
     // Get the FP status register
 #if defined(__aarch64__)
-    asm volatile("mrs %0, fpcr" : "=r" (fpsr));
+    asm volatile("mrs %0, fpcr"
+                 : "=r"(fpsr));
 #else
-    asm volatile("vmrs %0, fpscr" : "=r" (fpsr));
+    asm volatile("vmrs %0, fpscr"
+                 : "=r"(fpsr));
 #endif
 
     // Setting this is like setting FTZ+DAZ on x86
@@ -33,11 +35,14 @@ inline void set_math_flags() {
 
     // Set the FP status register
 #if defined(__aarch64__)
-    asm volatile("msr fpcr, %0" : : "ri" (fpsr));
+    asm volatile("msr fpcr, %0"
+                 :
+                 : "ri"(fpsr));
 #else
-    asm volatile("vmsr fpscr, %0" : : "ri" (fpsr));
+    asm volatile("vmsr fpscr, %0"
+                 :
+                 : "ri"(fpsr));
 #endif
-
 
 #endif  // ENABLE_FTZ_DAZ
 }
