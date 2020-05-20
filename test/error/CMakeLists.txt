@@ -1,4 +1,4 @@
-tests(GROUPS error travis
+tests(GROUPS error
       EXPECT_FAILURE
       SOURCES
       ambiguous_inline_reductions.cpp

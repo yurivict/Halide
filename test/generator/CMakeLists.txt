@@ -27,7 +27,7 @@ function(halide_define_aot_test NAME)
         target_compile_definitions("${TARGET}" PRIVATE TEST_CUDA)
     endif ()
 
-    add_halide_test("${TARGET}" GROUPS generator travis)
+    add_halide_test("${TARGET}" GROUPS generator)
 endfunction(halide_define_aot_test)
 
 ##

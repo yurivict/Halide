@@ -1,4 +1,4 @@
-tests(GROUPS correctness travis
+tests(GROUPS correctness
       SOURCES
       align_bounds.cpp
       argmax.cpp
