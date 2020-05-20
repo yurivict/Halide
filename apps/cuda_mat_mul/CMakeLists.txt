@@ -26,6 +26,7 @@ target_link_libraries(mat_mul.generator PRIVATE Halide::Generator)
 
 # Filters
 add_halide_library(mat_mul FROM mat_mul.generator
+                   TARGETS host
                    FEATURES cuda cuda_capability_50
                    PARAMS size=1024)
 

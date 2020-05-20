@@ -356,7 +356,7 @@ function(_Halide_target_link_gpu_libs TARGET VISIBILITY)
         if (NOT METAL_LIBRARY)
             message(AUTHOR_WARNING "Metal framework dependency not found on system.")
         else ()
-            target_link_libraries(${T} ${VISIBILITY} "${METAL_LIBRARY}")
+            target_link_libraries(${TARGET} ${VISIBILITY} "${METAL_LIBRARY}")
         endif ()
 
         find_library(FOUNDATION_LIBRARY Foundation)

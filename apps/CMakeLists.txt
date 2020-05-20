@@ -34,11 +34,11 @@ function(add_app_test NAME)
         add_subdirectory(${NAME})
     endif ()
 
-    unset(cmakeToolchainOpt)
+    unset(cmakeToolchainOpts)
     if (NOT "${CMAKE_TOOLCHAIN_FILE}" STREQUAL "")
-        list(APPEND cmakeToolchainOpt "-DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}")
+        list(APPEND cmakeToolchainOpts "-DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}")
         if (NOT "${VCPKG_CHAINLOAD_TOOLCHAIN_FILE}" STREQUAL "")
-            list(APPEND cmakeToolchainOpt "-DVCPKG_CHAINLOAD_TOOLCHAIN_FILE=${VCPKG_CHAINLOAD_TOOLCHAIN_FILE}")
+            list(APPEND cmakeToolchainOpts "-DVCPKG_CHAINLOAD_TOOLCHAIN_FILE=${VCPKG_CHAINLOAD_TOOLCHAIN_FILE}")
         endif ()
     endif ()
 
@@ -50,6 +50,14 @@ function(add_app_test NAME)
         list(APPEND cmakeGenOpts --build-generator-platform "${CMAKE_GENERATOR_PLATFORM}")
     endif ()
 
+    set(cmakeDefinitionOpts
+        "-DCMAKE_PREFIX_PATH=${HALIDE_DIR}"
+        "-DCMAKE_BUILD_TYPE=$<CONFIG>"
+        "-DLLVM_DIR=${LLVM_DIR}")
+    if (NOT "${HL_TARGET}" STREQUAL "")
+        list(APPEND cmakeDefinitionOpts "-DHL_TARGET=${HL_TARGET}")
+    endif ()
+
     add_test(NAME ${NAME}
              COMMAND ${CMAKE_CTEST_COMMAND}
              --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/${NAME}" "${CMAKE_CURRENT_BINARY_DIR}/app_test_${NAME}"
@@ -57,10 +65,8 @@ function(add_app_test NAME)
              ${cmakeGenOpts}
              --build-config "$<CONFIG>"
              --build-options
-             "-DCMAKE_PREFIX_PATH=${HALIDE_DIR}"
-             "-DCMAKE_BUILD_TYPE=$<CONFIG>"
-             "-DLLVM_DIR=${LLVM_DIR}"
-             ${cmakeToolchainOpt}
+             ${cmakeDefinitionOpts}
+             ${cmakeToolchainOpts}
              --test-command ${CMAKE_CTEST_COMMAND} -C $<CONFIG> -V)
     set_tests_properties(${NAME} PROPERTIES
                          FIXTURES_REQUIRED apps
