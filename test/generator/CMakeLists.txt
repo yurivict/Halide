@@ -27,11 +27,6 @@ function(halide_define_aot_test NAME)
         target_compile_definitions("${TARGET}" PRIVATE TEST_CUDA)
     endif ()
 
-    # TODO(#4938): refactor to avoid linking GPU targets to libraries that won't use them.
-    # currently used by acquire_release, buffer_copy, cxx_mangling, define_extern_opencl,
-    # gpu_object_lifetime, and gpu_only.
-    _Halide_target_link_gpu_libs(${TARGET} PRIVATE ${HL_TARGET})
-
     add_halide_test("${TARGET}" GROUPS generator travis)
 endfunction(halide_define_aot_test)
 
