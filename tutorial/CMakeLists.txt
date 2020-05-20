@@ -47,8 +47,7 @@ add_tutorial(lesson_07_multi_stage_pipelines.cpp WITH_IMAGE_IO)
 add_tutorial(lesson_08_scheduling_2.cpp WITH_IMAGE_IO WITH_OPENMP)
 add_tutorial(lesson_09_update_definitions.cpp WITH_IMAGE_IO WITH_OPENMP)
 
-option(BUILD_AOT_TUTORIAL "Build the ahead-of-time compilation tutorial" ON)
-if (BUILD_AOT_TUTORIAL)
+if (TARGET_PTX)
     # Tutorial 10 requires that we build generation code, then run it,
     # so we can build the final executable.
     add_tutorial(lesson_10_aot_compilation_generate.cpp)
