@@ -71,6 +71,21 @@ if (TARGET_PTX)
                           Halide::Runtime
                           Threads::Threads
                           ${CMAKE_DL_LIBS})
+
+    if ("${HL_TARGET}" MATCHES "metal")
+        target_link_libraries(lesson_10_aot_compilation_run PRIVATE "-framework Metal" "-framework Foundation")
+    endif ()
+
+    if ("${HL_TARGET}" MATCHES "cuda")
+        find_package(CUDA REQUIRED)
+        target_link_libraries(lesson_10_aot_compilation_run PRIVATE "${CUDA_LIBRARIES}")
+    endif ()
+
+    if ("${HL_TARGET}" MATCHES "opengl")
+        find_package(OpenGL REQUIRED)
+        target_link_libraries(lesson_10_aot_compilation_run PRIVATE OpenGL::GL)
+    endif ()
+
     target_include_directories(lesson_10_aot_compilation_run PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
 
     add_test(NAME tutorial_lesson_10_aot_compilation_run COMMAND lesson_10_aot_compilation_run)
