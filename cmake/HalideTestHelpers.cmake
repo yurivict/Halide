@@ -66,7 +66,10 @@ function(add_halide_test TARGET)
              COMMAND ${TARGET}
              WORKING_DIRECTORY "${args_WORKING_DIRECTORY}")
 
-    set_tests_properties(${TARGET} PROPERTIES LABELS "${args_GROUPS}")
+    set_tests_properties(${TARGET} PROPERTIES
+                         LABELS "${args_GROUPS}"
+                         PASS_REGULAR_EXPRESSION "Success!"
+                         SKIP_REGULAR_EXPRESSION "\\[SKIP\\]")
     if (${args_EXPECT_FAILURE})
         set_tests_properties(${TARGET} PROPERTIES WILL_FAIL true)
     endif ()

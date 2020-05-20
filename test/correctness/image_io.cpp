@@ -259,5 +259,6 @@ int main(int argc, char **argv) {
     do_test<uint8_t>();
     do_test<uint16_t>();
     test_mat_header();
+    printf("Success!\n");
     return 0;
 }
