@@ -16,26 +16,19 @@ set(CMAKE_CXX_EXTENSIONS NO)
 # Find Halide
 find_package(Halide REQUIRED)
 
-find_package(OpenGL)
-if (TARGET OpenGL::GL)
+# Generators
+add_executable(blur.generator halide_blur_glsl_generator.cpp)
+target_link_libraries(blur.generator PRIVATE Halide::Generator)
 
-    # Generators
-    add_executable(blur.generator halide_blur_glsl_generator.cpp)
-    target_link_libraries(blur.generator PRIVATE Halide::Generator)
+add_executable(ycc.generator halide_ycc_glsl_generator.cpp)
+target_link_libraries(ycc.generator PRIVATE Halide::Generator)
 
-    add_executable(ycc.generator halide_ycc_glsl_generator.cpp)
-    target_link_libraries(ycc.generator PRIVATE Halide::Generator)
+# Libraries
+add_halide_library(halide_blur_glsl FROM blur.generator FEATURES opengl debug)
+add_halide_library(halide_ycc_glsl FROM ycc.generator FEATURES opengl debug)
 
-    # Libraries
-    add_halide_library(halide_blur_glsl FROM blur.generator FEATURES opengl debug)
-    add_halide_library(halide_ycc_glsl FROM ycc.generator FEATURES opengl debug)
+# Final executable
+add_executable(opengl_test opengl_test.cpp)
+target_link_libraries(opengl_test PRIVATE halide_blur_glsl halide_ycc_glsl)
 
-    # Final executable
-    add_executable(opengl_test opengl_test.cpp)
-    target_link_libraries(opengl_test
-                          PRIVATE
-                          halide_blur_glsl
-                          halide_ycc_glsl)
-
-    add_test(NAME opengl_test COMMAND opengl_test)
-endif ()
+add_test(NAME opengl_test COMMAND opengl_test)

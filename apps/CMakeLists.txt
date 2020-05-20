@@ -52,8 +52,7 @@ function(add_app_test NAME)
                          SKIP_REGULAR_EXPRESSION "\\[SKIP\\]")
 endfunction()
 
-# Actually add the apps
-
+# Actually add the apps as tests
 add_app_test(bgu)
 add_app_test(bilateral_grid)
 add_app_test(blur)
@@ -61,7 +60,7 @@ add_app_test(c_backend)
 add_app_test(camera_pipe)
 add_app_test(conv_layer)
 add_app_test(cuda_mat_mul)
-#add_app_test(glsl)  # TODO: bugged on my computer; not built by Makefile
+add_app_test(glsl)  # TODO(#4937): bugged; not built by Makefile
 add_app_test(harris)
 add_app_test(hist)
 add_app_test(iir_blur)

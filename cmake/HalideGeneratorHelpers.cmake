@@ -166,7 +166,7 @@ function(add_halide_library TARGET)
                                   IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/${TARGET}.runtime${HL_STATIC_LIBRARY_SUFFIX}")
 
             # Defers reading the list of targets for which to generate a common runtime to CMake _generation_ time.
-            # This prevents issues where
+            # This prevents issues where a lower GCD is required by a later Halide library linking to this runtime.
             add_custom_command(OUTPUT "${TARGET}.runtime${HL_STATIC_LIBRARY_SUFFIX}"
                                COMMAND ${generatorCommand} -r "${TARGET}.runtime" -o .
                                target=$<JOIN:$<TARGET_PROPERTY:${TARGET}.runtime,HLRT_TARGETS>,$<COMMA>>
