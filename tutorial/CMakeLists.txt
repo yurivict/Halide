@@ -72,19 +72,10 @@ if (TARGET_PTX)
                           Threads::Threads
                           ${CMAKE_DL_LIBS})
 
-    if ("${HL_TARGET}" MATCHES "metal")
-        target_link_libraries(lesson_10_aot_compilation_run PRIVATE "-framework Metal" "-framework Foundation")
-    endif ()
-
-    if ("${HL_TARGET}" MATCHES "cuda")
-        find_package(CUDA REQUIRED)
-        target_link_libraries(lesson_10_aot_compilation_run PRIVATE "${CUDA_LIBRARIES}")
-    endif ()
-
-    if ("${HL_TARGET}" MATCHES "opengl")
-        find_package(OpenGL REQUIRED)
-        target_link_libraries(lesson_10_aot_compilation_run PRIVATE OpenGL::GL)
-    endif ()
+    # Undocumented function in HalideGeneratorHelpers. Do not call in external code.
+    # Users of the AOT functions (as opposed to Generators) should link to the relevant
+    # GPU libraries manually.
+    _add_gpu_libraries_to_targets("${HL_TARGET}" PRIVATE lesson_10_aot_compilation_run)
 
     target_include_directories(lesson_10_aot_compilation_run PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
 
