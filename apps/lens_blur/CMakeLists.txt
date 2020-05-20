@@ -33,6 +33,9 @@ target_link_libraries(lens_blur_filter
 set(IMAGE ${CMAKE_CURRENT_LIST_DIR}/../images/rgb.png)
 if (EXISTS ${IMAGE})
     configure_file(${IMAGE} rgb.png COPYONLY)
-    add_test(NAME lens_blur_filter
-             COMMAND lens_blur_filter rgb.png out.png)
+    add_test(NAME lens_blur_filter COMMAND lens_blur_filter rgb.png out.png)
+    set_tests_properties(lens_blur_filter PROPERTIES
+                         LABELS internal_app_tests
+                         SKIP_REGULAR_EXPRESSION "\\[SKIP\\]")
+
 endif ()

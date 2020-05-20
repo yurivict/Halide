@@ -29,4 +29,7 @@ target_link_libraries(blur_test
                       $<TARGET_NAME_IF_EXISTS:OpenMP::OpenMP_CXX>)
 
 # Test that the app actually works!
-add_test(NAME blur COMMAND blur_test)
+add_test(NAME blur_app COMMAND blur_test)
+set_tests_properties(blur_app PROPERTIES
+                     LABELS internal_app_tests
+                     SKIP_REGULAR_EXPRESSION "\\[SKIP\\]")

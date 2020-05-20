@@ -17,11 +17,13 @@ target_link_libraries(bilateral_grid.generator PRIVATE Halide::Generator Halide:
 
 # Filters
 add_halide_library(bilateral_grid FROM bilateral_grid.generator
-                   EXTRA_OUTPUTS stmt schedule)
+                   STMT bilateral_grid_STMT
+                   SCHEDULE bilateral_grid_SCHEDULE)
 
 add_halide_library(bilateral_grid_auto_schedule FROM bilateral_grid.generator
                    GENERATOR bilateral_grid
-                   EXTRA_OUTPUTS stmt schedule
+                   STMT bilateral_grid_auto_schedule_STMT
+                   SCHEDULE bilateral_grid_auto_schedule_SCHEDULE
                    PARAMS auto_schedule=true)
 
 # Main executable
@@ -39,4 +41,7 @@ if (EXISTS ${IMAGE})
     configure_file(${IMAGE} gray.png COPYONLY)
     add_test(NAME bilateral_grid_process
              COMMAND bilateral_grid_process gray.png out.png 0.1 10)
+    set_tests_properties(bilateral_grid_process PROPERTIES
+                         LABELS internal_app_tests
+                         SKIP_REGULAR_EXPRESSION "\\[SKIP\\]")
 endif ()

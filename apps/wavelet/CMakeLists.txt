@@ -40,6 +40,9 @@ target_link_libraries(wavelet
 set(IMAGE ${CMAKE_CURRENT_LIST_DIR}/../images/gray.png)
 if (EXISTS ${IMAGE})
     configure_file(${IMAGE} gray.png COPYONLY)
-    add_test(NAME wavelet
-             COMMAND wavelet gray.png .)
+    add_test(NAME wavelet COMMAND wavelet gray.png .)
+    set_tests_properties(wavelet PROPERTIES
+                         LABELS internal_app_tests
+                         SKIP_REGULAR_EXPRESSION "\\[SKIP\\]")
+
 endif ()

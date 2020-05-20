@@ -33,6 +33,9 @@ target_link_libraries(max_filter_filter
 set(IMAGE ${CMAKE_CURRENT_LIST_DIR}/../images/rgb.png)
 if (EXISTS ${IMAGE})
     configure_file(${IMAGE} rgb.png COPYONLY)
-    add_test(NAME max_filter_filter
-             COMMAND max_filter_filter rgb.png out.png)
+    add_test(NAME max_filter_filter COMMAND max_filter_filter rgb.png out.png)
+    set_tests_properties(max_filter_filter PROPERTIES
+                         LABELS internal_app_tests
+                         SKIP_REGULAR_EXPRESSION "\\[SKIP\\]")
+
 endif ()

@@ -1,4 +1,13 @@
 ##
+# Add a stubbed-out find module for Halide so that the apps can build as part of the parent build.
+##
+
+option(WITH_APPS "Build apps" OFF)
+if (WITH_APPS)
+    list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
+endif ()
+
+##
 # Test apps from the perspective of a consuming project.
 ##
 
@@ -9,8 +18,7 @@ set(HALIDE_DIR "${CMAKE_CURRENT_BINARY_DIR}/_Halide_install")
 add_test(NAME delete_halide_distrib
          COMMAND ${CMAKE_COMMAND} -E remove_directory "${HALIDE_DIR}")
 
-set_tests_properties(delete_halide_distrib PROPERTIES
-                     FIXTURES_SETUP apps)
+set_tests_properties(delete_halide_distrib PROPERTIES FIXTURES_SETUP apps)
 
 add_test(NAME create_halide_distrib
          COMMAND ${CMAKE_COMMAND} --install . --config $<CONFIG> --prefix "${HALIDE_DIR}"
@@ -21,6 +29,11 @@ set_tests_properties(create_halide_distrib PROPERTIES
                      DEPENDS delete_halide_distrib)
 
 function(add_app_test NAME)
+    # Add the apps to the build directly
+    if (WITH_APPS)
+        add_subdirectory(${NAME})
+    endif ()
+
     unset(cmakeToolchainOpt)
     if (NOT "${CMAKE_TOOLCHAIN_FILE}" STREQUAL "")
         set(cmakeToolchainOpt "-DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}")
@@ -36,7 +49,7 @@ function(add_app_test NAME)
 
     add_test(NAME ${NAME}
              COMMAND ${CMAKE_CTEST_COMMAND}
-             --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/${NAME}" "${CMAKE_CURRENT_BINARY_DIR}/${NAME}"
+             --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/${NAME}" "${CMAKE_CURRENT_BINARY_DIR}/app_test_${NAME}"
              --build-generator "${CMAKE_GENERATOR}"
              ${cmakeGenOpts}
              --build-config "$<CONFIG>"
@@ -60,7 +73,7 @@ add_app_test(c_backend)
 add_app_test(camera_pipe)
 add_app_test(conv_layer)
 add_app_test(cuda_mat_mul)
-add_app_test(glsl)  # TODO(#4937): bugged; not built by Makefile
+#add_app_test(glsl)  # TODO(#4937): bugged; not built by Makefile
 add_app_test(harris)
 add_app_test(hist)
 add_app_test(iir_blur)

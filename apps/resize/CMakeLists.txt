@@ -70,7 +70,11 @@ if (EXISTS ${IMAGE})
     add_test(NAME resize_initial_downsample
              COMMAND resize rgb.png rgb_small.png -i lanczos -t float32 -f 0.125)
 
-    set_tests_properties(resize_initial_downsample PROPERTIES FIXTURES_SETUP rgb_small)
+    set_tests_properties(resize_initial_downsample PROPERTIES
+                         FIXTURES_SETUP rgb_small
+                         LABELS internal_app_tests
+                         SKIP_REGULAR_EXPRESSION "\\[SKIP\\]")
+
 
     foreach (VARIANT IN LISTS VARIANTS)
         string(REPLACE "_" ";" VLIST ${VARIANT})
@@ -86,6 +90,10 @@ if (EXISTS ${IMAGE})
         endif ()
         add_test(NAME resize_${VARIANT}
                  COMMAND resize ${INPUT} out_${VARIANT}.png -i ${INTERP} -t ${TYPE} -f ${F})
-        set_tests_properties(resize_${VARIANT} PROPERTIES FIXTURES_REQUIRED rgb_small)
+        set_tests_properties(resize_${VARIANT}
+                             PROPERTIES FIXTURES_REQUIRED rgb_small
+                             LABELS internal_app_tests
+                             SKIP_REGULAR_EXPRESSION "\\[SKIP\\]")
+
     endforeach ()
 endif ()

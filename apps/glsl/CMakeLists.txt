@@ -17,14 +17,14 @@ set(CMAKE_CXX_EXTENSIONS NO)
 find_package(Halide REQUIRED)
 
 # Generators
-add_executable(blur.generator halide_blur_glsl_generator.cpp)
-target_link_libraries(blur.generator PRIVATE Halide::Generator)
+add_executable(glsl_blur.generator halide_blur_glsl_generator.cpp)
+target_link_libraries(glsl_blur.generator PRIVATE Halide::Generator)
 
 add_executable(ycc.generator halide_ycc_glsl_generator.cpp)
 target_link_libraries(ycc.generator PRIVATE Halide::Generator)
 
 # Libraries
-add_halide_library(halide_blur_glsl FROM blur.generator FEATURES opengl debug)
+add_halide_library(halide_blur_glsl FROM glsl_blur.generator FEATURES opengl debug)
 add_halide_library(halide_ycc_glsl FROM ycc.generator FEATURES opengl debug)
 
 # Final executable

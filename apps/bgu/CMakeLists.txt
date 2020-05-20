@@ -33,6 +33,8 @@ target_link_libraries(bgu_filter
 set(IMAGE ${CMAKE_CURRENT_LIST_DIR}/../images/rgb.png)
 if (EXISTS ${IMAGE})
     configure_file(${IMAGE} rgb.png COPYONLY)
-    add_test(NAME bgu_filter
-             COMMAND bgu_filter rgb.png out.png)
+    add_test(NAME bgu_filter COMMAND bgu_filter rgb.png out.png)
+    set_tests_properties(bgu_filter PROPERTIES
+                         LABELS internal_app_tests
+                         SKIP_REGULAR_EXPRESSION "\\[SKIP\\]")
 endif ()

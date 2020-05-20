@@ -33,6 +33,8 @@ target_link_libraries(interpolate_filter
 set(IMAGE ${CMAKE_CURRENT_LIST_DIR}/../images/rgba.png)
 if (EXISTS ${IMAGE})
     configure_file(${IMAGE} rgba.png COPYONLY)
-    add_test(NAME interpolate_filter
-             COMMAND interpolate_filter rgba.png out.png)
+    add_test(NAME interpolate_filter COMMAND interpolate_filter rgba.png out.png)
+    set_tests_properties(interpolate_filter PROPERTIES
+                         LABELS internal_app_tests
+                         SKIP_REGULAR_EXPRESSION "\\[SKIP\\]")
 endif ()
