@@ -213,7 +213,6 @@ tests(GROUPS correctness travis
       non_vector_aligned_embeded_buffer.cpp
       obscure_image_references.cpp
       oddly_sized_output.cpp
-      opencl_runtime.cpp
       out_constraint.cpp
       out_of_memory.cpp
       output_larger_than_two_gigs.cpp

@@ -15,6 +15,23 @@ function(halide_define_aot_test NAME)
     if (NOT args_OMIT_DEFAULT_GENERATOR)
         target_link_libraries(${TARGET} PRIVATE ${NAME})
     endif ()
+
+    # TODO(#4938): remove need for these definitions
+    if ("${HL_TARGET}" MATCHES "opencl")
+        target_compile_definitions("${TARGET}" PRIVATE TEST_OPENCL)
+    endif ()
+    if ("${HL_TARGET}" MATCHES "metal")
+        target_compile_definitions("${TARGET}" PRIVATE TEST_METAL)
+    endif ()
+    if ("${HL_TARGET}" MATCHES "cuda")
+        target_compile_definitions("${TARGET}" PRIVATE TEST_CUDA)
+    endif ()
+
+    # TODO(#4938): refactor to avoid linking GPU targets to libraries that won't use them.
+    # currently used by acquire_release, buffer_copy, cxx_mangling, define_extern_opencl,
+    # gpu_object_lifetime, and gpu_only.
+    _Halide_target_link_gpu_libs(${TARGET} PRIVATE ${HL_TARGET})
+
     add_halide_test("${TARGET}" GROUPS generator travis)
 endfunction(halide_define_aot_test)
 
@@ -61,6 +78,7 @@ set(GENERATOR_SRCS
     msan_generator.cpp
     multitarget_generator.cpp
     nested_externs_generator.cpp
+    opencl_runtime_generator.cpp
     output_assign_generator.cpp
     pyramid_generator.cpp
     rdom_input_generator.cpp
@@ -185,6 +203,7 @@ add_library(external_code_generator_deps OBJECT "${EC32}.cpp" "${EC64}.cpp" "${E
 
 halide_define_aot_test(acquire_release)
 halide_define_aot_test(argvcall)
+halide_define_aot_test(buffer_copy)
 halide_define_aot_test(can_use_target)
 #halide_define_aot_test(cleanup_on_error)  # TODO: requires access to internal header runtime/device_interface.h
 halide_define_aot_test(configure)
@@ -201,6 +220,7 @@ halide_define_aot_test(mandelbrot)
 halide_define_aot_test(memory_profiler_mandelbrot)
 halide_define_aot_test(msan)
 halide_define_aot_test(multitarget)
+halide_define_aot_test(opencl_runtime)
 halide_define_aot_test(output_assign)
 halide_define_aot_test(pyramid)
 halide_define_aot_test(string_param)
