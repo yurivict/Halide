@@ -36,7 +36,10 @@ function(add_app_test NAME)
 
     unset(cmakeToolchainOpt)
     if (NOT "${CMAKE_TOOLCHAIN_FILE}" STREQUAL "")
-        set(cmakeToolchainOpt "-DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}")
+        list(APPEND cmakeToolchainOpt "-DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}")
+        if (NOT "${VCPKG_CHAINLOAD_TOOLCHAIN_FILE}" STREQUAL "")
+            list(APPEND cmakeToolchainOpt "-DVCPKG_CHAINLOAD_TOOLCHAIN_FILE=${VCPKG_CHAINLOAD_TOOLCHAIN_FILE}")
+        endif ()
     endif ()
 
     unset(cmakeGenOpts)
