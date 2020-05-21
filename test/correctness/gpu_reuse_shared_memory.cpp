@@ -137,7 +137,7 @@ int inverted_pyramid_test(MemoryType memory_type) {
 
 int dynamic_shared_test(MemoryType memory_type) {
     if (!get_jit_target_from_environment().has_gpu_feature()) {
-        printf("Not running test because no gpu target enabled\n");
+        printf("[SKIP] No GPU target enabled.\n");
         return 0;
     }
 

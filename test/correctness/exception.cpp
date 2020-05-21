@@ -150,6 +150,5 @@ int main(int argc, char **argv) {
     check_error(error);
 
     std::cout << "Success!\n";
-
     return 0;
 }

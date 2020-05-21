@@ -1,8 +1,7 @@
-// Test doesn't build on windows, because OpenGL on windows is a nightmare.
 #ifdef _WIN32
 #include <stdio.h>
 int main() {
-    printf("Skipping test on Windows\n");
+    printf("[SKIP] OpenGL on Windows is broken.\n");
     return 0;
 }
 #else
