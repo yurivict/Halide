@@ -14,16 +14,23 @@ find_package(Halide REQUIRED COMPONENTS Halide)
 # Find BLAS-es
 unset(DEFAULT_BLAS)
 unset(BLAS_TARGETS)
-set(BLA_PREFER_PKGCONFIG YES)
-set(BLAS_VENDORS OpenBLAS Apple)  # TODO: add ATLAS and its weird extra linking requirements
+set(BLAS_VENDORS OpenBLAS ATLAS Apple Generic)
+
+# ATLAS is weird and has extra requirements
+find_library(CBLAS_LIBRARY cblas)
+set(ATLAS_EXTRA_LIBS ${CBLAS_LIBRARY})
 
 message(STATUS "Checking for available CBLAS implementations")
 foreach (BLA_VENDOR IN LISTS BLAS_VENDORS)
     find_package(BLAS QUIET)
-    if (NOT BLAS_FOUND)
+    if (NOT BLAS_FOUND
+        OR ("${BLA_VENDOR}" STREQUAL "ATLAS" AND NOT CBLAS_LIBRARY)
+        OR ("${BLA_VENDOR}" STREQUAL "Generic" AND BLAS_TARGETS))
         message(STATUS "${BLA_VENDOR}: Missing")
     else ()
-        message(STATUS "${BLA_VENDOR}: Found")
+        list(APPEND BLAS_LIBRARIES ${${BLA_VENDOR}_EXTRA_LIBS})
+
+        message(STATUS "${BLA_VENDOR}: Found ${BLAS_LIBRARIES}")
         add_library(BLAS_${BLA_VENDOR} INTERFACE)
         add_library(${BLA_VENDOR}::${BLA_VENDOR} ALIAS BLAS_${BLA_VENDOR})
 
