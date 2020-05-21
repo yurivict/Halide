@@ -25,20 +25,20 @@ typedef unsigned int qurt_thread_t;
 #define QURT_HTHREAD_L1D_PREFETCH 0x2 /**< Enables hardware L1 data cache prefetching. */
 #define QURT_HTHREAD_L2I_PREFETCH 0x4 /**< Enables hardware L2 instruction cache prefetching. */
 #define QURT_HTHREAD_L2D_PREFETCH 0x8 /**< Enables hardware L2 data cache prefetching. */
-#define QURT_HTHREAD_DCFETCH 0x10     /**< Enables DC fetch to the provided virtual address.                   \
-                                          DC fetch instructs the hardware that a data memory access is likely. \
-                                          Instructions are dropped in the case of high bus utilization. */
+#define QURT_HTHREAD_DCFETCH 0x10 /**< Enables DC fetch to the provided virtual address.                   \
+                                      DC fetch instructs the hardware that a data memory access is likely. \
+                                      Instructions are dropped in the case of high bus utilization. */
 
-#define QURT_THREAD_ATTR_NAME_MAXLEN 16                                           /**< */
-#define QURT_THREAD_ATTR_TCB_PARTITION_RAM 0                                      /**< Creates threads in RAM/DDR. */
-#define QURT_THREAD_ATTR_TCB_PARTITION_TCM 1                                      /**< Creates threads in TCM. */
+#define QURT_THREAD_ATTR_NAME_MAXLEN 16 /**< */
+#define QURT_THREAD_ATTR_TCB_PARTITION_RAM 0 /**< Creates threads in RAM/DDR. */
+#define QURT_THREAD_ATTR_TCB_PARTITION_TCM 1 /**< Creates threads in TCM. */
 #define QURT_THREAD_ATTR_TCB_PARTITION_DEFAULT QURT_THREAD_ATTR_TCB_PARTITION_RAM /**< Backward compatibility. */
-#define QURT_THREAD_ATTR_PRIORITY_DEFAULT 255                                     /**< */
-#define QURT_THREAD_ATTR_ASID_DEFAULT 0                                           /**< */
-#define QURT_THREAD_ATTR_AFFINITY_DEFAULT (-1)                                    /**< */
-#define QURT_THREAD_ATTR_BUS_PRIO_DEFAULT 255                                     /**< */
-#define QURT_THREAD_ATTR_TIMETEST_ID_DEFAULT (-2)                                 /**< */
-/** @} */                                                                         /* end_addtogroup thread_macros */
+#define QURT_THREAD_ATTR_PRIORITY_DEFAULT 255 /**< */
+#define QURT_THREAD_ATTR_ASID_DEFAULT 0 /**< */
+#define QURT_THREAD_ATTR_AFFINITY_DEFAULT (-1) /**< */
+#define QURT_THREAD_ATTR_BUS_PRIO_DEFAULT 255 /**< */
+#define QURT_THREAD_ATTR_TIMETEST_ID_DEFAULT (-2) /**< */
+/** @} */ /* end_addtogroup thread_macros */
 
 /** Thread attributes */
 typedef struct _qurt_thread_attr {
