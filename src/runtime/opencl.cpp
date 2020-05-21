@@ -80,15 +80,15 @@ cl_command_queue WEAK command_queue = 0;
 volatile int WEAK thread_lock = 0;
 
 WEAK char platform_name[256];
-WEAK int platform_name_lock = 0;
+WEAK ScopedSpinLock::AtomicFlag platform_name_lock = 0;
 WEAK bool platform_name_initialized = false;
 
 WEAK char device_type[256];
-WEAK int device_type_lock = 0;
+WEAK ScopedSpinLock::AtomicFlag device_type_lock = 0;
 WEAK bool device_type_initialized = false;
 
 WEAK char build_options[1024];
-WEAK int build_options_lock = 0;
+WEAK ScopedSpinLock::AtomicFlag build_options_lock = 0;
 WEAK bool build_options_initialized = false;
 
 }  // namespace OpenCL
