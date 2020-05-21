@@ -22,7 +22,7 @@ if (TARGET OpenGL::GL)
           tuples.cpp
           varying.cpp
           )
-    foreach (test_name IN ITEMS ${TEST_NAMES})
+    foreach (test_name IN LISTS TEST_NAMES)
         target_link_libraries("${test_name}" PRIVATE OpenGL::GL)
     endforeach ()
 endif ()

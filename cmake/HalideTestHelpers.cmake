@@ -84,7 +84,7 @@ function(tests)
     list(GET args_GROUPS 0 PRIMARY_GROUP)
 
     set(TEST_NAMES "")
-    foreach (file ${args_SOURCES})
+    foreach (file IN LISTS args_SOURCES)
         get_filename_component(name "${file}" NAME_WE)
         set(TARGET "${PRIMARY_GROUP}_${name}")
 
@@ -92,7 +92,7 @@ function(tests)
 
         add_executable("${TARGET}" "${file}")
         target_link_libraries("${TARGET}" PRIVATE Halide::Test)
-        if (COMMAND target_precompile_headers AND "${file}" MATCHES ".cpp$")
+        if ("${file}" MATCHES ".cpp$")
             target_precompile_headers("${TARGET}" REUSE_FROM _test_internal)
         endif ()
 

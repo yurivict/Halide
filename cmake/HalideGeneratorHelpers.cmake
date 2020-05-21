@@ -145,12 +145,12 @@ function(add_halide_library TARGET)
 
     if (ARG_C_BACKEND)
         # The C backend does not provide a runtime.
-        unset(ARG_USE_RUNTIME)
+        set(ARG_USE_RUNTIME Halide::Runtime)
     else ()
         # If we're not using an existing runtime, create one.
         if (NOT ARG_USE_RUNTIME)
             add_library("${TARGET}.runtime" STATIC IMPORTED)
-            target_link_libraries("${TARGET}.runtime" INTERFACE Threads::Threads ${CMAKE_DL_LIBS})
+            target_link_libraries("${TARGET}.runtime" INTERFACE Halide::Runtime Threads::Threads ${CMAKE_DL_LIBS})
 
             set_target_properties("${TARGET}.runtime"
                                   PROPERTIES
@@ -168,7 +168,7 @@ function(add_halide_library TARGET)
             add_dependencies("${TARGET}.runtime" "${TARGET}.runtime.update")
             set(ARG_USE_RUNTIME "${TARGET}.runtime")
         elseif (NOT TARGET ${ARG_USE_RUNTIME})
-            # Require an existing runtime target to exist.
+            # Require a user-supplied runtime target to exist.
             message(FATAL_ERROR "Invalid runtime target ${ARG_USE_RUNTIME}")
         endif ()
 
@@ -283,7 +283,7 @@ function(add_halide_library TARGET)
     add_dependencies("${TARGET}" "${TARGET}.update")
 
     target_include_directories("${TARGET}" INTERFACE "${CMAKE_CURRENT_BINARY_DIR}")
-    target_link_libraries("${TARGET}" INTERFACE "${ARG_USE_RUNTIME}" Halide::Runtime)
+    target_link_libraries("${TARGET}" INTERFACE "${ARG_USE_RUNTIME}")
 endfunction()
 
 function(_Halide_get_library_suffix OUTVAR)
