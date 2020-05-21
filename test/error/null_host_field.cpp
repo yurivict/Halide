@@ -33,7 +33,6 @@ int main(int argc, char **argv) {
     param_buf.raw_buffer()->device = 0;
     param_buf.raw_buffer()->device_interface = 0;
 
-    printf("I should not have reached here\n");
-
+    printf("Success!\n");
     return 0;
 }

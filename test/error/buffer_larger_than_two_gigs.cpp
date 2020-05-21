@@ -12,5 +12,7 @@ int main(int argc, char **argv) {
     } else {
         Buffer<uint8_t> result(1 << 12, 1 << 12, 1 << 8);
     }
+
     printf("Success!\n");
+    return 0;
 }

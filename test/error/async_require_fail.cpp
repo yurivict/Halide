@@ -27,5 +27,6 @@ int main(int argc, char **argv) {
     p2.set(2);
     result = g.realize(1);
 
+    printf("Success!\n");
     return 0;
 }

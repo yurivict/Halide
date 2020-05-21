@@ -16,5 +16,6 @@ int main(int argc, char **argv) {
 
     f.compile_to_object(test_object, {input}, "f", mac_target);
 
+    printf("Success!\n");
     return 0;
 }

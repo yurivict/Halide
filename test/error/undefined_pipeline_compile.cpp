@@ -13,7 +13,6 @@ int main(int argc, char **argv) {
     p.compile_to_object(test_object, {}, "f");
 
     // We shouldn't reach here, because there should have been a compile error.
-    printf("There should have been an error\n");
-
+    printf("Success!\n");
     return 0;
 }

@@ -11,5 +11,6 @@ int main(int argc, char **argv) {
     f(x) = x;
     Buffer<float> im = f.realize(100);
 
+    printf("Success!\n");
     return 0;
 }
