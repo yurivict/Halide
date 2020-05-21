@@ -10,6 +10,10 @@ if (NOT CUDA_FOUND)
     message(FATAL_ERROR "[SKIP] Could NOT find CUDA")
 endif ()
 
+if (NOT CUDA_CUBLAS_LIBRARIES)
+    message(FATAL_ERROR "[SKIP] Could NOT find cuBLAS")
+endif ()
+
 enable_testing()
 
 # Set up language settings
@@ -32,7 +36,7 @@ add_halide_library(mat_mul FROM mat_mul.generator
 
 # Main executable
 add_executable(runner runner.cpp)
-target_link_libraries(runner PRIVATE Halide::Tools mat_mul)
+target_link_libraries(runner PRIVATE Halide::Tools mat_mul ${CUDA_CUBLAS_LIBRARIES})
 
 # Test that the app actually works!
 add_test(NAME mat_mul COMMAND runner)
