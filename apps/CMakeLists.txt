@@ -1,11 +1,8 @@
 ##
-# Add a stubbed-out find module for Halide so that the apps can build as part of the parent build.
+# Option controlling whether apps are built internally or at test time, externally.
 ##
 
-option(WITH_APPS "Build apps" OFF)
-if (WITH_APPS)
-    list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
-endif ()
+option(APPS_INTERNAL "Build apps as part of the internal build" OFF)
 
 ##
 # Test apps from the perspective of a consuming project.
@@ -18,7 +15,8 @@ set(HALIDE_DIR "${CMAKE_CURRENT_BINARY_DIR}/_Halide_install")
 add_test(NAME delete_halide_distrib
          COMMAND ${CMAKE_COMMAND} -E remove_directory "${HALIDE_DIR}")
 
-set_tests_properties(delete_halide_distrib PROPERTIES FIXTURES_SETUP apps)
+set_tests_properties(delete_halide_distrib PROPERTIES
+                     FIXTURES_SETUP apps)
 
 add_test(NAME create_halide_distrib
          COMMAND ${CMAKE_COMMAND} --install . --config $<CONFIG> --prefix "${HALIDE_DIR}"
@@ -29,9 +27,12 @@ set_tests_properties(create_halide_distrib PROPERTIES
                      DEPENDS delete_halide_distrib)
 
 function(add_app_test NAME)
-    # Add the apps to the build directly
-    if (WITH_APPS)
+    # Either add the apps to the build directly or add them as external tests
+    if (APPS_INTERNAL)
+        # Add a stubbed-out find module for Halide so that the apps can build as part of the parent build.
+        list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
         add_subdirectory(${NAME})
+        return()
     endif ()
 
     unset(cmakeToolchainOpts)
